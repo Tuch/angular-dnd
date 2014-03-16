@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="app">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Angular-DnD Lasso example</title>
+
+<link rel="stylesheet" href="demo.css" />
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.js"></script>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.2.10/angular.js"></script>
+
+<link rel="stylesheet" href="../css/stylesheet.css" />
+<script type="text/javascript" src = "../js/angular-dnd.js"></script>
+
+
+
+<script type="text/javascript">
+
+	var app = angular.module('app', ['dnd']);
+
+    app.controller('controller', function($scope){
+        var models = $scope.models = [];
+
+        $scope.createRect = function(rect){
+            models.push({
+                rect:rect,
+                selected: false
+            });
+        };
+
+        $scope.onSelect = function(model){
+            model.selected = true;
+        };
+
+        $scope.onUnselect = function(model){
+            model.selected = false;
+        };
+
+    });
+
+</script>
+
+</head>
+
+
+
+<body ng-controller="controller" style = "position: relative">
+
+    <div class = "menu">
+
+        <a class = "button" href = "basic.html">Basic example</a>
+        <a class = "button" href = "lasso.html">Lasso example</a>
+
+    </div>
+
+    <div class = "title"> Some lasso examples </div>
+
+    <div class = "lasso-area" dnd-lasso-area = "createRect($rect)" dnd-rect = "test123">
+        <div class = "article"> Creating lasso </div>
+
+    </div>
+
+    <div class = "lasso-area" dnd-lasso-area>
+        <div class = "article"> Selecting lasso </div>
+        <div class = "lasso-area-creature" 
+	        ng-repeat = "model in models" 
+	        dnd-rect = "model.rect" 
+	        ng-class = "{selected: model.selected, progress: model.progress}"
+			dnd-selectable = "{ select: 'onSelect(model)', unselect: 'onUnselect(model)' }"
+            dnd-draggable>
+        </div>
+    </div>
+
+</body>
+</html>

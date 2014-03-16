@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="app" style = "height: 100%">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Angular-DnD Basic Example</title>
+
+<link rel="stylesheet" href="demo.css" />
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.js"></script>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.2.10/angular.js"></script>
+
+<link rel="stylesheet" href="../css/stylesheet.css" />
+<script type="text/javascript" src = "../js/angular-dnd.js"></script>
+
+
+
+<script type="text/javascript">
+
+	var app = angular.module('app', ['dnd']);
+
+    app.controller('controller', function($scope){
+        $scope.rect = {top:'20px', left:'240px', width: '100px', height: '100px'};
+        
+        $scope.dragstart = function(){
+	        console.log('dragstart', arguments);
+        };       
+        
+        $scope.drag = function(){
+	        console.log('drag', arguments);
+        };       
+        
+        $scope.dragend = function(){
+	        console.log('dragend', arguments);
+	        
+	        if(!arguments[0]) $scope.dropped = false;
+        };     
+        
+        $scope.dragenter = function(){
+	        console.log('dragenter', arguments);
+        };     
+        
+        $scope.dragover = function(){
+	        console.log('dragover', arguments);
+        };     
+        
+        $scope.dragleave = function(){
+	        console.log('dragleave', arguments);
+        };       
+        
+        $scope.drop = function(){
+	        console.log('drop', arguments);
+	        $scope.dropped = true;
+        };
+        
+        $scope.dragmodel = 'some dragmodel..';
+        $scope.dropmodel = 'some dropmodel..';
+        
+    });
+
+</script>
+
+</head>
+
+
+
+<body ng-controller="controller" style = "position: relative; height:100%;">
+	<div style = "height: 100%; overflow: auto;">
+	    <div class = "menu">
+	
+	        <a class = "button" href = "basic.html">Basic example</a>
+	        <a class = "button" href = "lasso.html">Lasso example</a>
+	
+	    </div>
+	
+	    <div class = "title"> Basic example <br><em style = "font-size: 50%;">Draggable, Droppable, Rotatable, Resizable, Fittext...</em></div>
+	
+	    top: <input ng-model = 'rect.top' type="text">
+	    left: <input ng-model = 'rect.left' type="text">
+	    height: <input ng-model = 'rect.height' type="text">
+	    width: <input ng-model = 'rect.width' type="text">
+	    transform: <input ng-model = 'rect.transform' type="text">
+	    
+		<div class = "dnd-container">
+		
+		    <div class = "draggable" style = "position: absolute;"
+				
+		    	dnd-draggable = "{onstart: 'dragstart()', ondrag: 'drag()', onend: 'dragend($droptarget)', ns: 'area1'}"
+		        dnd-rotatable = "{onstart: 'dragstart()', ondrag: 'drag()', onend: 'dragend()'}"
+		        dnd-resizable = "{onstart: 'dragstart()', ondrag: 'drag()', onend: 'dragend()'}"
+		    	dnd-fittext = "rect.height"
+		        dnd-rect = "rect"
+		       
+		        dnd-model = "dragmodel" dnd-model = "dragmodel">test
+		
+		
+		    </div>
+		    
+		    <div class = "dropzone" ng-class = "{dropped: dropped}" dnd-droppable = "{ ondrop: 'drop($dragtarget)', onenter: 'dragenter($dragtarget)', onleave: 'dragleave($dragtarget)', onover: 'dragover($dragtarget)', ns: 'area1' }" dnd-model = "dropmodel" >
+			    
+		    </div>
+		    <br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
+		    
+		</div>
+	
+	</div>
+</body>
+</html>
