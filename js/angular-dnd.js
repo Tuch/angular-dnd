@@ -1,12 +1,12 @@
 
 /**
- * @license AngularJS-DND v0.1.0
+ * @license AngularJS-DND v0.1.1
  * (c) 2014-2015 Alexander Afonin (toafonin@gmail.com, http://github.com/Tuch)
  * License: MIT
  */
 
 
-;(function(angular, undefined, $){'use strict'
+;(function(angular, undefined){'use strict'
 
 	 /*
 
@@ -20,7 +20,10 @@
 
 	/* ENVIRONMENT VARIABLES */
 
-	var $window = $(window), $document = $(document), body = 'body', TRANSFORM, TRANSFORMORIGIN;
+	var $ = angular.element, $window = $(window), $document = $(document), body = 'body', TRANSFORM, TRANSFORMORIGIN,
+
+		forEach = angular.forEach,
+		extend = angular.extend;
 	
 	(function(){
 		var agent = navigator.userAgent;
@@ -84,14 +87,6 @@
 			}).replace(MOZ_HACK_REGEXP, 'Moz$1');
 		}
 	})();	
-	
-	/* EXTEND NUMBER PROTOTYPE BY applyToSegment */
-	
-	if(Number.prototype.applyToSegment != undefined) console.warning('Number.prototype.applyToSegment is defined');
-	Number.prototype.applyToSegment = function(){	
-		return this<min ? min : this > max ? max : this;
-	};
-	
 	
 	/* EXTEND NUMBER PROTOTYPE BY round */
 	
@@ -343,41 +338,32 @@
 		return fn;
 	})();
 
+	/* JQLITE EXTENDING */
 
-	/* JQUERY EXTENSIONS */
+	extend($.prototype, {
 
-	$.fn.extend({
-	
-		disableSelection: function() {
-			$(this).on({ dragstart:doFalse, selectstart:doFalse }).css({ '-moz-user-select':'none', '-khtml-user-select':'none', '-webkit-user-select':'none' })
+		dndDisableSelection: function() {
+			this.on('dragstart selectstart', doFalse ).css({ '-moz-user-select':'none', '-khtml-user-select':'none', '-webkit-user-select':'none' })
 		},
 
-		enableSelection: function() {
-			$(this).off({ dragstart:doFalse, selectstart:doFalse }).css({ '-moz-user-select':'auto', '-khtml-user-select':'auto', '-webkit-user-select':'auto' });
+		dndEnableSelection: function() {
+			this.off('dragstart selectstart', doFalse ).css({ '-moz-user-select':'auto', '-khtml-user-select':'auto', '-webkit-user-select':'auto' });
 		},
-		
-		/* experimental */
-		altClientRect: function(){
-			var offset = $(this).offset();
 
-			offset.left=offset.left-$(this).scrollLeft();
-			offset.top=offset.top-$(this).scrollTop();
-
-			$(this).parents().each(function(index){
-				offset.left=offset.left-$(this).scrollLeft();
-				offset.top=offset.top-$(this).scrollTop();
-				//if($(this).css('position') == 'fixed') return false;
-			});
-
-			return offset;
+		dndClientRect: function(){
+			return extend({}, this[0].getBoundingClientRect());
 		},
-		
-		clientRect: function(){
-			return $.extend({}, this[0].getBoundingClientRect());
-		},
-		
-		styleRect: function(){
-			var styles = this.css(['width','height','top','left']);
+
+		dndStyleRect: function(){
+			var get = ['width','height','top','left'];
+			//var styles = this.css(get);
+			
+			var styles = {};
+			
+			for(var i=0; i<get.length; i++){
+				styles[get[i]] = this.css(get[i]);
+			}
+			
 			var width = parseFloat(styles.width);
 			var height = parseFloat(styles.height);
 
@@ -386,31 +372,30 @@
 
 			return {top: top, right: left+width, bottom: top+height, left: left, width: width, height: height};
 		},
-				
-		getParentScrollArea: function(){
-			var ret;
-			
-			this.parents().each(function(){
-				if(this.scrollHeight !== this.clientHeight) {
-					ret = this;
+
+		dndGetParentScrollArea: function(){
+			var ret, parent = this.parent()[0], parents = [];
+
+			while(parent){
+				parents.push(parent);
+				parent = parent.parentElement;
+			}
+
+			forEach($(parents), function(element) {
+				if(element.scrollHeight !== element.clientHeight) {
+					ret = element;
 					return false;
 				}
 			});
-			
+
 			return $(ret);
-			
-		}
+		},
 
-	});
-
-	(function($){
-		var transform;
-
-		function getAngle(degs){
+		dndGetAngle: function (degs){
 
 			var matrix = this.css(TRANSFORM);
 
-			if(matrix == 'none') return 0;
+			if(matrix == 'none' || matrix == '') return 0;
 
 			var values = matrix.split('(')[1].split(')')[0].split(',');
 
@@ -424,11 +409,47 @@
 
 			return degs ? Math.round(rads * 180/Math.PI) : rads;
 
-		};
-
-		$.fn.extend({getAngle:getAngle});
-
-	})(jQuery);
+		},
+		
+		dndCss: (function(){
+			var setCss = function($element, obj){
+				return $element.css(obj);
+			};
+			
+			var getCss = function($element, arg){
+				var computed = window.getComputedStyle( $element[0], null );
+			
+				if(typeof arg == 'string') return computed.getPropertyValue( arg );
+				
+				var ret = {};
+				
+				for(var i=0; i < arg.length; i++){
+					ret[arg[i]] = computed.getPropertyValue( arg[i] );
+				}
+				
+				return ret;
+			}
+			
+			function css(){
+				var a = arguments;
+				
+				if( (a.length == 1) && (a[0] instanceof Array) || (typeof a[0] == 'string') ) return getCss(this, a[0]);
+				else if( (a.length == 1) && (typeof a[0] == 'object') ) return setCss(this, a[0]);
+				else if( a.length == 2 ) {
+					var obj = {};
+					
+					obj[a[0]] = a[1];
+					
+					return setCss(this, obj);
+				}
+				
+				return this;
+				
+			}
+			
+			return css;
+		})()
+	});
 
 	/* INIT ANGULAR MODULE */
 
@@ -436,9 +457,9 @@
 
 
 
-	/* JQUERY DND PLUGIN - CORE OF ANGULAR-DND */
+	/* ANGULAR.ELEMENT DND PLUGIN - CORE OF ANGULAR-DND */
 
-	(function($){
+	(function(){
 
 		var Regions = (function(){
 			var arr = {};
@@ -576,7 +597,7 @@
 
 				this.container = function(rect){
 					if(!arguments.length) {
-						if(!container) container = $(body).clientRect();
+						if(!container) container = angular.element(document.body).dndClientRect();
 						
 						return container;
 					}
@@ -641,7 +662,7 @@
 
 				this.regions = this.prepare();
 				
-				this.$scrollarea = this.dnd.$el.getParentScrollArea();
+				this.$scrollarea = this.dnd.$el.dndGetParentScrollArea();
 				
 				this.$scrollarea.on('scroll', this.onscroll);
 
@@ -675,7 +696,7 @@
 
 					ret.push({
 						dnd: dnd,
-						rect: dnd.$el.clientRect()
+						rect: dnd.$el.dndClientRect()
 					});
 				}
 
@@ -688,7 +709,7 @@
 
 				this.started = false;
 
-				$(body).disableSelection();
+				angular.element(document.body).dndDisableSelection();
 
 				event.preventDefault();
 				
@@ -732,7 +753,7 @@
 
 				if(this.started) this.stop();
 
-				$(body).enableSelection();
+				angular.element(document.body).dndEnableSelection();
 			},	
 		};
 
@@ -757,8 +778,9 @@
 
 			mousedown: function (event){
 				this.manipulator.begin(event);
-			
-				$document.on({mousemove: this.mousemove, mouseup: this.mouseup});
+
+				$document.on( 'mousemove', this.mousemove );
+				$document.on( 'mouseup', this.mouseup );
 			},
 			
 			mousemove: function(event){
@@ -767,8 +789,9 @@
 			
 			mousetup: function(event){
 				this.manipulator.end(event);
-				
-				$document.off({mousemove: this.mousemove, mouseup: this.mouseup});
+
+				$document.off(' mousemove', this.mousemove );
+				$document.off(' mouseup', this.mouseup );
 			},
 
 			destroy: function(){
@@ -798,8 +821,9 @@
 			
 			touchstart: function (event){
 				this.manipulator.begin(event);
-			
-				$document.on({touchmove: this.touchmove, touchend: this.touchend});
+
+				$document.on( 'touchmove', this.touchmove );
+				$document.on( 'touchend', this.touchend );
 			},
 			
 			touchmove: function(event){
@@ -808,8 +832,9 @@
 			
 			touchend: function(event){
 				this.manipulator.end(event);
-				
-				$document.off({touchmove: this.touchmove, touchend: this.touchend});
+
+				$document.off('touchmove', this.touchmove );
+				$document.off('touchend', this.touchend );
 			},
 
 			destroy: function(){
@@ -818,7 +843,7 @@
 		};
 
 		/**
-		 * @name jQuery.fn.dndBind
+		 * @name angular.element.dndBind
 		 *
 		 * @description
 		 * Аналог jQuery.fn.bind(), только для drag and drop событий
@@ -840,10 +865,10 @@
 		 * Если string, то определяется только <event name> причем возможно задать несколько событий через пробел, например <dragstart drag leftside.dragend>
 		 * @param {function} handler
 		 * Если arg1 это string, то arg2 это callback, который будет вызван после наступления события.
-		 * @returns {object} jQuery object.
+		 * @returns {object} angular.element object.
 		 */
 
-		$.fn.dndBind = function ( event, handler ) {
+		angular.element.prototype.dndBind = function ( event, handler ) {
 		
 			if(!this.length) return this;
 
@@ -877,8 +902,8 @@
 
 			if(!opts.length) return this;
 
-			this.each(function(){
-				var data = $(this).data();
+			forEach(this, function(element){
+				var data = $(element).data();
 
 				if(!data.dnd) data.dnd = {};
 				for(var i=0; i < opts.length; i++){
@@ -895,10 +920,9 @@
 					namespace = event[0];
 					event = event[1];
 
-					if(!data.dnd[namespace]) data.dnd[namespace] = new Dnd(this, namespace);
+					if(!data.dnd[namespace]) data.dnd[namespace] = new Dnd(element, namespace);
 					data.dnd[namespace].addListener(event, handler);
-			}
-
+				}
 			});
 
 			return this;
@@ -906,7 +930,7 @@
 
 
 		/**
-		 * @name jQuery.fn.dndUnbind
+		 * @name angular.element.dndUnbind
 		 *
 		 * @description
 		 * Аналог jQuery.fn.unbind(), только для drag and drop событий
@@ -919,10 +943,10 @@
 		 * 		Если arg1 это object, то arg2 это string которая определяет имя используемого слоя.
 		 * @param {string=} arg3
 		 * 		Если задан arg1 и arg2, то arg3 это string которая определяет имя используемого слоя
-		 * @returns {object} jQuery object.
+		 * @returns {object} angular.element object.
 		 */
 
-		$.fn.dndUnbind =  function(){
+		angular.element.dndUnbind =  function(){
 
 			/* TODO: supporting remove function */
 
@@ -943,10 +967,10 @@
 				if(typeof args[2] === 'string') namespace = args[2];
 			} else return this;
 
-			this.each(function(){
-				var data = $(this).data();
+			forEach(this, function(element){
+				var data = $(element).data();
 
-				if(!data.dnd) return this;
+				if(!data.dnd) return element;
 
 				if (clearall) data.dnd[namespace].removeListener();
 				else {
@@ -954,13 +978,12 @@
 						data.dnd[namespace].removeListener( opts[event], handler );
 					}
 				}
-
 			});
 
 			return this;
 		}
 
-	})(jQuery);
+	})();
 	
 	/* parsing like: ' a = fn1(), b = fn2()' into {a: 'fn1()', b: 'fn2()'} */
 	
@@ -999,9 +1022,9 @@
 				function dragstart(api){
 					local = {};
 
-					local.pos = $el.styleRect();
+					local.pos = $el.dndStyleRect();
 
-					var axis = api.getAxis(), offset = {}, crect = $el.clientRect();
+					var axis = api.getAxis(), offset = {}, crect = $el.dndClientRect();
 					offset.top = axis.top - crect.top;
 					offset.left = axis.left - crect.left;
 					offset.bottom = offset.top - crect.height;
@@ -1015,7 +1038,7 @@
 					if(container) {
 						api.container(container.getRect());
 						
-						local.$scrollarea = $el.getParentScrollArea();
+						local.$scrollarea = $el.dndGetParentScrollArea();
 						
 						local.$scrollarea.on('scroll',local.onscroll);
 					}
@@ -1159,7 +1182,7 @@
 	module.directive('dndResizable', function($parse){
 	
 		function createHandleElement(side){
-			return $('<div></div>').addClass('angular-dnd-resizable-handle angular-dnd-resizable-handle-' + side);
+			return angular.element('<div></div>').addClass('angular-dnd-resizable-handle angular-dnd-resizable-handle-' + side);
 		};
 		
 		function getCenterPoint(rect, scale){
@@ -1181,7 +1204,7 @@
 					maxHeight: 10000
 				};
 
-				var opts = $.extend({}, defaults, $parse(attrs.dndResizable)() || {});
+				var opts = extend({}, defaults, $parse(attrs.dndResizable)() || {});
 				
 				var dragstartCallback = $parse(opts.onstart);
 				var dragCallback = $parse(opts.ondrag);
@@ -1196,12 +1219,12 @@
 		
 						local.started = true;
 						local.$parent = $el.parent();
-						local.rads = $el.getAngle();
+						local.rads = $el.dndGetAngle();
 						local.rotateMatrix = Matrix.IDENTITY.rotate(local.rads);
 						local.inverseRotateMatrix = local.rotateMatrix.inverse();
-						local.parentRect = local.$parent.clientRect();
+						local.parentRect = local.$parent.dndClientRect();
 		
-						var axis = api.getAxis(), crect = $el.clientRect(), srect = local.rect = $el.styleRect();
+						var axis = api.getAxis(), crect = $el.dndClientRect(), srect = local.rect = $el.dndStyleRect();
 						
 					
 						local.onscroll = function(){
@@ -1212,7 +1235,7 @@
 						if(container) {
 							api.container(container.getRect());
 						
-							local.$scrollarea = $el.getParentScrollArea();
+							local.$scrollarea = $el.dndGetParentScrollArea();
 							
 							local.$scrollarea.on('scroll',local.onscroll);
 						}
@@ -1337,7 +1360,7 @@
 				
 				
 				for(var i=0; i < sides.length; i++) {
-					createHandleElement( sides[i] ).appendTo($el).dndBind( getBindings( sides[i] ) );
+					$el.append( createHandleElement( sides[i] ).dndBind( getBindings( sides[i] ) ) );
 				}
 
 			}
@@ -1357,7 +1380,7 @@
 				};
 
 
-				var opts = $.extend({}, defaults, $parse(attrs.dndRotatable)() || {});
+				var opts = extend({}, defaults, $parse(attrs.dndRotatable)() || {});
 				
 				var dragstartCallback = $parse(opts.onstart);
 				var dragCallback = $parse(opts.ondrag);
@@ -1371,7 +1394,7 @@
 					$el.css('position', cssPosition);
 				}
 				
-				var handle = $('<div class = "angular-dnd-rotatable-handle"></div>');
+				var handle = angular.element('<div class = "angular-dnd-rotatable-handle"></div>');
 				
 				$el.append(handle);
 				
@@ -1383,11 +1406,11 @@
 						
 							local = {};		
 							
-							var axis = api.getAxis(), crect = $el.clientRect();
+							var axis = api.getAxis(), crect = $el.dndClientRect();
 							
-							local.srect = $el.styleRect();
+							local.srect = $el.dndStyleRect();
 							
-							local.currAngle = $el.getAngle();
+							local.currAngle = $el.dndGetAngle();
 							local.startPoint = Point(axis);
 							
 							if(container) api.container(container.getRect());
@@ -1446,7 +1469,7 @@
 
 	module.factory('DndLasso', function () {
 
-		var local, $div = $('<div></div>').css({position: 'absolute'});//.appendTo(body);
+		var local, $div = $('<div></div>').css({position: 'absolute'}); //.appendTo(document.body);
 
 		var defaults = {
 			className: 'angular-dnd-lasso',
@@ -1459,7 +1482,7 @@
 
 			var self = this;
 
-			options = $.extend( {}, defaults, options );
+			options = extend( {}, defaults, options );
 
 			options.$el.dndBind({
 
@@ -1469,11 +1492,11 @@
 					local.start = {};
 					local.startAxis = api.getAxis();
 
-					$div.removeAttr('class style')
-						.addClass(options.className)
-						.appendTo(options.$el);
+					$div.removeAttr('class style').addClass(options.className);
 
-					var $container = $(options.$el), crect = $container.clientRect(), brect = $(body).clientRect();
+					options.$el.append( $div );
+
+					var $container = options.$el, crect = $container.dndClientRect(); //, brect = angular.element(document.body).dndClientRect();
 
 					api.container(crect);
 
@@ -1486,7 +1509,7 @@
 					$div.show();
 
 					var axis = api.getAxis();
-					var areaRect = options.$el.clientRect();
+					var areaRect = options.$el.dndClientRect();
 
 					var changeTop = axis.top - local.startAxis.top;
 					var changeLeft = axis.left - local.startAxis.left;
@@ -1521,7 +1544,9 @@
 				dragend: function(api) {
 					self.onend(local.rect);
 
-					$div.appendTo('body').hide();
+					$div.hide();
+
+					$(document.body).append( $div );
 				}
 			});
 
@@ -1676,7 +1701,7 @@
 
 		function Controller($element, $attrs, $scope){
 			var selected = false;
-			var opts = $.extend({}, defaults, $parse($attrs.dndSelectable)() || {});
+			var opts = extend({}, defaults, $parse($attrs.dndSelectable)() || {});
 
 			var selectCallback = $parse(opts.select);
 			var unselectCallback = $parse(opts.unselect);
@@ -1786,7 +1811,7 @@
 
 		function Controller( $element ){
 			this.getRect = function(){
-				return $.extend({},$element.clientRect());
+				return extend({}, $element.dndClientRect());
 			};
 			
 		}
@@ -1801,7 +1826,7 @@
 	/* RECTANGLE DIRECTIVE: */
 
 	module.directive('dndRect', function($parse){
-		var styles = ['top','right','bottom','left','width','height','transform'];
+		var styles = ['top','right','bottom','left','width','height','transform'], base = ['left','top','width','height'];
 
 		styles.has = function(val){
 			return this.indexOf(val) > -1;
@@ -1831,7 +1856,7 @@
 			}
 
 			this.get = function(){
-				return $.extend({},rect);
+				return extend({},rect);
 			}
 
 			rect = typeof rect == 'object' ? rect : {};
@@ -1845,7 +1870,7 @@
 
 			for(var key in rect) if(!styles.has(key)) delete rect[key];
 
-			var css = $element.css(['left','top','width','height']);
+			var css = $element.dndCss(base);
 
 			if(rect.top == undefined) rect.top = css.top;
 			if(rect.left == undefined) rect.left = css.left;
@@ -1899,30 +1924,29 @@
 	 */
 
 	module.directive('dndFittext', function( $timeout, $window ){
-		var $span = $('<span></span>').css({'position':'absolute','top':-10000}).appendTo("body");
+		var $span = $('<span></span>').css({'position':'absolute','top':-10000});
+
+		$(document.body).append( $span );
 
 		function encodeStr(val) {
 			return $span.text(val).html().replace(/\s/g,'&nbsp;');
 		}
 
 		function getRealSize(text, font) {
-
+		
 			$span.html( encodeStr(text) ).css(font);
-
-			var size = $span.css( ['width', 'height'] );
-
+			
 			return {
-				width: parseFloat(size.width),
-				height: parseFloat(size.height)
+				width: parseFloat($span[0].clientWidth),
+				height: parseFloat($span[0].clientHeight)
 			}
 		}
 
 		function getCurrSize($el){
-			var size = $el.css( ['width', 'height'] );
 
 			return {
-				width: parseFloat(size.width),
-				height: parseFloat(size.height)
+				width: parseFloat($el[0].clientWidth),
+				height: parseFloat($el[0].clientHeight)
 			}
 		}
 
@@ -1933,7 +1957,8 @@
 
 				function updateSize() {
 					$timeout(function(){
-						var font = $el.css(['font-size','font-family','font-weight','text-transform']), text = $el.text();
+					
+						var font = $el.dndCss(['font-size','font-family','font-weight','text-transform']), text = $el.text();
 
 						var realSize = getRealSize(text, font), currSize = getCurrSize($el);
 
@@ -1945,7 +1970,7 @@
 
 						if(min == undefined) min = 0;
 						if(max == undefined) max = Number.POSITIVE_INFINITY;
-
+						
 						var n = (kof1 < kof2 ? kof1 : kof2) * parseFloat(font['font-size']);
 
 						n = getNumFromSegment(min, n, max);
@@ -1962,4 +1987,4 @@
 	});
 
 
-})(angular, undefined, $);
+})(angular, undefined);
