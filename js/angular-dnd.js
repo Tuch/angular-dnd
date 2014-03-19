@@ -5,7 +5,6 @@
  * License: MIT
  */
 
-
 ;(function(angular, undefined){'use strict'
 
 	 /*
@@ -343,11 +342,11 @@
 	extend($.prototype, {
 
 		dndDisableSelection: function() {
-			this.on('dragstart selectstart', doFalse ).css({ '-moz-user-select':'none', '-khtml-user-select':'none', '-webkit-user-select':'none' })
+			this.on('dragstart selectstart', doFalse ).dndCss({ '-moz-user-select':'none', '-khtml-user-select':'none', '-webkit-user-select':'none' })
 		},
 
 		dndEnableSelection: function() {
-			this.off('dragstart selectstart', doFalse ).css({ '-moz-user-select':'auto', '-khtml-user-select':'auto', '-webkit-user-select':'auto' });
+			this.off('dragstart selectstart', doFalse ).dndCss({ '-moz-user-select':'auto', '-khtml-user-select':'auto', '-webkit-user-select':'auto' });
 		},
 
 		dndClientRect: function(){
@@ -355,14 +354,7 @@
 		},
 
 		dndStyleRect: function(){
-			var get = ['width','height','top','left'];
-			//var styles = this.css(get);
-			
-			var styles = {};
-			
-			for(var i=0; i<get.length; i++){
-				styles[get[i]] = this.css(get[i]);
-			}
+			var styles = this.dndCss(['width','height','top','left']);
 			
 			var width = parseFloat(styles.width);
 			var height = parseFloat(styles.height);
@@ -393,7 +385,7 @@
 
 		dndGetAngle: function (degs){
 
-			var matrix = this.css(TRANSFORM);
+			var matrix = this.dndCss(TRANSFORM);
 
 			if(matrix == 'none' || matrix == '') return 0;
 
@@ -413,6 +405,11 @@
 		
 		dndCss: (function(){
 			var setCss = function($element, obj){
+				obj = extend({}, obj);
+				for(var key in obj) {
+					if(typeof obj[key] == 'number') obj[key] = obj[key] + 'px';
+				}
+			
 				return $element.css(obj);
 			};
 			
@@ -511,9 +508,6 @@
 			this.listeners = { 'dragstart':[], 'drag':[], 'dragend':[], 'dragenter':[], 'dragover':[], 'dragleave':[], 'drop':[] };
 			this.regions = new Regions(namespace);
 			this.namespace = function(){ return namespace };
-
-			if('onmousedown' in document) this.mouse = new Mouse(this);
-			if('ontouchstart' in document) this.touch = new Touch(this);
 		}
 
 		var events = [ 'dragstart', 'drag', 'dragend', 'dragenter', 'dragover', 'dragleave', 'drop' ];
@@ -540,6 +534,10 @@
 				this.listeners[event].push( handler);
 
 				if( droppables.has(event) ) this.regions.add(this.el);
+				else if(draggables.has(event) && !this.mouse && !this.touch) {
+					if('onmousedown' in document) this.mouse = new Mouse(this);
+					if('ontouchstart' in document) this.touch = new Touch(this);
+				}
 			},
 
 			removeListener: function(event, handler){
@@ -551,7 +549,7 @@
 				}
 
 				if( droppables.has(event) && this._isEmptyListeners(droppables)) this.regions.remove(this.el);
-
+				else if(draggables.has(event) && this._isEmptyListeners(draggables)) this.destroy();
 			},
 
 			trigger: function(event, api, el){
@@ -777,6 +775,7 @@
 			},
 
 			mousedown: function (event){
+			
 				this.manipulator.begin(event);
 
 				$document.on( 'mousemove', this.mousemove );
@@ -813,9 +812,10 @@
 		Touch.prototype = {
 
 			getClientAxis: function() {
+			
 				return {
-					top: this.event.originalEvent.changedTouches[0].clientY,
-					left: this.event.originalEvent.changedTouches[0].clientX
+					top: this.event.changedTouches[0].clientY,
+					left: this.event.changedTouches[0].clientX
 				};
 			},
 			
@@ -824,6 +824,7 @@
 
 				$document.on( 'touchmove', this.touchmove );
 				$document.on( 'touchend', this.touchend );
+				
 			},
 			
 			touchmove: function(event){
@@ -1065,7 +1066,7 @@
 					var position = { top: local.pos.top + subtract.y, left: local.pos.left + subtract.x };
 
 					// если draggable элемент имеет абсолютное позиционирование, то есть возможность расчитывать его координаты в процентах.
-					// Что чаще всего намного удобнее. При относительном позиционировании функция $el.css(['top','left'])
+					// Что чаще всего намного удобнее. При относительном позиционировании функция $el.dndCss(['top','left'])
 					// не верно расчитывает значение в некоторых мобильных браузерах. В частности Safari 7.0.4.
 
 					//if(cssPosition == 'absolute') {
@@ -1074,7 +1075,7 @@
 					//}
 
 					if(rect) rect.update(position);
-					else $el.css(position);
+					else $el.dndCss(position);
 
 					dragCallback(scope, {$droptarget: api.droptarget});
 
@@ -1082,7 +1083,6 @@
 				}
 
 				function dragend(api){
-					//$el.css('pointer-events', local.cssPointer);
 					if(container) local.$scrollarea.off('scroll', local.onscroll); 
 
 					dragendCallback(scope, {$droptarget: api.droptarget});
@@ -1101,11 +1101,11 @@
 					return binding;
 				}
 
-				var cssPosition =  $el.css('position');
+				var cssPosition =  $el.dndCss('position');
 
 				if(cssPosition != 'fixed' && cssPosition != 'absolute' && cssPosition != 'relative') {
 					cssPosition = 'relative';
-					$el.css('position', cssPosition);
+					$el.dndCss('position', cssPosition);
 				}
 
 				$el.dndBind( getBindings() );
@@ -1312,7 +1312,7 @@
 						if(boundedRect.left+1 < local.startBorders.left || boundedRect.top+1 < local.startBorders.top || boundedRect.right-1 > local.startBorders.right || boundedRect.bottom-1 > local.startBorders.bottom) return;
 						
 						// если resizable элемент имеет абсолютное позиционирование, то есть возможность расчитывать его координаты в процентах.
-						// Что чаще всего намного удобнее. При относительном позиционировании функция $el.css(['top','left'])
+						// Что чаще всего намного удобнее. При относительном позиционировании функция $el.dndCss(['top','left'])
 						// не верно расчитывает значение в некоторых мобильных браузерах. В частности Safari 7.0.4.
 	
 						//if(cssPosition == 'absolute') {
@@ -1323,7 +1323,7 @@
 						//}
 						
 						if(rect) rect.update(styles);
-						else $el.css(styles);
+						else $el.dndCss(styles);
 					
 						dragCallback(scope);
 	
@@ -1349,11 +1349,11 @@
 
 				}
 				
-				var cssPosition = $el.css('position');
+				var cssPosition = $el.dndCss('position');
 
 				if(cssPosition != 'fixed' && cssPosition != 'absolute' && cssPosition != 'relative') {
 					cssPosition = 'relative';
-					$el.css('position', cssPosition);
+					$el.dndCss('position', cssPosition);
 				}
 				
 				var sides = opts.handles.replace(/\s/g,'').split(',');
@@ -1387,11 +1387,11 @@
 				var dragendCallback = $parse(opts.onend);
 				var step = opts.step ? opts.step : 5; //degs
 				
-				var cssPosition = $el.css('position');
+				var cssPosition = $el.dndCss('position');
 
 				if(cssPosition != 'fixed' && cssPosition != 'absolute' && cssPosition != 'relative') {
 					cssPosition = 'relative';
-					$el.css('position', cssPosition);
+					$el.dndCss('position', cssPosition);
 				}
 				
 				var handle = angular.element('<div class = "angular-dnd-rotatable-handle"></div>');
@@ -1439,7 +1439,7 @@
 							if(compute.left < local.borders.left-1 || compute.top < local.borders.top-1 || (compute.left+compute.width) > local.borders.right+1 || (compute.top+compute.height) > local.borders.bottom+1) return;
 		
 							if(rect) rect.update('transform', matrix.toStyle());
-							else $el.css('transform',  matrix.toStyle());
+							else $el.dndCss('transform',  matrix.toStyle());
 							
 							dragCallback(scope);
 							
@@ -1469,7 +1469,7 @@
 
 	module.factory('DndLasso', function () {
 
-		var local, $div = $('<div></div>').css({position: 'absolute'}); //.appendTo(document.body);
+		var local, $div = $('<div></div>').dndCss({position: 'absolute'}); 
 
 		var defaults = {
 			className: 'angular-dnd-lasso',
@@ -1492,11 +1492,11 @@
 					local.start = {};
 					local.startAxis = api.getAxis();
 
-					$div.removeAttr('class style').addClass(options.className);
+					$div.removeAttr('class style').removeClass('ng-hide').addClass(options.className);
 
 					options.$el.append( $div );
 
-					var $container = options.$el, crect = $container.dndClientRect(); //, brect = angular.element(document.body).dndClientRect();
+					var $container = options.$el, crect = $container.dndClientRect(); 
 
 					api.container(crect);
 
@@ -1505,8 +1505,6 @@
 				},
 
 				drag: function(api) {
-
-					$div.show();
 
 					var axis = api.getAxis();
 					var areaRect = options.$el.dndClientRect();
@@ -1536,15 +1534,16 @@
 					rect.top = rect.top+options.offsetY;
 					rect.left = rect.left+options.offsetX;
 
-					$div.css(local.rect);
+					$div.dndCss(local.rect);
 
 					self.ondrag(local.rect);
 				},
 
 				dragend: function(api) {
+				
 					self.onend(local.rect);
-
-					$div.hide();
+					
+					$div.addClass('ng-hide');
 
 					$(document.body).append( $div );
 				}
@@ -1668,7 +1667,6 @@
 
 				lasso.onend = function(rect) {
 					//rect = pxToPrct(rect, { width:$el.width(),height:$el.height() });
-					
 					callback(scope, { $rect: rect });
 					
 					scope.$apply();
@@ -1743,7 +1741,6 @@
 				b.right = b.right == undefined ? b.left + b.width : b.right;
 				a.bottom = a.bottom == undefined ? a.top + a.height : a.bottom;
 				a.right = a.right == undefined ? a.left + a.width : a.right;
-
 
 				return (
 					a.top < b.top && b.top < a.bottom && ( a.left < b.left && b.left < a.right || a.left < b.right && b.right < a.right ) ||
@@ -1901,7 +1898,7 @@
 					
 					if(css['transform']) css[TRANSFORM] = css['transform'];
 
-					$el.css(css);
+					$el.dndCss(css);
 
 			   }, true);
 
@@ -1924,7 +1921,7 @@
 	 */
 
 	module.directive('dndFittext', function( $timeout, $window ){
-		var $span = $('<span></span>').css({'position':'absolute','top':-10000});
+		var $span = $('<span></span>').dndCss({'position':'absolute','top':-10000});
 
 		$(document.body).append( $span );
 
@@ -1934,7 +1931,7 @@
 
 		function getRealSize(text, font) {
 		
-			$span.html( encodeStr(text) ).css(font);
+			$span.html( encodeStr(text) ).dndCss(font);
 			
 			return {
 				width: parseFloat($span[0].clientWidth),
@@ -1975,7 +1972,7 @@
 
 						n = getNumFromSegment(min, n, max);
 
-						$el.css('font-size', Math.floor(n)+'px');
+						$el.dndCss('font-size', Math.floor(n)+'px');
 					});
 				}
 

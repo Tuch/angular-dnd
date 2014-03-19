@@ -6,7 +6,6 @@
 
 <link rel="stylesheet" href="demo.css" />
 
-<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.js"></script>
 
 
 <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.2.10/angular.js"></script>
@@ -24,6 +23,7 @@
         var models = $scope.models = [];
 
         $scope.createRect = function(rect){
+       	// console.log(rect);
             models.push({
                 rect:rect,
                 selected: false

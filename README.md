@@ -1,4 +1,4 @@
-﻿## Angular-DND 0.1.0
+﻿## Angular-DND 0.1.1
 
 ## Особенности:
 - Не jQueryUI обертка
