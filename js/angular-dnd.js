@@ -73,20 +73,6 @@
 		return curr<min ? min : curr > max ? max : curr;
 	}
 	
-	/* EXTEND STRING PROTOTYPE BY toCamelCase */
-	
-	if(String.prototype.toCamelCase != undefined) console.warning('String.prototype.toCamelCase is defined');
-	String.prototype.toCamelCase = (function(){		
-		var SPECIAL_CHARS_REGEXP = /([\:\-\_\.]+(.))/g;
-		var MOZ_HACK_REGEXP = /^moz([A-Z])/;	
-		
-		return function toCamelCase(){
-			return this.replace(SPECIAL_CHARS_REGEXP, function(_, separator, letter, offset) {
-				 return offset ? letter.toUpperCase() : letter;
-			}).replace(MOZ_HACK_REGEXP, 'Moz$1');
-		}
-	})();	
-	
 	/* EXTEND NUMBER PROTOTYPE BY round */
 	
 	if(Number.prototype.round != undefined) console.warning('Number.prototype.round is defined');
@@ -404,33 +390,55 @@
 		},
 		
 		dndCss: (function(){
+			var SPECIAL_CHARS_REGEXP = /([\:\-\_\.]+(.))/g;
+			var MOZ_HACK_REGEXP = /^moz([A-Z])/;
+
+			function toCamelCase(string){
+				return string.replace(SPECIAL_CHARS_REGEXP, function(_, separator, letter, offset) {
+					return offset ? letter.toUpperCase() : letter;
+				}).replace(MOZ_HACK_REGEXP, 'Moz$1');
+			}
+
 			var setCss = function($element, obj){
-				obj = extend({}, obj);
+				var styles = {};
+
 				for(var key in obj) {
-					if(typeof obj[key] == 'number') obj[key] = obj[key] + 'px';
+					styles[toCamelCase(key)] = obj[key];
 				}
-			
-				return $element.css(obj);
+
+				for(var key in styles) {
+					if(typeof styles[key] == 'number') styles[key] = styles[key] + 'px';
+				}
+
+				$element.css(styles);
+
+				return $element;
 			};
 			
 			var getCss = function($element, arg){
+
+				var style = $element[0].style;
 				var computed = window.getComputedStyle( $element[0], null );
 			
-				if(typeof arg == 'string') return computed.getPropertyValue( arg );
+				if(typeof arg == 'string') {
+					if(style[arg]) return style[arg];
+					else return computed.getPropertyValue( arg );
+				}
 				
 				var ret = {};
 				
 				for(var i=0; i < arg.length; i++){
-					ret[arg[i]] = computed.getPropertyValue( arg[i] );
+					if(style[arg[i]]) ret[arg[i]] = style[ arg[i] ];
+					else ret[arg[i]] = computed.getPropertyValue( arg[i] );
 				}
 				
 				return ret;
-			}
+			};
 			
 			function css(){
 				var a = arguments;
 				
-				if( (a.length == 1) && (a[0] instanceof Array) || (typeof a[0] == 'string') ) return getCss(this, a[0]);
+				if( (a.length == 1) && ((a[0] instanceof Array) || (typeof a[0] == 'string')) ) return getCss(this, a[0]);
 				else if( (a.length == 1) && (typeof a[0] == 'object') ) return setCss(this, a[0]);
 				else if( a.length == 2 ) {
 					var obj = {};
@@ -1007,7 +1015,6 @@
 	module.directive('dndDraggable', function($timeout, $parse){
 		return {
 			require: ['?dndRect', '?dndModel', '?^dndContainer'],
-			scope: true,
 			link: function(scope, $el, attrs, ctrls){
 				var local, rect = ctrls[0], model = ctrls[1], container = ctrls[2];
 
@@ -1134,7 +1141,7 @@
 				function dragenter(api){
 					api.droptarget = model ? model.get() : model;
 					dragenterCallback(scope, { $dragtarget: api.dragtarget });
-					
+				
 					scope.$apply();
 				}
 
@@ -1921,43 +1928,51 @@
 	 */
 
 	module.directive('dndFittext', function( $timeout, $window ){
-		var $span = $('<span></span>').dndCss({'position':'absolute','top':-10000});
+		var $span = $('<span></span>').dndCss({'position':'absolute','left':-10000, 'top':-10000, 'opacity':0, 'z-index': -9999});
 
 		$(document.body).append( $span );
 
 		function encodeStr(val) {
-			return $span.text(val).html().replace(/\s/g,'&nbsp;');
+			var val = $span.text(val).html().replace(/\s+/g, ' ')
+			if($span[0].tagName == 'INPUT' || $span[0].tagName == 'TEXTAREA') val = val.replace(/\s/g,'&nbsp;');
+
+			return val;
 		}
 
 		function getRealSize(text, font) {
-		
 			$span.html( encodeStr(text) ).dndCss(font);
-			
+
+			var rect = $span[0].getBoundingClientRect();
+
 			return {
-				width: parseFloat($span[0].clientWidth),
-				height: parseFloat($span[0].clientHeight)
+				width: parseFloat(rect.width),
+				height: parseFloat(rect.height)
 			}
 		}
 
-		function getCurrSize($el){
+		function getCurrSize($el, offsetWidthPrct, offsetHeightPrct){
+			var rect = $el[0].getBoundingClientRect();
 
 			return {
-				width: parseFloat($el[0].clientWidth),
-				height: parseFloat($el[0].clientHeight)
+				width: parseFloat(rect.width)*(100-offsetWidthPrct)/100,
+				height: parseFloat(rect.height)*(100-offsetHeightPrct)/100
 			}
 		}
 
 		return {
 			restrict: 'A',
-			scope:true,
 			link: function(scope, $el, attrs) {
 
-				function updateSize() {
+				function updateSize(size) {
 					$timeout(function(){
-					
-						var font = $el.dndCss(['font-size','font-family','font-weight','text-transform']), text = $el.text();
+						var font = $el.dndCss(
+							['font-size','font-family','font-weight','text-transform','border-top','border-right','border-bottom','border-left','padding-top','padding-right','padding-bottom','padding-left']
+						), text = $el.text();
 
-						var realSize = getRealSize(text, font), currSize = getCurrSize($el);
+						var realSize = getRealSize(text, font), currSize = getCurrSize($el,0,0);
+
+						currSize.width = parseFloat(size.width);
+						currSize.height = parseFloat(size.height);
 
 						var kof1 = currSize.height / realSize.height;
 						var kof2 = currSize.width / realSize.width;
@@ -1967,13 +1982,19 @@
 
 						if(min == undefined) min = 0;
 						if(max == undefined) max = Number.POSITIVE_INFINITY;
-						
-						var n = (kof1 < kof2 ? kof1 : kof2) * parseFloat(font['font-size']);
+
+						var kof = (kof1 < kof2 ? kof1 : kof2);
+
+						//Корректировка плавности
+						kof *= 0.75;
+						if((kof > 0.95 && kof <= 1) || (kof >= 1 && kof < 1.05) ) return;
+
+						var n = kof * parseFloat(font['font-size']);
 
 						n = getNumFromSegment(min, n, max);
 
-						$el.dndCss('font-size', Math.floor(n)+'px');
-					});
+						$el.dndCss('font-size', n+'px');
+					})
 				}
 
 				scope.$watch( attrs.dndFittext, updateSize, true);

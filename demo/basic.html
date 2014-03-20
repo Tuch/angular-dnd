@@ -13,13 +13,13 @@
 
 
 
-<script type="text/javascript">
+    <script type="text/javascript">
 
-	var app = angular.module('app', ['dnd']);
+    var app = angular.module('app', ['dnd']);
 
     app.controller('controller', function($scope){
         $scope.rect = {top:'20px', left:'240px', width: '100px', height: '100px'};
-        
+
         $scope.dragstart = function(){
 	        console.log('dragstart', arguments);
         };       
@@ -82,21 +82,26 @@
 		<div class = "dnd-container">
 		
 		    <div class = "draggable" style = "position: absolute;"
-				
+				ng-style = "{'line-height': rect.height}"
 		    	dnd-draggable = "{onstart: 'dragstart()', ondrag: 'drag()', onend: 'dragend($droptarget)', ns: 'area1'}"
 		        dnd-rotatable = "{onstart: 'dragstart()', ondrag: 'drag()', onend: 'dragend()'}"
 		        dnd-resizable = "{onstart: 'dragstart()', ondrag: 'drag()', onend: 'dragend()'}"
-		    	dnd-fittext = "rect.height"
+
 		        dnd-rect = "rect"
-		       
-		        dnd-model = "dragmodel" dnd-model = "dragmodel">test
-		
-		
-		    </div>
+                dnd-fittext = "{width:rect.width, height:rect.height}"
+                dnd-model = "dragmodel">
+
+                Drag me
+
+            </div>
 		    
-		    <div class = "dropzone" ng-class = "{dropped: dropped}" dnd-droppable = "{ ondrop: 'drop($dragtarget)', onenter: 'dragenter($dragtarget)', onleave: 'dragleave($dragtarget)', onover: 'dragover($dragtarget)', ns: 'area1' }" dnd-model = "dropmodel" >
+		    <div class = "dropzone" 
+		    ng-class = "{dropped: dropped}" 
+		    dnd-droppable = "{ ondrop: 'drop($dragtarget)', onenter: 'dragenter($dragtarget)', onleave: 'dragleave($dragtarget)', onover: 'dragover($dragtarget)', ns: 'area1' }" 
+		    dnd-model = "dropmodel" >
 			    
 		    </div>
+		    
 		    <br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
 		    
 		</div>
