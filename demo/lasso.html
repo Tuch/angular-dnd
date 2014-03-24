@@ -32,10 +32,12 @@
 
         $scope.onSelect = function(model){
             model.selected = true;
+            console.log('select');
         };
 
         $scope.onUnselect = function(model){
             model.selected = false;
+            console.log('unselect');
         };
 
     });

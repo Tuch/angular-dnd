@@ -1622,15 +1622,14 @@
 
 			this.hitChecking = function(rect){
 				for(var i = 0; i < ctrls.length; i++) {
-					if(ctrls[i].hit(rect)) {
-						if(!ctrls[i].selected()) ctrls[i].select();
-					} else ctrls[i].unselect();
+					if(ctrls[i].hit(rect)) ctrls[i].select();
+					else ctrls[i].unselect();
 				}
 			};
 
 			this.hitReset = function(){
 				for(var i = 0; i < ctrls.length; i++) {
-					if(ctrls[i].selected()) ctrls[i].unselect();
+					ctrls[i].unselect();
 				};
 			};
 		}
@@ -1658,6 +1657,12 @@
 			require: 'dndLassoArea',
 			link: function(scope, $el, attrs, ctrl){
 				var callback = $parse(attrs.dndLassoArea), lasso = new DndLasso({ $el:$el });
+
+
+				//var opts = extend({}, defaults, $parse($attrs.dndLassoArea)() || {});
+
+				//var selectCallback = $parse(opts.select);
+				//var unselectCallback = $parse(opts.unselect);
 
 				ctrls.push(ctrl);
 
@@ -1710,13 +1715,14 @@
 
 			var selectCallback = $parse(opts.select);
 			var unselectCallback = $parse(opts.unselect);
-			var progressCallback = $parse(opts.progress);
 
 			this.toggle = function(){
 				selected ? this.unselect() : this.select();
 			};
 
 			this.select = function(){
+				if(selected) return;
+
 				selected = true;
 
 				selectCallback($scope);
@@ -1727,14 +1733,11 @@
 			};
 
 			this.unselect = function(){
+				if(!selected) return;
+
 				selected = false;
 
 				unselectCallback($scope);
-			};
-
-			this.progress = function(){
-
-				progressCallback($scope);
 			};
 
 			this.hit = function(a){
