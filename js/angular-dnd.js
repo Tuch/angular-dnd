@@ -645,6 +645,9 @@
 					return manipulator.target;
 				};
 
+				this.getEvent = function(){
+					return manipulator.event;
+				}
 			}
 
 			return Api;
@@ -656,6 +659,8 @@
 			
 			this.onscroll = proxy(this, this.onscroll);
 		}
+
+		var sens = 2;
 
 		Manipulator.prototype = {
 
@@ -723,6 +728,7 @@
 			},
 				
 			progress: function (event){
+
 				var self = this;
 				if(this.moving) return false;
 				this.moving = setTimeout(function(){ self.moving = undefined; }, 10);
@@ -775,22 +781,33 @@
 
 		Mouse.prototype = {
 
-			getClientAxis: function() {
+			getClientAxis: function(event,s) {
+				event = event ? event : this.event;
+				s = s != undefined ? s : sens;
+
 				return {
-					top: this.event.clientY,
-					left: this.event.clientX
+					top: event.clientY-s,
+					left: event.clientX-s
 				};
 			},
 
 			mousedown: function (event){
-			
+				this._startAxis = this.getClientAxis(event,0);
+				this._moved = false;
+
 				this.manipulator.begin(event);
 
 				$document.on( 'mousemove', this.mousemove );
 				$document.on( 'mouseup', this.mouseup );
 			},
-			
+
 			mousemove: function(event){
+				if(!this._moved) {
+					var currAxis = this.getClientAxis(event,0);
+					if( this._startAxis.top-sens >= currAxis.top || currAxis.top >= this._startAxis.top+sens || this._startAxis.left-sens >= currAxis.left || currAxis.left >= this._startAxis.left+sens ) this._moved = true;
+					else return;
+				}
+
 				this.manipulator.progress(event);
 			},
 			
@@ -819,15 +836,20 @@
 
 		Touch.prototype = {
 
-			getClientAxis: function() {
+			getClientAxis: function(event,s) {
+				event = event ? event : this.event;
+				s = s != undefined ? s : sens;
 			
 				return {
-					top: this.event.changedTouches[0].clientY,
-					left: this.event.changedTouches[0].clientX
+					top: event.changedTouches[0].clientY-s,
+					left: event.changedTouches[0].clientX-s
 				};
 			},
 			
 			touchstart: function (event){
+				this._startAxis = this.getClientAxis(event);
+				this._moved = false;
+
 				this.manipulator.begin(event);
 
 				$document.on( 'touchmove', this.touchmove );
@@ -836,6 +858,12 @@
 			},
 			
 			touchmove: function(event){
+				//if(!this._moved) {
+				//	var currAxis = this.getClientAxis(event,0);
+				//	if( this._startAxis.top-sens >= currAxis.top || currAxis.top >= this._startAxis.top+sens || this._startAxis.left-sens >= currAxis.left || currAxis.left >= this._startAxis.left+sens ) this._moved = true;
+				//	else return;
+				//}
+
 				this.manipulator.progress(event);
 			},
 			
@@ -1410,7 +1438,6 @@
 				
 					return {
 						dragstart: function(api, target){
-						
 							local = {};		
 							
 							var axis = api.getAxis(), crect = $el.dndClientRect();
@@ -1476,7 +1503,7 @@
 
 	module.factory('DndLasso', function () {
 
-		var local, $div = $('<div></div>').dndCss({position: 'absolute'}); 
+		var local, handler, $div = $('<div></div>').dndCss({position: 'absolute'});
 
 		var defaults = {
 			className: 'angular-dnd-lasso',
@@ -1484,6 +1511,20 @@
 			offsetX: -1,
 			offsetY: -1
 		};
+		
+
+
+		function Handler(){
+
+			this.getRect = function(){
+				return local.rect;
+			}
+
+			this.getClientRect = function(){
+				return $div.dndClientRect();
+			}
+			
+		}
 
 		function Lasso(options){
 
@@ -1494,8 +1535,9 @@
 			options.$el.dndBind({
 
 				dragstart: function(api) {
-					local = {};
-
+					local = {}, handler = new Handler();
+					handler.event = api.getEvent()
+						
 					local.start = {};
 					local.startAxis = api.getAxis();
 
@@ -1507,11 +1549,12 @@
 
 					api.container(crect);
 
-					self.onstart();
+					self.onstart(handler);
 
 				},
 
 				drag: function(api) {
+					handler.event = api.getEvent()
 
 					var axis = api.getAxis();
 					var areaRect = options.$el.dndClientRect();
@@ -1543,12 +1586,13 @@
 
 					$div.dndCss(local.rect);
 
-					self.ondrag(local.rect);
+					self.ondrag(handler);
 				},
 
 				dragend: function(api) {
+					handler.event = api.getEvent();
 				
-					self.onend(local.rect);
+					self.onend(handler);
 					
 					$div.addClass('ng-hide');
 
@@ -1595,16 +1639,40 @@
 			return rect;
 		}
 
-		function Controller($element, $attrs, $scope){
-			var ctrls = [], selected;
+		function Controller(){
+			var ctrls = [];
 
-
-			this.unselectAll = function(){
+			this.unselecting = function(ctrl){
 				for(var i = 0; i < ctrls.length; i++){
-					ctrls[i].unselect();
+					if(ctrls[i] != ctrl) ctrls[i].unselecting();
 				}
-			};	
-				
+			};
+
+			this.unselected = function(ctrl){
+				for(var i = 0; i < ctrls.length; i++){
+					if(ctrls[i] != ctrl) ctrls[i].unselected();
+				}
+			};
+
+			this.complete = function(){
+				for(var i = 0; i < ctrls.length; i++){
+					if(ctrls[i].isSelecting()) {
+						ctrls[i].unselecting();
+
+						if(ctrls[i].isSelected()) ctrls[i].unselected();
+						else ctrls[i].selected();
+					}
+				}
+			};
+
+			this.progress = function(rect){
+				for(var i = 0; i < ctrls.length; i++) {
+					if( ctrls[i].hit(rect)) {
+						if(!ctrls[i].isSelecting()) ctrls[i].selecting();
+					} else ctrls[i].unselecting();
+				}
+			};
+
 			this.add = function(ctrl){
 				ctrls.push(ctrl);
 			};
@@ -1620,22 +1688,19 @@
 				return false;
 			};
 
-			this.hitChecking = function(rect){
-				for(var i = 0; i < ctrls.length; i++) {
-					if(ctrls[i].hit(rect)) ctrls[i].select();
-					else ctrls[i].unselect();
+			this.selectable = function(element){
+				for(var i = 0; i < ctrls.length; i++){
+					if(ctrls[i].getElement()[0] == element) return true;
 				}
+
+				return false;
 			};
 
-			this.hitReset = function(){
-				for(var i = 0; i < ctrls.length; i++) {
-					ctrls[i].unselect();
-				};
-			};
+			this.empty = function(){
+				return !ctrls.length;
+			}
 		}
-
-
-
+		
 		var ctrls = [];
 
 		ctrls.remove = function (ctrl){
@@ -1656,45 +1721,59 @@
 			controller: Controller,
 			require: 'dndLassoArea',
 			link: function(scope, $el, attrs, ctrl){
-				var callback = $parse(attrs.dndLassoArea), lasso = new DndLasso({ $el:$el });
-
-
-				//var opts = extend({}, defaults, $parse($attrs.dndLassoArea)() || {});
-
-				//var selectCallback = $parse(opts.select);
-				//var unselectCallback = $parse(opts.unselect);
+				var callback = $parse(attrs.dndLassoArea), lasso = new DndLasso({ $el:$el }), dragged;
 
 				ctrls.push(ctrl);
 
-				lasso.onstart = function(rect) {
-					ctrl.hitReset();
+				function prepare(event){
+					if(ctrl.empty() || ctrl.selectable(event.target)) return;
+
+					ctrl.unselecting();
+
+					if(!event.metaKey && !event.ctrlKey && !event.shiftKey) ctrl.unselected();
+
 				}
 
-				lasso.ondrag = function(rect) {
-
-					ctrl.hitChecking(rect);
+				lasso.onstart = function(handler) {
+					prepare(handler.event);
 
 					scope.$apply();
 				}
 
-				lasso.onend = function(rect) {
+				lasso.ondrag = function(handler) {
+					if(ctrl.empty()) return;
+
+					//if(handler.event.metaKey || handler.event.ctrlKey || handler.event.shiftKey) altmode = true;
+
+					ctrl.progress( handler.getClientRect() );
+
+					scope.$apply();
+				}
+
+				lasso.onend = function(handler) {
+					dragged = true;
 					//rect = pxToPrct(rect, { width:$el.width(),height:$el.height() });
-					callback(scope, { $rect: rect });
+
+					ctrl.complete();
+					callback(scope, { $rect: handler.getRect() });
 					
 					scope.$apply();
 				}
 
 				$el.on('$destroy', function(){
-					ctrl.unselectAll();
 					ctrls.remove(ctrl);
 
 					scope.$apply();
 				});
 
-				$el.on('mousedown', function(event){
-					if(event.target !== $el[0]) return;
+				$el.on('click touchend', function(event){
+					if(dragged) {
+						dragged = false;
+						return;
+					}
 
-					ctrl.unselectAll();
+					prepare(event);
+
 					scope.$apply();
 				});
 			}
@@ -1710,38 +1789,76 @@
 		var defaults = {};
 
 		function Controller($element, $attrs, $scope){
-			var selected = false;
+			var selected = false, selecting = false;
 			var opts = extend({}, defaults, $parse($attrs.dndSelectable)() || {});
 
-			var selectCallback = $parse(opts.select);
-			var unselectCallback = $parse(opts.unselect);
+			var selectedCallback = $parse(opts.selected);
+			var unselectedCallback = $parse(opts.unselected);
+			var selectingCallback = $parse(opts.selecting);
+			var unselectingCallback = $parse(opts.unselecting);
 
-			this.toggle = function(){
-				selected ? this.unselect() : this.select();
+			this.getElement = function(){
+				return $element;
 			};
 
-			this.select = function(){
+			this.isSelected = function(){
+				return selected;
+			};
+
+			this.isSelecting = function(){
+				return selecting;
+			};
+
+			this.toggleSelecting = function(){
+				return selecting ? !!this.unselecting() : !this.selecting();
+			};
+
+			this.toggleSelected = function(){
+				return selected ? !!this.unselected() : !this.selected();
+			};
+
+			this.selecting = function(){
+				if(selecting) return;
+
+				selecting = true;
+
+				selectingCallback($scope);
+
+				return this;
+			};
+
+			this.unselecting = function(){
+				if(!selecting) return;
+
+				selecting = false;
+
+				unselectingCallback($scope);
+
+				return this;
+			};
+
+			this.selected = function(){
 				if(selected) return;
 
 				selected = true;
 
-				selectCallback($scope);
-			};
+				selectedCallback($scope);
 
-			this.selected = function(){
-				return selected;
+				return this;
 			};
-
-			this.unselect = function(){
+			
+			this.unselected = function(){
 				if(!selected) return;
-
+				
 				selected = false;
 
-				unselectCallback($scope);
+				unselectedCallback($scope);
+
+				return this;
 			};
 
 			this.hit = function(a){
-				var b = this.rectCtrl.get();
+				var b = this.rectCtrl.getClient();
 
 				for(var key in b) {
 					b[key] = parseFloat(b[key]);
@@ -1753,11 +1870,11 @@
 				a.right = a.right == undefined ? a.left + a.width : a.right;
 
 				return (
-					a.top < b.top && b.top < a.bottom && ( a.left < b.left && b.left < a.right || a.left < b.right && b.right < a.right ) ||
-					a.top < b.bottom && b.bottom < a.bottom && ( a.left < b.left && b.left < a.right || a.left < b.right && b.right < a.right ) ||
-					a.left > b.left && a.right < b.right && ( b.top < a.bottom && a.bottom < b.bottom ||  b.bottom > a.top && a.top > b.top || a.top <= b.top && a.bottom >= b.bottom) || 
-					a.top > b.top && a.bottom < b.bottom && ( b.left < a.right && a.right < b.right || b.right > a.left && a.left > b.left || a.left <= b.left && a.right >= b.right) || 
-					a.top > b.top && a.right < b.right && a.bottom < b.bottom && a.left > b.left
+					a.top <= b.top && b.top <= a.bottom && ( a.left <= b.left && b.left <= a.right || a.left <= b.right && b.right <= a.right ) ||
+					a.top <= b.bottom && b.bottom <= a.bottom && ( a.left <= b.left && b.left <= a.right || a.left <= b.right && b.right <= a.right ) ||
+					a.left >= b.left && a.right <= b.right && ( b.top <= a.bottom && a.bottom <= b.bottom ||  b.bottom >= a.top && a.top >= b.top || a.top <= b.top && a.bottom >= b.bottom) ||
+					a.top >= b.top && a.bottom <= b.bottom && ( b.left <= a.right && a.right <= b.right || b.right >= a.left && a.left >= b.left || a.left <= b.left && a.right >= b.right) ||
+					a.top >= b.top && a.right <= b.right && a.bottom <= b.bottom && a.left >= b.left
 				);
 			};
 		}
@@ -1767,24 +1884,41 @@
 			require: ['dndSelectable', '^dndLassoArea', 'dndRect'],
 			controller: Controller,
 			link: function(scope, $el, attrs, ctrls) {
+				var dragged = true;
 
 				ctrls[0].rectCtrl = ctrls[2];
 
 				ctrls[1].add(ctrls[0]);
 
-				$el.on("$destroy", function() {
-					handler.destroy();
-					ctrls[1].remove(ctrls[0])
-					scope.$apply();
-				});
-
-
-				$el.on('click', function(event){
-					if(!event.ctrlKey && !event.shiftKey) ctrls[1].unselectAll();
-					ctrls[0].select();
+				function ondestroy() {
+					ctrls[1].remove(ctrls[0]);
 
 					scope.$apply();
-				});
+				}
+
+				function onclick(event){
+					if(dragged) {
+						dragged = false;
+						return;
+					}
+
+					ctrls[1].unselecting();
+
+					if(!event.metaKey && !event.ctrlKey && !event.shiftKey) {
+						ctrls[1].unselected(ctrls[0]);
+						ctrls[0].selected();
+					} else ctrls[0].toggleSelected();
+
+					scope.$apply();
+				}
+
+				function ondrag(){
+					dragged = true;
+				}
+
+				$el.on('$destroy', ondestroy);
+				$el.on('click touchend', onclick);
+				$el.dndBind('drag', ondrag);
 
 			}
 		};
@@ -1864,6 +1998,10 @@
 
 			this.get = function(){
 				return extend({},rect);
+			}
+
+			this.getClient = function(){
+				return $element.dndClientRect();
 			}
 
 			rect = typeof rect == 'object' ? rect : {};

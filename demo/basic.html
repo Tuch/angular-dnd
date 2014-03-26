@@ -22,38 +22,37 @@
 
         $scope.dragstart = function(){
 	        console.log('dragstart', arguments);
-        };       
-        
+        };
+
         $scope.drag = function(){
 	        console.log('drag', arguments);
-        };       
-        
+        };
+
         $scope.dragend = function(){
 	        console.log('dragend', arguments);
-	        
+
 	        if(!arguments[0]) $scope.dropped = false;
-        };     
-        
+        };
+
         $scope.dragenter = function(){
 	        console.log('dragenter', arguments);
-        };     
-        
+        };
+
         $scope.dragover = function(){
 	        console.log('dragover', arguments);
-        };     
-        
+        };
+
         $scope.dragleave = function(){
 	        console.log('dragleave', arguments);
-        };       
-        
+        };
+
         $scope.drop = function(){
 	        console.log('drop', arguments);
 	        $scope.dropped = true;
         };
-        
+
         $scope.dragmodel = 'some dragmodel..';
         $scope.dropmodel = 'some dropmodel..';
-        
     });
 
 </script>
@@ -65,22 +64,22 @@
 <body ng-controller="controller" style = "position: relative; height:100%;">
 	<div style = "height: 100%; overflow: auto;">
 	    <div class = "menu">
-	
+
 	        <a class = "button" href = "basic.html">Basic example</a>
 	        <a class = "button" href = "lasso.html">Lasso example</a>
-	
+
 	    </div>
-	
+
 	    <div class = "title"> Basic example <br><em style = "font-size: 50%;">Draggable, Droppable, Rotatable, Resizable, Fittext...</em></div>
-	
+
 	    top: <input ng-model = 'rect.top' type="text">
 	    left: <input ng-model = 'rect.left' type="text">
 	    height: <input ng-model = 'rect.height' type="text">
 	    width: <input ng-model = 'rect.width' type="text">
 	    transform: <input ng-model = 'rect.transform' type="text">
-	    
+
 		<div class = "dnd-container">
-		
+
 		    <div class = "draggable" style = "position: absolute;"
 				ng-style = "{'line-height': rect.height}"
 		    	dnd-draggable = "{onstart: 'dragstart()', ondrag: 'drag()', onend: 'dragend($droptarget)', ns: 'area1'}"
@@ -94,18 +93,18 @@
                 Drag me
 
             </div>
-		    
-		    <div class = "dropzone" 
-		    ng-class = "{dropped: dropped}" 
-		    dnd-droppable = "{ ondrop: 'drop($dragtarget)', onenter: 'dragenter($dragtarget)', onleave: 'dragleave($dragtarget)', onover: 'dragover($dragtarget)', ns: 'area1' }" 
+
+		    <div class = "dropzone"
+		    ng-class = "{dropped: dropped}"
+		    dnd-droppable = "{ ondrop: 'drop($dragtarget)', onenter: 'dragenter($dragtarget)', onleave: 'dragleave($dragtarget)', onover: 'dragover($dragtarget)', ns: 'area1' }"
 		    dnd-model = "dropmodel" >
-			    
+
 		    </div>
-		    
+
 		    <br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
-		    
+
 		</div>
-	
+
 	</div>
 </body>
 </html>

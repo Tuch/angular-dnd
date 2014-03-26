@@ -19,28 +19,39 @@
 
 	var app = angular.module('app', ['dnd']);
 
-    app.controller('controller', function($scope){
+    app.controller('controller', function($scope, $element){
         var models = $scope.models = [];
 
         $scope.createRect = function(rect){
        	// console.log(rect);
             models.push({
                 rect:rect,
-                selected: false
+                selected: false,
+                selecting: false
             });
         };
 
-        $scope.onSelect = function(model){
+        $scope.onSelecting = function(model){
+            model.selecting = true;
+            console.log('selecting');
+        };
+
+        $scope.onUnselecting = function(model){
+            model.selecting = false;
+            console.log('unselecting');
+        };
+
+        $scope.onSelected = function(model){
             model.selected = true;
-            console.log('select');
+            console.log('selected');
         };
 
-        $scope.onUnselect = function(model){
+        $scope.onUnselected = function(model){
             model.selected = false;
-            console.log('unselect');
+            console.log('unselected');
         };
-
     });
+
 
 </script>
 
@@ -69,8 +80,8 @@
         <div class = "lasso-area-creature" 
 	        ng-repeat = "model in models" 
 	        dnd-rect = "model.rect" 
-	        ng-class = "{selected: model.selected, progress: model.progress}"
-			dnd-selectable = "{ select: 'onSelect(model)', unselect: 'onUnselect(model)' }"
+	        ng-class = "{selected: model.selected, selecting: model.selecting}"
+			dnd-selectable = "{ selecting: 'onSelecting(model)', unselecting: 'onUnselecting(model)', selected: 'onSelected(model)', unselected: 'onUnselected(model)' }"
             dnd-draggable>
         </div>
     </div>

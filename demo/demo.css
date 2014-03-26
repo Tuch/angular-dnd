@@ -105,14 +105,14 @@ input {
 
 .lasso-area-creature {
     position: absolute;
-    background: #d7ffae;
+    background: #ffff33;
     border-radius: 3px;
 }
 
 .lasso-area-creature.selected {
-    background: #f0ffe0;
+    background: #bbffbb;
 }
 
-.lasso-area-creature.progress {
-    background: #fbffe0;
+.lasso-area-creature.selecting {
+    background: #ffffbb;
 }
