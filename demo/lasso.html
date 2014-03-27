@@ -7,8 +7,8 @@
 <link rel="stylesheet" href="demo.css" />
 
 
-
-<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.2.10/angular.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.2.10/angular.js"></script>
 
 <link rel="stylesheet" href="../css/stylesheet.css" />
 <script type="text/javascript" src = "../js/angular-dnd.js"></script>
@@ -19,11 +19,10 @@
 
 	var app = angular.module('app', ['dnd']);
 
-    app.controller('controller', function($scope, $element){
+    app.controller('controller', function($scope){
         var models = $scope.models = [];
 
         $scope.createRect = function(rect){
-       	// console.log(rect);
             models.push({
                 rect:rect,
                 selected: false,
@@ -33,22 +32,22 @@
 
         $scope.onSelecting = function(model){
             model.selecting = true;
-            console.log('selecting');
+            //console.log('selecting');
         };
 
         $scope.onUnselecting = function(model){
             model.selecting = false;
-            console.log('unselecting');
+            //console.log('unselecting');
         };
 
         $scope.onSelected = function(model){
             model.selected = true;
-            console.log('selected');
+            //console.log('selected');
         };
 
         $scope.onUnselected = function(model){
             model.selected = false;
-            console.log('unselected');
+           // console.log('unselected');
         };
     });
 

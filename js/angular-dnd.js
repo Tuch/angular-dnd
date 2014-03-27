@@ -4,6 +4,10 @@
  * (c) 2014-2015 Alexander Afonin (toafonin@gmail.com, http://github.com/Tuch)
  * License: MIT
  */
+ 
+//window.onerror = function(){
+//	alert(arguments[0]);
+//}
 
 ;(function(angular, undefined){'use strict'
 
@@ -538,7 +542,6 @@
 					console.log('jquery.dnd: invalid event name - ', event);
 					return;
 				}
-
 				this.listeners[event].push( handler);
 
 				if( droppables.has(event) ) this.regions.add(this.el);
@@ -562,6 +565,7 @@
 
 			trigger: function(event, api, el){
 				for(var i=0; i < this.listeners[event].length; i++) {
+					//console.log(this.listeners[event]);
 					this.listeners[event][i].call(this.$el, api,  el);
 				}
 			},
@@ -773,7 +777,7 @@
 			this.manipulator = new Manipulator(dnd);
 			this.mousedown = proxy(this, this.mousedown);
 			this.mousemove = proxy(this, this.mousemove);
-			this.mouseup = proxy(this, this.mousetup);
+			this.mouseup = proxy(this, this.mouseup);
 			this.manipulator.getClientAxis = this.getClientAxis;
 
 			dnd.$el.on('mousedown', this.mousedown);
@@ -797,8 +801,8 @@
 
 				this.manipulator.begin(event);
 
-				$document.on( 'mousemove', this.mousemove );
-				$document.on( 'mouseup', this.mouseup );
+				$document.on('mousemove', this.mousemove );
+				$document.on('mouseup', this.mouseup );
 			},
 
 			mousemove: function(event){
@@ -811,16 +815,16 @@
 				this.manipulator.progress(event);
 			},
 			
-			mousetup: function(event){
+			mouseup: function(event){
 				this.manipulator.end(event);
 
-				$document.off(' mousemove', this.mousemove );
-				$document.off(' mouseup', this.mouseup );
+				$document.off('mousemove', this.mousemove );
+				$document.off('mouseup', this.mouseup );
 			},
 
 			destroy: function(){
 				this.dnd.$el.off('mousedown', this.mousedown);
-			}
+			},
 		};
 
 
@@ -839,7 +843,8 @@
 			getClientAxis: function(event,s) {
 				event = event ? event : this.event;
 				s = s != undefined ? s : sens;
-			
+				event = event.originalEvent ? event.originalEvent : event;
+				
 				return {
 					top: event.changedTouches[0].clientY-s,
 					left: event.changedTouches[0].clientX-s
@@ -852,17 +857,17 @@
 
 				this.manipulator.begin(event);
 
-				$document.on( 'touchmove', this.touchmove );
-				$document.on( 'touchend', this.touchend );
+				$document.on('touchmove', this.touchmove );
+				$document.on('touchend', this.touchend );
 				
 			},
 			
 			touchmove: function(event){
-				//if(!this._moved) {
-				//	var currAxis = this.getClientAxis(event,0);
-				//	if( this._startAxis.top-sens >= currAxis.top || currAxis.top >= this._startAxis.top+sens || this._startAxis.left-sens >= currAxis.left || currAxis.left >= this._startAxis.left+sens ) this._moved = true;
-				//	else return;
-				//}
+				if(!this._moved) {
+					var currAxis = this.getClientAxis(event,0);
+					if( this._startAxis.top-sens >= currAxis.top || currAxis.top >= this._startAxis.top+sens || this._startAxis.left-sens >= currAxis.left || currAxis.left >= this._startAxis.left+sens ) this._moved = true;
+					else return;
+				}
 
 				this.manipulator.progress(event);
 			},
@@ -909,7 +914,7 @@
 		
 			if(!this.length) return this;
 
-			var opts = [], events, obj, namespace;
+			var opts = [], events, obj, namespace, self = this;
 
 			if(typeof event === 'object') {
 				obj = event;
@@ -983,7 +988,7 @@
 		 * @returns {object} angular.element object.
 		 */
 
-		angular.element.dndUnbind =  function(){
+		angular.element.prototype.dndUnbind =  function(){
 
 			/* TODO: supporting remove function */
 
@@ -1084,6 +1089,7 @@
 					local.startAxis = Point(axis.left - local.startBorders.left, axis.top - local.startBorders.top);
 
 					api.dragtarget = model ? model.get() : model;
+					local.dragged = false;
 
 					dragstartCallback(scope);
 
@@ -1091,6 +1097,7 @@
 				}
 
 				function drag(api){
+					if(!local.dragged) local.dragged = true;
 				
 					var axis = api.getAxis();
 					
@@ -1120,7 +1127,7 @@
 				function dragend(api){
 					if(container) local.$scrollarea.off('scroll', local.onscroll); 
 
-					dragendCallback(scope, {$droptarget: api.droptarget});
+					dragendCallback(scope, {$droptarget: api.droptarget, $dragged: local.dragged});
 
 					scope.$apply();
 				}
@@ -1640,7 +1647,11 @@
 		}
 
 		function Controller(){
-			var ctrls = [];
+			var ctrls = [], data = {};
+
+			this.data = function(){
+				return data;
+			};
 
 			this.unselecting = function(ctrl){
 				for(var i = 0; i < ctrls.length; i++){
@@ -1725,25 +1736,8 @@
 
 				ctrls.push(ctrl);
 
-				function prepare(event){
-					if(ctrl.empty() || ctrl.selectable(event.target)) return;
-
-					ctrl.unselecting();
-
-					if(!event.metaKey && !event.ctrlKey && !event.shiftKey) ctrl.unselected();
-
-				}
-
-				lasso.onstart = function(handler) {
-					prepare(handler.event);
-
-					scope.$apply();
-				}
-
 				lasso.ondrag = function(handler) {
 					if(ctrl.empty()) return;
-
-					//if(handler.event.metaKey || handler.event.ctrlKey || handler.event.shiftKey) altmode = true;
 
 					ctrl.progress( handler.getClientRect() );
 
@@ -1751,7 +1745,6 @@
 				}
 
 				lasso.onend = function(handler) {
-					dragged = true;
 					//rect = pxToPrct(rect, { width:$el.width(),height:$el.height() });
 
 					ctrl.complete();
@@ -1766,15 +1759,17 @@
 					scope.$apply();
 				});
 
-				$el.on('click touchend', function(event){
-					if(dragged) {
-						dragged = false;
-						return;
-					}
 
-					prepare(event);
+				$el.on('mousedown touchstart', function(event){
+
+					if(ctrl.empty() || ctrl.selectable(event.target)) return;
+
+					ctrl.unselecting();
+
+					if(!event.metaKey && !event.ctrlKey && !event.shiftKey) ctrl.unselected();
 
 					scope.$apply();
+
 				});
 			}
 		};
@@ -1881,12 +1876,12 @@
 
 		return {
 			restrict: 'A',
-			require: ['dndSelectable', '^dndLassoArea', 'dndRect'],
+			require: ['dndSelectable', '^dndLassoArea', 'dndRect', '?dndDraggable'],
 			controller: Controller,
 			link: function(scope, $el, attrs, ctrls) {
-				var dragged = true;
+				var startPos, rectCtrl = ctrls[2];
 
-				ctrls[0].rectCtrl = ctrls[2];
+				ctrls[0].rectCtrl = rectCtrl;
 
 				ctrls[1].add(ctrls[0]);
 
@@ -1896,10 +1891,14 @@
 					scope.$apply();
 				}
 
-				function onclick(event){
-					if(dragged) {
-						dragged = false;
-						return;
+				function onstart(event){
+					startPos = rectCtrl.get();
+				}
+
+				function onend(event){
+					if(startPos) {
+						var currPos = rectCtrl.get();
+						if(currPos.top != startPos.top || currPos.left != startPos.left) return;
 					}
 
 					ctrls[1].unselecting();
@@ -1912,13 +1911,9 @@
 					scope.$apply();
 				}
 
-				function ondrag(){
-					dragged = true;
-				}
-
 				$el.on('$destroy', ondestroy);
-				$el.on('click touchend', onclick);
-				$el.dndBind('drag', ondrag);
+				$el.on('mousedown touchstart', onstart);
+				$el.on('mouseup touchend', onend);
 
 			}
 		};
