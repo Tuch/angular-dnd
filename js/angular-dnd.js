@@ -471,10 +471,10 @@
 	(function(){
 
 		var Regions = (function(){
-			var arr = {};
+			var list= {};
 
 			function Regions(namespace){
-				if(!arr[namespace]) arr[namespace] = [];
+				if(!list[namespace]) list[namespace] = [];
 
 				this.namespace = function(){
 					return namespace;
@@ -483,7 +483,7 @@
 
 			Regions.prototype = {
 				get: function(){
-					return arr[this.namespace()];
+					return list[this.namespace()];
 				},
 
 				remove: function(el){
@@ -500,90 +500,113 @@
 					if(this.has(el)) return;
 
 					this.get().push(el);
-				}
+				},
 
 			}
 
 			return Regions;
 		})();
+		
+		var Dnd = (function(){
 
-		var draggables = [ 'dragstart', 'drag', 'dragend' ];
-		var droppables = [ 'dragenter', 'dragover', 'dragleave', 'drop' ];
-
-		draggables.has = droppables.has = function(event){
-			return this.indexOf(event) > -1;
-		};
-
-		function Dnd(el, namespace){
-			this.el = el;
-			this.$el = $(el);
-			this.listeners = { 'dragstart':[], 'drag':[], 'dragend':[], 'dragenter':[], 'dragover':[], 'dragleave':[], 'drop':[] };
-			this.regions = new Regions(namespace);
-			this.namespace = function(){ return namespace };
-		}
-
-		var events = [ 'dragstart', 'drag', 'dragend', 'dragenter', 'dragover', 'dragleave', 'drop' ];
-
-		Dnd.prototype = {
-			_isEmptyListeners: function(event){
-				if(event instanceof Array) {
-
-					for(var i=0; i < event.length; i++ ) {
-						if(!this.isEmptyListeners(event[i])) return false;
-					}
-
-				} else if(this.listeners[event].length > 0) return false;
-
-				return true;
-			},
-
-			addListener: function(event, handler){
-				if(events.indexOf(event) == -1) {
-					console.log('jquery.dnd: invalid event name - ', event);
-					return;
-				}
-				this.listeners[event].push( handler);
-
-				if( droppables.has(event) ) this.regions.add(this.el);
-				else if(draggables.has(event) && !this.mouse && !this.touch) {
-					if('onmousedown' in document) this.mouse = new Mouse(this);
-					if('ontouchstart' in document) this.touch = new Touch(this);
-				}
-			},
-
-			removeListener: function(event, handler){
-
-				var listeners = this.listeners[event];
-
-				for(var i=0; i < listeners.length; i++) {
-					if( listeners[i] === handler ) listeners[event].splice(i,1);
-				}
-
-				if( droppables.has(event) && this._isEmptyListeners(droppables)) this.regions.remove(this.el);
-				else if(draggables.has(event) && this._isEmptyListeners(draggables)) this.destroy();
-			},
-
-			trigger: function(event, api, el){
-				for(var i=0; i < this.listeners[event].length; i++) {
-					//console.log(this.listeners[event]);
-					this.listeners[event][i].call(this.$el, api,  el);
-				}
-			},
-
-			destroy: function(){
-
-				if( this.mouse ) {
-					this.mouse.destroy();
-					delete this.mouse;
-				}
-
-				if( this.touch ) {
-					this.touch.destroy();
-					delete this.touch;
-				}
+			var events = [ 'dragstart', 'drag', 'dragend', 'dragenter', 'dragover', 'dragleave', 'drop' ];
+			var draggables = [ 'dragstart', 'drag', 'dragend' ];
+			var droppables = [ 'dragenter', 'dragover', 'dragleave', 'drop' ];
+			var handled = false;
+	
+			draggables.has = droppables.has = function(event){
+				return this.indexOf(event) > -1;
+			};
+			
+	
+			function Dnd(el, namespace){
+				this.el = el;
+				this.$el = $(el);
+				this.listeners = { 'dragstart':[], 'drag':[], 'dragend':[], 'dragenter':[], 'dragover':[], 'dragleave':[], 'drop':[] };
+				this.regions = new Regions(namespace);
+				this.namespace = function(){ return namespace };
+				this.propagation = true;
 			}
+	
+			Dnd.prototype = {
+				_isEmptyListeners: function(event){
+					if(event instanceof Array) {
+	
+						for(var i=0; i < event.length; i++ ) {
+							if(!this._isEmptyListeners(event[i])) return false;
+						}
+	
+					} else if(this.listeners[event].length > 0) return false;
+	
+					return true;
+				},
+	
+				addListener: function(event, handler){
+					if(events.indexOf(event) == -1) {
+						console.log('jquery.dnd: invalid event name - ', event);
+						return;
+					}
+					this.listeners[event].push( handler);
+	
+					if( droppables.has(event) ) this.regions.add(this.el);
+					else if(draggables.has(event) && !this.mouse && !this.touch) {
+						if('onmousedown' in document) this.mouse = new Mouse(this);
+						if('ontouchstart' in document) this.touch = new Touch(this);
+					}
+				},
+	
+				removeListener: function(event, handler){
+				
+					var args = arguments;
+					
+					if(args.length === 0) for( var key in this.listeners ) this.listeners[key].length = 0;
+					else if(args.length === 1) this.listeners[event].length = 0;
+					else {
+						var listeners = this.listeners[event];
+					
+						for(var i=0; i < listeners.length; i++) {
+							if( listeners[i] === handler ) listeners[event].splice(i,1);
+						} 
+						
+					} 
+	
+					if( this._isEmptyListeners(droppables) ) this.regions.remove(this.el);
+					else if( this._isEmptyListeners(draggables)) this.destroy();
+					
+				},
+	
+				trigger: function(event, api, el){
+					for(var i=0; i < this.listeners[event].length; i++) {
+						this.listeners[event][i].call(this.$el, api,  el);
+					}
+				},
+	
+				destroy: function(){
+	
+					if( this.mouse ) {
+						this.mouse.destroy();
+						delete this.mouse;
+					}
+	
+					if( this.touch ) {
+						this.touch.destroy();
+						delete this.touch;
+					}
+				},
+				
+				setHandledState: function(state){
+					handled = state;
+				},
+				
+				getHandledState: function(){
+					return handled;
+				}
+				
+			};
 
-		};
+		
+			return Dnd;
+		})();
 
 		var Api = (function(){
 
@@ -720,15 +743,13 @@
 			},
 			
 			begin: function (event){
+				event.preventDefault();
+
 				this.event = event;
 
 				this.started = false;
 
 				angular.element(document.body).dndDisableSelection();
-
-				event.preventDefault();
-				
-				event.stopPropagation();
 			},
 				
 			progress: function (event){
@@ -796,10 +817,14 @@
 			},
 
 			mousedown: function (event){
+				if( this.manipulator.dnd.getHandledState() ) return;
+								
+				this.manipulator.dnd.setHandledState(true);
+			
+				this.manipulator.begin(event)
+			
 				this._startAxis = this.getClientAxis(event,0);
 				this._moved = false;
-
-				this.manipulator.begin(event);
 
 				$document.on('mousemove', this.mousemove );
 				$document.on('mouseup', this.mouseup );
@@ -816,6 +841,8 @@
 			},
 			
 			mouseup: function(event){
+				this.manipulator.dnd.setHandledState(false);
+				
 				this.manipulator.end(event);
 
 				$document.off('mousemove', this.mousemove );
@@ -852,6 +879,10 @@
 			},
 			
 			touchstart: function (event){
+				if( this.manipulator.dnd.getHandledState() ) return;
+				
+				this.manipulator.dnd.setHandledState(true);
+						
 				this._startAxis = this.getClientAxis(event);
 				this._moved = false;
 
@@ -872,7 +903,7 @@
 				this.manipulator.progress(event);
 			},
 			
-			touchend: function(event){
+			touchend1: function(event){
 				this.manipulator.end(event);
 
 				$document.off('touchmove', this.touchmove );
@@ -931,7 +962,7 @@
 				}
 
 			} else if(typeof event === 'string' && typeof handler === 'function') {
-				events = event.replace(/\s+/g, ' ').split(' ');
+				events = event.trim().replace(/\s+/g, ' ').split(' ');
 
 				for(var i=0; i < events.length; i++) {
 					opts.push({
@@ -976,7 +1007,6 @@
 		 *
 		 * @description
 		 * Аналог jQuery.fn.unbind(), только для drag and drop событий
-		 * !!Функция не работает!!
 		 *
 		 * @param {(object=|string=)} arg1 Если не object и не string, то удаляются все обработчики с каждого слоя
 		 * 		Если object, то будут удалены callbacks события которые заданы в виде ключа и
@@ -989,36 +1019,78 @@
 		 */
 
 		angular.element.prototype.dndUnbind =  function(){
-
-			/* TODO: supporting remove function */
+			
+			var args = arguments, events = [], default_ns = 'common';
 
 			if(!this.length) return this;
-
-			var args = arguments, opts = {}, namespace = 'common', clearall = false;
-
-			if(args.length === 0){
-				clearall = true;
-			} else if(typeof args[0] === 'object') {
-				opts = args[0];
-				if(typeof args[1] === 'string') namespace = args[1];
-			} else if(typeof args[0] === 'string'){
-				namespace = args[0];
-				clearall = true;
-			} else if(args.length > 1) {
-				opts[ args[0] ] = args[1];
-				if(typeof args[2] === 'string') namespace = args[2];
-			} else return this;
+			
+			if(typeof args[0] == 'string') {
+				args[0] = args[0].trim().replace(/\s+/g, ' ').split(' ');
+			
+				if(typeof args[1] == 'function') {
+					
+					for(var i = 0; i < args[0].length; i++){
+						events.push({
+							event: args[0][i],
+							handler: args[1]
+						});
+					}
+					
+				} else {
+					for(var i = 0; i < args[0].length; i++){
+						events.push({
+							event: args[0][i]
+						});
+					}
+				}
+				
+			} else if( typeof args[0] == 'object') {
+				
+				for(var key in args[0]){
+					if(args[0].hasOwnProperty(key)) {
+						
+						events.push({
+							event: key.trim(),
+							handler: args[0][key]
+						});
+						
+					}
+				}
+				
+			} else if(args.length !== 0) return this;
 
 			forEach(this, function(element){
 				var data = $(element).data();
 
-				if(!data.dnd) return element;
-
-				if (clearall) data.dnd[namespace].removeListener();
-				else {
-					for(var event in opts) {
-						data.dnd[namespace].removeListener( opts[event], handler );
+				if(!data.dnd) return;
+				
+				if (args.length === 0) {
+				
+					for(var key in data.dnd){
+						data.dnd[key].removeListener();
 					}
+					
+				} else {
+				
+					for(var i = 0; i < events.length; i++) {
+						var obj = events[i];
+						
+						obj.event = event.split('.');
+						
+						if(obj.event[1] == undefined) {
+							obj.event[1] = obj.event[0];
+							obj.event[0] = default_ns;
+						}
+						
+						if(obj.event[0] == '*') {
+							for(var key in data.dnd){
+								data.dnd[key].removeListener( obj.event[1] );
+							}
+							
+						} else data.dnd[ obj.event[0] ].removeListener( obj.event[1], obj.handler );
+						
+					}
+					
 				}
 			});
 
@@ -1607,13 +1679,15 @@
 				}
 			});
 
-
+			this.destroy = function(){
+				options.$el.dndUnbind();
+			};
 		}
 
 		Lasso.prototype = {
 			onstart: function(){},
 			ondrag: function(){},
-			onend: function(){}
+			onend: function(){},
 		}
 
 		return Lasso;
@@ -1621,30 +1695,9 @@
 
 
 
-
-
 	/* LASSO AREA DIRECTIVE: */
 
 	module.directive('dndLassoArea', function(DndLasso, $parse){
-
-		var styles = {
-			'top':'height',
-			'right':'width',
-			'bottom':'height',
-			'left':'width',
-			'width':'width',
-			'height':'height'
-		};
-
-		function pxToPrct(rect, parentsize){
-			for(var key in styles){
-				var side = styles[key];
-
-				if(rect[key]) rect[key] = parseFloat(rect[key]) / parentsize[side] * 100 + '%';
-			}
-
-			return rect;
-		}
 
 		function Controller(){
 			var ctrls = [], data = {};
@@ -1745,7 +1798,6 @@
 				}
 
 				lasso.onend = function(handler) {
-					//rect = pxToPrct(rect, { width:$el.width(),height:$el.height() });
 
 					ctrl.complete();
 					callback(scope, { $rect: handler.getRect() });
@@ -1758,7 +1810,6 @@
 
 					scope.$apply();
 				});
-
 
 				$el.on('mousedown touchstart', function(event){
 
