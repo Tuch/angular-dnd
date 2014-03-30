@@ -895,7 +895,7 @@
 			
 			touchmove: function(event){
 				if(!this._moved) {
-					var currAxis = this.getClientAxis(event,0);
+					var currAxis = this.getClientAxis(event, 0);
 					if( this._startAxis.top-sens >= currAxis.top || currAxis.top >= this._startAxis.top+sens || this._startAxis.left-sens >= currAxis.left || currAxis.left >= this._startAxis.left+sens ) this._moved = true;
 					else return;
 				}
@@ -903,7 +903,9 @@
 				this.manipulator.progress(event);
 			},
 			
-			touchend1: function(event){
+			touchend: function(event){
+				this.manipulator.dnd.setHandledState(false);
+				
 				this.manipulator.end(event);
 
 				$document.off('touchmove', this.touchmove );
@@ -1426,7 +1428,7 @@
 						if(boundedRect.left+1 < local.startBorders.left || boundedRect.top+1 < local.startBorders.top || boundedRect.right-1 > local.startBorders.right || boundedRect.bottom-1 > local.startBorders.bottom) return;
 						
 						// если resizable элемент имеет абсолютное позиционирование, то есть возможность расчитывать его координаты в процентах.
-						// Что чаще всего намного удобнее. При относительном позиционировании функция $el.dndCss(['top','left'])
+						// Что чаще всего намного удобнее. При относительном позиционировании функция $el.css(['top','left'])
 						// не верно расчитывает значение в некоторых мобильных браузерах. В частности Safari 7.0.4.
 	
 						//if(cssPosition == 'absolute') {
@@ -1720,6 +1722,7 @@
 
 			this.complete = function(){
 				for(var i = 0; i < ctrls.length; i++){
+				
 					if(ctrls[i].isSelecting()) {
 						ctrls[i].unselecting();
 
@@ -1754,7 +1757,7 @@
 
 			this.selectable = function(element){
 				for(var i = 0; i < ctrls.length; i++){
-					if(ctrls[i].getElement()[0] == element) return true;
+					if(ctrls[i].getElement()[0] == element) return ctrls[i];
 				}
 
 				return false;
@@ -1785,11 +1788,16 @@
 			controller: Controller,
 			require: 'dndLassoArea',
 			link: function(scope, $el, attrs, ctrl){
-				var callback = $parse(attrs.dndLassoArea), lasso = new DndLasso({ $el:$el }), dragged;
+				var callback = $parse(attrs.dndLassoArea), lasso = new DndLasso({ $el:$el }), dragged, initiatedCtrl;
 
 				ctrls.push(ctrl);
 
+				lasso.onstart = function(handler) {
+					dragged = true;
+				}
+				
 				lasso.ondrag = function(handler) {
+
 					if(ctrl.empty()) return;
 
 					ctrl.progress( handler.getClientRect() );
@@ -1798,29 +1806,46 @@
 				}
 
 				lasso.onend = function(handler) {
-
-					ctrl.complete();
+					if(!ctrl.empty()) ctrl.complete();
+					
 					callback(scope, { $rect: handler.getRect() });
 					
 					scope.$apply();
 				}
 
-				$el.on('$destroy', function(){
-					ctrls.remove(ctrl);
-
-					scope.$apply();
-				});
-
 				$el.on('mousedown touchstart', function(event){
 
-					if(ctrl.empty() || ctrl.selectable(event.target)) return;
+					if(ctrl.empty()) return;
 
 					ctrl.unselecting();
 
 					if(!event.metaKey && !event.ctrlKey && !event.shiftKey) ctrl.unselected();
+					
+					initiatedCtrl = ctrl.selectable(event.target);
+						
+					if(initiatedCtrl) initiatedCtrl.selecting();
 
 					scope.$apply();
 
+				});
+				
+				$el.on('mouseup touchend', function(event){
+					if(ctrl.empty()) return;
+					
+					if(!dragged && initiatedCtrl && initiatedCtrl === ctrl.selectable(event.target)) {
+					
+						initiatedCtrl.unselecting().toggleSelected();
+						
+						callback(scope, { $rect: false });
+						
+						scope.$apply();
+					} else dragged = false;
+				});
+
+				$el.on('$destroy', function(){
+					ctrls.remove(ctrl);
+
+					scope.$apply();
 				});
 			}
 		};
@@ -1885,7 +1910,7 @@
 
 			this.selected = function(){
 				if(selected) return;
-
+				
 				selected = true;
 
 				selectedCallback($scope);
@@ -1895,7 +1920,7 @@
 			
 			this.unselected = function(){
 				if(!selected) return;
-				
+
 				selected = false;
 
 				unselectedCallback($scope);
@@ -1942,29 +1967,7 @@
 					scope.$apply();
 				}
 
-				function onstart(event){
-					startPos = rectCtrl.get();
-				}
-
-				function onend(event){
-					if(startPos) {
-						var currPos = rectCtrl.get();
-						if(currPos.top != startPos.top || currPos.left != startPos.left) return;
-					}
-
-					ctrls[1].unselecting();
-
-					if(!event.metaKey && !event.ctrlKey && !event.shiftKey) {
-						ctrls[1].unselected(ctrls[0]);
-						ctrls[0].selected();
-					} else ctrls[0].toggleSelected();
-
-					scope.$apply();
-				}
-
 				$el.on('$destroy', ondestroy);
-				$el.on('mousedown touchstart', onstart);
-				$el.on('mouseup touchend', onend);
 
 			}
 		};
