@@ -4,10 +4,6 @@
  * (c) 2014-2015 Alexander Afonin (toafonin@gmail.com, http://github.com/Tuch)
  * License: MIT
  */
- 
-//window.onerror = function(){
-//	alert(arguments[0]);
-//}
 
 ;(function(angular, undefined){'use strict'
 
