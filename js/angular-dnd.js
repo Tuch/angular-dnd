@@ -352,21 +352,84 @@
 		},
 
 		dndGetParentScrollArea: function(){
-			var ret, parent = this.parent()[0], parents = [];
+			var ret, parents = this.dndParents(), scrollX, clientX, scrollY, clientY, paddingX, paddingY, paddings;
 
-			while(parent){
-				parents.push(parent);
-				parent = parent.parentElement;
-			}
+			forEach(parents, function(element) {
 
-			forEach($(parents), function(element) {
-				if(element.scrollHeight !== element.clientHeight) {
+				paddings = $(element).dndCss(['padding-top', 'padding-right', 'padding-bottom', 'padding-left']);
+
+				scrollX = element.scrollWidth;
+				clientX = element.clientWidth;
+				scrollY = element.scrollHeight;
+				clientY = element.clientHeight;
+
+				paddingY = parseFloat(paddings['padding-top']) + parseFloat(paddings['padding-bottom']);
+				paddingX = parseFloat(paddings['padding-left']) + parseFloat(paddings['padding-right']);
+
+				if( scrollX - paddingX !== clientX || scrollY - paddingY !== clientY ) {
 					ret = element;
 					return false;
 				}
 			});
 
 			return $(ret);
+		},
+
+		dndParents: function(){
+			var parent = this[0].parentElement, ret = [];
+
+			while(parent){
+				ret.push(parent);
+				parent = parent.parentElement;
+			}
+
+			return $(ret);
+		},
+
+		/* experemental: */
+
+		dndConverToAbsolute: function(){
+
+			forEach(this, function(element){
+				var $element = $(element);
+				var parents = $element.dndParents(), container = document.body;
+
+				forEach(parents, function(element){
+					var position = $(element).dndCss('position');
+
+					if(position == 'absolute' || position == 'relative' || position == 'fixed') {
+						container = element;
+						return false;
+					}
+				});
+
+				var transform1 = $(container).dndCss(TRANSFORM);
+				var transform2 = $element.dndCss(TRANSFORM);
+
+				var styled1 = !!container.style[TRANSFORM];
+				var styled2 = !!element.style[TRANSFORM];
+
+				$(container).dndCss(TRANSFORM, '');
+				$element.dndCss(TRANSFORM, '');
+
+				var client1 = container.getBoundingClientRect();
+				var client2 = element.getBoundingClientRect();
+
+				container.style[TRANSFORM] = styled1 ? transform1 : '';
+				element.style[TRANSFORM] = styled2 ? transform2 : '';
+
+				var styles = {
+					top: client2.top - client1.top + 'px',
+					left: client2.left - client1.left + 'px',
+					width: client2.width + 'px',
+					height: client2.height + 'px',
+					position: 'absolute'
+				};
+
+				$element.dndCss(styles);
+			});
+
+			return this;
 		},
 
 		dndGetAngle: function (degs){
@@ -416,22 +479,23 @@
 			};
 			
 			var getCss = function($element, arg){
+				var ret = {};
+
+				if(!$element[0]) return undefined;
 
 				var style = $element[0].style;
 				var computed = window.getComputedStyle( $element[0], null );
-			
+
 				if(typeof arg == 'string') {
 					if(style[arg]) return style[arg];
 					else return computed.getPropertyValue( arg );
 				}
-				
-				var ret = {};
-				
+
 				for(var i=0; i < arg.length; i++){
 					if(style[arg[i]]) ret[arg[i]] = style[ arg[i] ];
 					else ret[arg[i]] = computed.getPropertyValue( arg[i] );
 				}
-				
+
 				return ret;
 			};
 			
@@ -1946,14 +2010,24 @@
 			};
 		}
 
+		function LikeRectCtrl($element){
+			this.$element = $element;
+		}
+
+		LikeRectCtrl.prototype = {
+			getClient: function(){
+				return this.$element.dndClientRect();
+			}
+		};
+
 		return {
 			restrict: 'A',
-			require: ['dndSelectable', '^dndLassoArea', 'dndRect', '?dndDraggable'],
+			require: ['dndSelectable', '^dndLassoArea', '?dndRect', '?dndDraggable'],
 			controller: Controller,
 			link: function(scope, $el, attrs, ctrls) {
-				var startPos, rectCtrl = ctrls[2];
+				var rectCtrl = ctrls[2];
 
-				ctrls[0].rectCtrl = rectCtrl;
+				ctrls[0].rectCtrl = rectCtrl ? rectCtrl : new LikeRectCtrl($el);
 
 				ctrls[1].add(ctrls[0]);
 
@@ -2019,7 +2093,6 @@
 		}
 
 		function Controller( $scope, $attrs, $element ){
-
 			var getter = $parse($attrs.dndRect), setter = getter.assign, rect = getter($scope);
 
 			this.update = function(prop, value) {
@@ -2084,16 +2157,16 @@
 
 					for(var val, i=0; i < styles.length; i++ ){
 						val = styles[i];
-	
+
 						if(n[val] == undefined && o[val] != undefined) css[val] = '';
 						else if(n[val] != undefined) css[val] = n[val];
 					}
-					
+
 					if(css['transform']) css[TRANSFORM] = css['transform'];
 
 					$el.dndCss(css);
 
-			   }, true);
+			    }, true);
 
 			}
 		};
