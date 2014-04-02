@@ -1,11 +1,11 @@
 
 /**
- * @license AngularJS-DND v0.1.1
+ * @license AngularJS-DND v0.1.2
  * (c) 2014-2015 Alexander Afonin (toafonin@gmail.com, http://github.com/Tuch)
  * License: MIT
  */
 
-;(function(angular, undefined){'use strict'
+;(function(angular, undefined, window, document){'use strict'
 
 	 /*
 
@@ -43,6 +43,7 @@
 			TRANSFORM = 'transform';
 			TRANSFORMORIGIN = 'transform-origin';
 		};
+
 	})();
 
 
@@ -2086,7 +2087,7 @@
 	/* RECTANGLE DIRECTIVE: */
 
 	module.directive('dndRect', function($parse){
-		var styles = ['top','right','bottom','left','width','height','transform'], base = ['left','top','width','height'];
+		var styles = ['top','left','width','height','transform'];
 
 		styles.has = function(val){
 			return this.indexOf(val) > -1;
@@ -2133,12 +2134,13 @@
 
 			for(var key in rect) if(!styles.has(key)) delete rect[key];
 
-			var css = $element.dndCss(base);
+			var css = $element.dndCss(['top','left','width','height',TRANSFORM]);
 
 			if(rect.top == undefined) rect.top = css.top;
 			if(rect.left == undefined) rect.left = css.left;
 			if(rect.width == undefined) rect.width = css.width;
 			if(rect.height == undefined) rect.height = css.height;
+			if(rect.transform == undefined) rect.transform = css[TRANSFORM] == 'none' ? 'matrix(1, 0, 0, 1, 0, 0)' : css[TRANSFORM];
 
 			this.update(rect);
 		}
@@ -2162,7 +2164,7 @@
 						else if(n[val] != undefined) css[val] = n[val];
 					}
 
-					if(css['transform']) css[TRANSFORM] = css['transform'];
+					if(css.transform) css[TRANSFORM] = css.transform;
 
 					$el.dndCss(css);
 
@@ -2264,4 +2266,4 @@
 	});
 
 
-})(angular, undefined);
+})(angular, undefined, window, document);
