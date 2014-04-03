@@ -1855,10 +1855,27 @@
 
 				lasso.onstart = function(handler) {
 					dragged = true;
+
+					ctrl.unselecting();
+
+					//if(!event.metaKey && !event.ctrlKey && !event.shiftKey) ctrl.unselected();
+
+					if(!event.metaKey && !event.ctrlKey && !event.shiftKey) {
+						if(initiatedCtrl && initiatedCtrl === ctrl.selectable(event.target)) {
+							ctrl.unselected(initiatedCtrl);
+							initiatedCtrl.selecting();
+						} else ctrl.unselected();
+
+						//initiatedCtrl.selected();
+
+					} //else initiatedCtrl.toggleSelected();
+
+					if(initiatedCtrl)
+
+					scope.$apply();
 				}
 				
 				lasso.ondrag = function(handler) {
-
 					if(ctrl.empty()) return;
 
 					ctrl.progress( handler.getClientRect() );
@@ -1868,6 +1885,8 @@
 
 				lasso.onend = function(handler) {
 					if(!ctrl.empty()) ctrl.complete();
+
+					ctrl.unselecting();
 					
 					callback(scope, { $rect: handler.getRect() });
 					
@@ -1875,32 +1894,34 @@
 				}
 
 				$el.on('mousedown touchstart', function(event){
-
 					if(ctrl.empty()) return;
-
-					ctrl.unselecting();
-
-					if(!event.metaKey && !event.ctrlKey && !event.shiftKey) ctrl.unselected();
 					
 					initiatedCtrl = ctrl.selectable(event.target);
-						
-					if(initiatedCtrl) initiatedCtrl.selecting();
 
 					scope.$apply();
 
 				});
+
+				function onclick(event){
+					if(!event.metaKey && !event.ctrlKey && !event.shiftKey) {
+
+						if(initiatedCtrl && initiatedCtrl === ctrl.selectable(event.target)) {
+							ctrl.unselected(initiatedCtrl);
+							initiatedCtrl.selected();
+						} else ctrl.unselected();
+
+					} else initiatedCtrl.toggleSelected();
+
+					callback(scope, { $rect: false });
+
+					scope.$apply();
+				}
 				
 				$el.on('mouseup touchend', function(event){
 					if(ctrl.empty()) return;
-					
-					if(!dragged && initiatedCtrl && initiatedCtrl === ctrl.selectable(event.target)) {
-					
-						initiatedCtrl.unselecting().toggleSelected();
-						
-						callback(scope, { $rect: false });
-						
-						scope.$apply();
-					} else dragged = false;
+
+					if(dragged) dragged = false;
+					else onclick(event);
 				});
 
 				$el.on('$destroy', function(){
@@ -1921,70 +1942,64 @@
 		var defaults = {};
 
 		function Controller($element, $attrs, $scope){
-			var selected = false, selecting = false;
+			$scope.$selected = false, $scope.$selecting = false;
 			var opts = extend({}, defaults, $parse($attrs.dndSelectable)() || {});
 
-			var selectedCallback = $parse(opts.selected);
-			var unselectedCallback = $parse(opts.unselected);
-			var selectingCallback = $parse(opts.selecting);
-			var unselectingCallback = $parse(opts.unselecting);
+			var changeSelectedCallback = $parse(opts.onChangeSelected);
+			var changeSelectingCallback = $parse(opts.onChangeSelecting);
 
 			this.getElement = function(){
 				return $element;
 			};
 
 			this.isSelected = function(){
-				return selected;
+				return $scope.$selected;
 			};
 
 			this.isSelecting = function(){
-				return selecting;
+				return $scope.$selecting;
 			};
 
 			this.toggleSelecting = function(){
-				return selecting ? !!this.unselecting() : !this.selecting();
+				return this.isSelecting() ? !!this.unselecting() : !this.selecting();
 			};
 
 			this.toggleSelected = function(){
-				return selected ? !!this.unselected() : !this.selected();
+				return this.isSelected() ? !!this.unselected() : !this.selected();
 			};
 
 			this.selecting = function(){
-				if(selecting) return;
+				if($scope.$selecting) return this;
 
-				selecting = true;
-
-				selectingCallback($scope);
+				$scope.$selecting = true;
+				if( changeSelectingCallback($scope) === false ) $scope.$selecting = false;
 
 				return this;
 			};
 
 			this.unselecting = function(){
-				if(!selecting) return;
+				if(!$scope.$selecting) return this;
 
-				selecting = false;
-
-				unselectingCallback($scope);
+				$scope.$selecting = false;
+				if( changeSelectingCallback($scope) === false ) $scope.$selecting = true;
 
 				return this;
 			};
 
 			this.selected = function(){
-				if(selected) return;
-				
-				selected = true;
+				if($scope.$selected) return this;
 
-				selectedCallback($scope);
+				$scope.$selected = true;
+				if( changeSelectedCallback($scope) === false ) $scope.$selected = false;
 
 				return this;
 			};
 			
 			this.unselected = function(){
-				if(!selected) return;
+				if(!$scope.$selected) return this;
 
-				selected = false;
-
-				unselectedCallback($scope);
+				$scope.$selected = false;
+				if( changeSelectedCallback($scope) === false ) $scope.$selected = true;
 
 				return this;
 			};
@@ -2025,6 +2040,7 @@
 			restrict: 'A',
 			require: ['dndSelectable', '^dndLassoArea', '?dndRect', '?dndDraggable'],
 			controller: Controller,
+			scope: true,
 			link: function(scope, $el, attrs, ctrls) {
 				var rectCtrl = ctrls[2];
 
