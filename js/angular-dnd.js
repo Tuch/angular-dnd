@@ -1971,8 +1971,7 @@
 			this.selecting = function(){
 				if($scope.$selecting) return this;
 
-				$scope.$selecting = true;
-				if( changeSelectingCallback($scope) === false ) $scope.$selecting = false;
+				if( changeSelectingCallback($scope, {$selecting: true}) !== false ) $scope.$selecting = true;
 
 				return this;
 			};
@@ -1980,8 +1979,7 @@
 			this.unselecting = function(){
 				if(!$scope.$selecting) return this;
 
-				$scope.$selecting = false;
-				if( changeSelectingCallback($scope) === false ) $scope.$selecting = true;
+				if( changeSelectingCallback($scope, {$selecting: false}) !== false ) $scope.$selecting = false;
 
 				return this;
 			};
@@ -1989,8 +1987,7 @@
 			this.selected = function(){
 				if($scope.$selected) return this;
 
-				$scope.$selected = true;
-				if( changeSelectedCallback($scope) === false ) $scope.$selected = false;
+				if( changeSelectedCallback($scope, {$selected: true}) !== false ) $scope.$selected = true;
 
 				return this;
 			};
@@ -1998,8 +1995,7 @@
 			this.unselected = function(){
 				if(!$scope.$selected) return this;
 
-				$scope.$selected = false;
-				if( changeSelectedCallback($scope) === false ) $scope.$selected = true;
+				if( changeSelectedCallback($scope, {$selected: false}) !== false ) $scope.$selected = false;
 
 				return this;
 			};
