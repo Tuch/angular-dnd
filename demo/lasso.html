@@ -29,52 +29,16 @@
             });
         };
 
-        $scope.onSelecting = function(model){
-            model.selecting = true;
-            //console.log('selecting');
+        $scope.onSelecting = function(state, model){
+            console.log('selecting:',state);
+            model.selecting = state;
         };
 
-        $scope.onUnselecting = function(model){
-            model.selecting = false;
-            //console.log('unselecting');
-        };
-
-        $scope.onSelected = function(model){
-            model.selected = true;
-            //console.log('selected');
-        };
-
-        $scope.onUnselected = function(model){
-            model.selected = false;
-           // console.log('unselected');
+        $scope.onSelected = function(state, model){
+            console.log('selected:',state);
+            model.selected = state;
         };
     });
-
-   // (function(){
-    //    setTimeout(function(){
-
-    //        var a = document.querySelectorAll('.lasso-area');
-
-    //        angular.element(a).on('click', function(){
-               // debugger
-                //console.log('click lasso');
-
-     //       })
-//
-      //      angular.element.prototype.click = function(){
-               // console.log('new click');
-
-       //     }
-
-       //     console.log('binded');
-
-       // },3000)
-
-
-
-
-  //  })()
-
 
 </script>
 
@@ -93,7 +57,7 @@
 
     <div class = "title"> Some lasso examples </div>
 
-    <div class = "lasso-area" dnd-lasso-area = "createRect($rect)" dnd-rect = "test123">
+    <div class = "lasso-area" dnd-lasso-area = "{onend: 'createRect($rect)'}" dnd-rect = "test123">
         <div class = "article"> Creating lasso </div>
 
     </div>
@@ -103,9 +67,9 @@
         <div class = "lasso-area-creature" 
 	        ng-repeat = "model in models" 
 	        dnd-rect = "model.rect" 
-	        ng-class = "{selected: model.selected, selecting: model.selecting}"
-			dnd-selectable = "{ selecting: 'onSelecting(model)', unselecting: 'onUnselecting(model)', selected: 'onSelected(model)', unselected: 'onUnselected(model)' }"
-            dnd-draggable>
+	        ng-class = "{selected: $selected, selecting: $selecting}"
+			dnd-selectable = "{ selecting: 'onSelecting($state, model)', selected: 'onSelected($state, model)' }"
+            dnd-draggable1>
         </div>
     </div>
 

@@ -1769,38 +1769,6 @@
 				return data;
 			};
 
-			this.unselecting = function(ctrl){
-				for(var i = 0; i < ctrls.length; i++){
-					if(ctrls[i] != ctrl) ctrls[i].unselecting();
-				}
-			};
-
-			this.unselected = function(ctrl){
-				for(var i = 0; i < ctrls.length; i++){
-					if(ctrls[i] != ctrl) ctrls[i].unselected();
-				}
-			};
-
-			this.complete = function(){
-				for(var i = 0; i < ctrls.length; i++){
-				
-					if(ctrls[i].isSelecting()) {
-						ctrls[i].unselecting();
-
-						if(ctrls[i].isSelected()) ctrls[i].unselected();
-						else ctrls[i].selected();
-					}
-				}
-			};
-
-			this.progress = function(rect){
-				for(var i = 0; i < ctrls.length; i++) {
-					if( ctrls[i].hit(rect)) {
-						if(!ctrls[i].isSelecting()) ctrls[i].selecting();
-					} else ctrls[i].unselecting();
-				}
-			};
-
 			this.add = function(ctrl){
 				ctrls.push(ctrl);
 			};
@@ -1826,6 +1794,10 @@
 
 			this.empty = function(){
 				return !ctrls.length;
+			};
+
+			this.get = function(i){
+				return i === undefined ? ctrls : ctrls[i];
 			}
 		}
 		
@@ -1849,79 +1821,117 @@
 			controller: Controller,
 			require: 'dndLassoArea',
 			link: function(scope, $el, attrs, ctrl){
-				var callback = $parse(attrs.dndLassoArea), lasso = new DndLasso({ $el:$el }), dragged, initiatedCtrl;
+			
+				var defaults = {};
+				var lasso = new DndLasso({ $el:$el }), dragged, selectable, keyPressed, opts = extend({}, defaults, $parse(attrs.dndLassoArea)() || {});
+				var dragstartCallback = $parse(opts.onstart);
+				var dragCallback = $parse(opts.ondrag);
+				var dragendCallback = $parse(opts.onend);
 
 				ctrls.push(ctrl);
 
-				lasso.onstart = function(handler) {
-					dragged = true;
+				function onclick(){
+					var s = ctrl.get();
 
-					ctrl.unselecting();
+					if(selectable) {
+						if(keyPressed) {
+							 selectable.toggleSelected();
+						} else {
+							for(var i = 0; i < s.length; i++) {
+								if(selectable !== s[i]) s[i].unselected().unselecting();
+							}
 
-					//if(!event.metaKey && !event.ctrlKey && !event.shiftKey) ctrl.unselected();
+							if(!selectable.isSelected()) selectable.selected().unselecting();
+						}
 
-					if(!event.metaKey && !event.ctrlKey && !event.shiftKey) {
-						if(initiatedCtrl && initiatedCtrl === ctrl.selectable(event.target)) {
-							ctrl.unselected(initiatedCtrl);
-							initiatedCtrl.selecting();
-						} else ctrl.unselected();
-
-						//initiatedCtrl.selected();
-
-					} //else initiatedCtrl.toggleSelected();
-
-					if(initiatedCtrl)
+					} else {
+						if(!keyPressed) {
+							for(var i = 0; i < s.length; i++){
+								s[i].unselected().unselecting();
+							}
+						}
+					}
 
 					scope.$apply();
 				}
-				
-				lasso.ondrag = function(handler) {
-					if(ctrl.empty()) return;
 
-					ctrl.progress( handler.getClientRect() );
+				lasso.onstart = function(handler) {
+					dragged = true;
+					
+					
+					if(!ctrl.empty()) {
+					
+						var s = ctrl.get();
+
+						if(selectable) {
+						
+							if(!keyPressed) {
+								for(var i = 0; i < s.length; i++){
+									s[i].unselected().unselecting();
+								}
+							}
+							
+						} else {
+							if(!keyPressed) {
+								for(var i = 0; i < s.length; i++){
+									s[i].unselected().unselecting();
+								}
+							}
+						}
+					}
+					
+					dragstartCallback(scope);
+
+					scope.$apply();
+				}
+
+				lasso.ondrag = function(handler) {
+					if(!ctrl.empty()) {
+					
+						var s = ctrl.get(), rect = handler.getClientRect();
+						
+						for(var i = 0; i < s.length; i++) {
+							s[i].hit(rect) ? s[i].selecting() : s[i].unselecting();
+						}
+						
+					}
+
+					dragstartCallback(scope, { $rect: handler.getRect() });
 
 					scope.$apply();
 				}
 
 				lasso.onend = function(handler) {
-					if(!ctrl.empty()) ctrl.complete();
+					if(!ctrl.empty()) {
+					
+						var s = ctrl.get();
+						
+						for(var i = 0; i < s.length; i++){
+							if(s[i].isSelecting()) s[i].toggleSelected().unselecting(); 
+						}
+						
+					}
 
-					ctrl.unselecting();
-					
-					callback(scope, { $rect: handler.getRect() });
-					
+					dragendCallback(scope, { $rect: handler.getRect() });
+
 					scope.$apply();
 				}
 
 				$el.on('mousedown touchstart', function(event){
 					if(ctrl.empty()) return;
-					
-					initiatedCtrl = ctrl.selectable(event.target);
 
-					scope.$apply();
+					selectable = ctrl.selectable(event.target);
+					
+					keyPressed = (event.metaKey || event.ctrlKey || event.shiftKey);
 
 				});
 
-				function onclick(event){
-					if(!event.metaKey && !event.ctrlKey && !event.shiftKey) {
-
-						if(initiatedCtrl && initiatedCtrl === ctrl.selectable(event.target)) {
-							ctrl.unselected(initiatedCtrl);
-							initiatedCtrl.selected();
-						} else ctrl.unselected();
-
-					} else initiatedCtrl.toggleSelected();
-
-					callback(scope, { $rect: false });
-
-					scope.$apply();
-				}
-				
 				$el.on('mouseup touchend', function(event){
 					if(ctrl.empty()) return;
 
 					if(dragged) dragged = false;
-					else onclick(event);
+					else onclick();
+
 				});
 
 				$el.on('$destroy', function(){
@@ -1929,6 +1939,8 @@
 
 					scope.$apply();
 				});
+
+
 			}
 		};
 	});
@@ -1945,8 +1957,8 @@
 			$scope.$selected = false, $scope.$selecting = false;
 			var opts = extend({}, defaults, $parse($attrs.dndSelectable)() || {});
 
-			var changeSelectedCallback = $parse(opts.onChangeSelected);
-			var changeSelectingCallback = $parse(opts.onChangeSelecting);
+			var selectedCallback = $parse(opts.selected);
+			var selectingCallback = $parse(opts.selecting);
 
 			this.getElement = function(){
 				return $element;
@@ -1960,18 +1972,14 @@
 				return $scope.$selecting;
 			};
 
-			this.toggleSelecting = function(){
-				return this.isSelecting() ? !!this.unselecting() : !this.selecting();
-			};
-
 			this.toggleSelected = function(){
-				return this.isSelected() ? !!this.unselected() : !this.selected();
+				return this.isSelected() ? this.unselected() : this.selected();
 			};
 
 			this.selecting = function(){
 				if($scope.$selecting) return this;
 
-				if( changeSelectingCallback($scope, {$selecting: true}) !== false ) $scope.$selecting = true;
+				if( selectingCallback($scope, {$state: true}) !== false ) $scope.$selecting = true;
 
 				return this;
 			};
@@ -1979,7 +1987,7 @@
 			this.unselecting = function(){
 				if(!$scope.$selecting) return this;
 
-				if( changeSelectingCallback($scope, {$selecting: false}) !== false ) $scope.$selecting = false;
+				if( selectingCallback($scope, {$state: false}) !== false ) $scope.$selecting = false;
 
 				return this;
 			};
@@ -1987,7 +1995,7 @@
 			this.selected = function(){
 				if($scope.$selected) return this;
 
-				if( changeSelectedCallback($scope, {$selected: true}) !== false ) $scope.$selected = true;
+				if( selectedCallback($scope, {$state: true}) !== false ) $scope.$selected = true;
 
 				return this;
 			};
@@ -1995,7 +2003,7 @@
 			this.unselected = function(){
 				if(!$scope.$selected) return this;
 
-				if( changeSelectedCallback($scope, {$selected: false}) !== false ) $scope.$selected = false;
+				if( selectedCallback($scope, {$state: false}) !== false ) $scope.$selected = false;
 
 				return this;
 			};
@@ -2256,10 +2264,10 @@
 						if(min == undefined) min = 0;
 						if(max == undefined) max = Number.POSITIVE_INFINITY;
 
-						var kof = (kof1 < kof2 ? kof1 : kof2);
+						//0.75 - коэффициент, ограничивающий вывод текст за границы блока
+						var kof = (kof1 < kof2 ? kof1 : kof2 * 0.75);
 
 						//Корректировка плавности
-						kof *= 0.75;
 						if((kof > 0.95 && kof <= 1) || (kof >= 1 && kof < 1.05) ) return;
 
 						var n = kof * parseFloat(font['font-size']);

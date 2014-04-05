@@ -95,9 +95,9 @@
 - dnd-lasso-area как родительский элемент
 
 Параметр (задается в виде объекта, callbacks задаются в кавычках):
-- onChangeSelected(): срабатывает при изменении значения scope.$selected
-- onChangeSelecting(): срабатывает при изменении значения scope.$selecting
-
+- selected([$state]): срабатывает при изменении значения scope.$selected.*
+- selecting([$state]): срабатывает при изменении значения scope.$selecting.*
+* $state - новое состояние, еще ни заданное в scope. Если функция вернет false, то состояние не будет задано вообще.
 
 
 
