@@ -23,20 +23,24 @@
 
         $scope.createRect = function(rect){
             models.push({
-                rect:rect,
-                selected: false,
-                selecting: false
+                rect:rect
             });
         };
 
-        $scope.onSelecting = function(state, model){
-            console.log('selecting:',state);
-            model.selecting = state;
+        $scope.onSelecting = function(selecting, selected){
+            console.log('selecting:',selecting, selected);
         };
 
-        $scope.onSelected = function(state, model){
-            console.log('selected:',state);
-            model.selected = state;
+        $scope.onSelected = function(selecting, selected){
+            console.log('selected:',selecting, selected);
+        };
+
+        $scope.onUnselecting = function(selecting, selected){
+            console.log('unselecting:',selecting, selected);
+        };
+
+        $scope.onUnselected = function(selecting, selected){
+            console.log('unselected:',selecting, selected);
         };
     });
 
@@ -68,8 +72,8 @@
 	        ng-repeat = "model in models" 
 	        dnd-rect = "model.rect" 
 	        ng-class = "{selected: $selected, selecting: $selecting}"
-			dnd-selectable = "{ selecting: 'onSelecting($state, model)', selected: 'onSelected($state, model)' }"
-            dnd-draggable1>
+			dnd-selectable = "{ selecting: 'onSelecting($selecting, $selected)', unselecting: 'onUnselecting($selecting, $selected)', selected: 'onSelected($selecting, $selected)', unselected: 'onUnselected($selecting, $selected)' }"
+            dnd-draggable>
         </div>
     </div>
 

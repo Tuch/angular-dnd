@@ -1827,6 +1827,7 @@
 				var dragstartCallback = $parse(opts.onstart);
 				var dragCallback = $parse(opts.ondrag);
 				var dragendCallback = $parse(opts.onend);
+				var clickCallback = $parse(opts.onclick);
 
 				ctrls.push(ctrl);
 
@@ -1851,6 +1852,8 @@
 							}
 						}
 					}
+					
+					dragendCallback(scope, { $rect: false });
 
 					scope.$apply();
 				}
@@ -1879,8 +1882,6 @@
 							}
 						}
 					}
-					
-					dragstartCallback(scope);
 
 					scope.$apply();
 				}
@@ -1923,7 +1924,10 @@
 					selectable = ctrl.selectable(event.target);
 					
 					keyPressed = (event.metaKey || event.ctrlKey || event.shiftKey);
-
+					
+					dragstartCallback(scope);
+					
+					scope.$apply();
 				});
 
 				$el.on('mouseup touchend', function(event){
@@ -1959,6 +1963,8 @@
 
 			var selectedCallback = $parse(opts.selected);
 			var selectingCallback = $parse(opts.selecting);
+			var unselectedCallback = $parse(opts.unselected);
+			var unselectingCallback = $parse(opts.unselecting);
 
 			this.getElement = function(){
 				return $element;
@@ -1979,15 +1985,17 @@
 			this.selecting = function(){
 				if($scope.$selecting) return this;
 
-				if( selectingCallback($scope, {$state: true}) !== false ) $scope.$selecting = true;
+				$scope.$selecting = true;
+				if( selectingCallback($scope) === false ) $scope.$selecting = false;
 
 				return this;
 			};
 
 			this.unselecting = function(){
 				if(!$scope.$selecting) return this;
-
-				if( selectingCallback($scope, {$state: false}) !== false ) $scope.$selecting = false;
+				
+				$scope.$selecting = false;
+				if( unselectingCallback($scope) === false ) $scope.$selecting = true;
 
 				return this;
 			};
@@ -1995,7 +2003,8 @@
 			this.selected = function(){
 				if($scope.$selected) return this;
 
-				if( selectedCallback($scope, {$state: true}) !== false ) $scope.$selected = true;
+				$scope.$selected = true;
+				if( selectedCallback($scope) === false ) $scope.$selected = false;
 
 				return this;
 			};
@@ -2003,7 +2012,8 @@
 			this.unselected = function(){
 				if(!$scope.$selected) return this;
 
-				if( selectedCallback($scope, {$state: false}) !== false ) $scope.$selected = false;
+				$scope.$selected = false;
+				if( unselectedCallback($scope) === false ) $scope.$selected = true;
 
 				return this;
 			};
@@ -2244,16 +2254,15 @@
 			restrict: 'A',
 			link: function(scope, $el, attrs) {
 
-				function updateSize(size) {
-					$timeout(function(){
+				function updateSize(opts) {
 						var font = $el.dndCss(
 							['font-size','font-family','font-weight','text-transform','border-top','border-right','border-bottom','border-left','padding-top','padding-right','padding-bottom','padding-left']
-						), text = $el.text();
+						), text = opts.text == undefined ? $el.text() : opts.text;
 
 						var realSize = getRealSize(text, font), currSize = getCurrSize($el,0,0);
 
-						currSize.width = parseFloat(size.width);
-						currSize.height = parseFloat(size.height);
+						currSize.width = parseFloat(opts.width);
+						currSize.height = parseFloat(opts.height);
 
 						var kof1 = currSize.height / realSize.height;
 						var kof2 = currSize.width / realSize.width;
@@ -2264,10 +2273,10 @@
 						if(min == undefined) min = 0;
 						if(max == undefined) max = Number.POSITIVE_INFINITY;
 
-						//0.75 - коэффициент, ограничивающий вывод текст за границы блока
-						var kof = (kof1 < kof2 ? kof1 : kof2 * 0.75);
+						var kof = (kof1 < kof2 ? kof1 : kof2);
 
 						//Корректировка плавности
+						kof *= 0.9;
 						if((kof > 0.95 && kof <= 1) || (kof >= 1 && kof < 1.05) ) return;
 
 						var n = kof * parseFloat(font['font-size']);
@@ -2275,12 +2284,21 @@
 						n = getNumFromSegment(min, n, max);
 
 						$el.dndCss('font-size', n+'px');
-					})
 				}
 
-				scope.$watch( attrs.dndFittext, updateSize, true);
+				scope.$watch( attrs.dndFittext, function(opts){
+					if(opts.width === undefined || opts.height === undefined) return;
+					
+					$timeout(function(){
+						updateSize(opts)
+					});
+				}, true);
 
-				$($window).on('resize', updateSize);
+				var rect = ['width', 'height'];
+				$($window).on('resize', function(){
+					var opts = $el.dndCss(rect);
+					updateSize(opt);
+				});
 			}
 		};
 	});
