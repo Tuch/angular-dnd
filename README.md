@@ -98,10 +98,10 @@
 - dnd-lasso-area как родительский элемент
 
 Параметр (задается в виде объекта, callbacks задаются в кавычках):
-- selected([$state]): срабатывает при изменении значения scope.$selected.*
-- selecting([$state]): срабатывает при изменении значения scope.$selecting.* 
-* $state - новое состояние, еще ни заданное в scope. Если функция вернет false, то состояние не будет задано вообще.
-
+- selected( [$dragged] ): срабатывает при изменении значения scope.$selected c false на true
+- unselected(): срабатывает при изменении значения scope.$selected c true на false
+- selecting(): срабатывает при изменении значения scope.$selecting c false на true
+- unselecting(): срабатывает при изменении значения scope.$selecting c true на false
 
 
 
@@ -128,4 +128,5 @@
 
 
 ## TODO: 
+ - new directive - sortable
  - translate to english

@@ -73,8 +73,8 @@
 	function getNumFromSegment(min, curr, max){
 		return curr<min ? min : curr > max ? max : curr;
 	}
-	
-	 function findEvents(element) {
+
+	function findEvents(element) {
 	
 	    var events = element.data('events');
 	    if (events !== undefined) 
@@ -94,6 +94,55 @@
 	
 	    return undefined;
 	}
+
+	function debounce(fn, timeout, invokeAsap, context) {
+		if(arguments.length == 3 && typeof invokeAsap != 'boolean') {
+			context = invokeAsap;
+			invokeAsap = false;
+		}
+
+		var timer;
+
+		return function() {
+			var args = arguments;
+			context = context || this;
+
+			invokeAsap && !timer && fn.apply(context, args);
+
+			clearTimeout(timer);
+
+			timer = setTimeout(function() {
+				!invokeAsap && fn.apply(context, args);
+				timer = null;
+			}, timeout);
+
+		};
+	}
+
+	function throttle(fn, timeout, context) {
+		var timer, args;
+
+		return function() {
+			if(timer) return;
+			args = arguments;
+			context = context || this;
+			fn.apply(context, args);
+			timer = setTimeout(function(){ timer = null; }, timeout);
+		};
+	}
+
+	angular.dnd = {
+		noop: noop,
+		doTrue: doTrue,
+		doFalse: doFalse,
+		proxy: proxy,
+		radToDeg: radToDeg,
+		degToRad: degToRad,
+		getNumFromSegment: getNumFromSegment,
+		findEvents: findEvents,
+		throttle: throttle,
+		debounce: debounce,
+	};
 	
 	/* EXTEND NUMBER PROTOTYPE BY round */
 	
@@ -627,8 +676,8 @@
 	
 					if( droppables.has(event) ) this.regions.add(this.el);
 					else if(draggables.has(event) && !this.mouse && !this.touch) {
-						if('onmousedown' in document) this.mouse = new Mouse(this);
-						if('ontouchstart' in document) this.touch = new Touch(this);
+						if('onmousedown' in window) this.mouse = new Mouse(this);
+						if( ('ontouchstart' in window) || ('onmsgesturechange' in window) ) this.touch = new Touch(this);
 					}
 				},
 	
@@ -893,6 +942,7 @@
 			},
 
 			mousedown: function (event){
+
 				if( this.manipulator.dnd.getHandledState() ) return;
 
 				event.preventDefault();
@@ -903,18 +953,19 @@
 				
 			
 				this._startAxis = this.getClientAxis(event,0);
-				this._moved = false;
+				//this._moved = false;
 
 				$document.on('mousemove', this.mousemove );
 				$document.on('mouseup', this.mouseup );
+
 			},
 
 			mousemove: function(event){
-				if(!this._moved) {
-					var currAxis = this.getClientAxis(event,0);
-					if( this._startAxis.top-sens >= currAxis.top || currAxis.top >= this._startAxis.top+sens || this._startAxis.left-sens >= currAxis.left || currAxis.left >= this._startAxis.left+sens ) this._moved = true;
-					else return;
-				}
+				//if(!this._moved) {
+				//	var currAxis = this.getClientAxis(event,0);
+				//	if( this._startAxis.top-sens >= currAxis.top || currAxis.top >= this._startAxis.top+sens || this._startAxis.left-sens >= currAxis.left || currAxis.left >= this._startAxis.left+sens ) this._moved = true;
+				//	else return;
+				//}
 
 				this.manipulator.progress(event);
 			},
@@ -958,12 +1009,13 @@
 			},
 			
 			touchstart: function (event){
+
 				if( this.manipulator.dnd.getHandledState() ) return;
 				
 				this.manipulator.dnd.setHandledState(true);
 						
 				this._startAxis = this.getClientAxis(event);
-				this._moved = false;
+				//this._moved = false;
 
 				this.manipulator.begin(event);
 
@@ -973,11 +1025,11 @@
 			},
 			
 			touchmove: function(event){
-				if(!this._moved) {
-					var currAxis = this.getClientAxis(event, 0);
-					if( this._startAxis.top-sens >= currAxis.top || currAxis.top >= this._startAxis.top+sens || this._startAxis.left-sens >= currAxis.left || currAxis.left >= this._startAxis.left+sens ) this._moved = true;
-					else return;
-				}
+				//if(!this._moved) {
+				//	var currAxis = this.getClientAxis(event, 0);
+				//	if( this._startAxis.top-sens >= currAxis.top || currAxis.top >= this._startAxis.top+sens || this._startAxis.left-sens >= currAxis.left || currAxis.left >= this._startAxis.left+sens ) this._moved = true;
+				//	else return;
+				//}
 				
 				event.preventDefault();
 
@@ -1845,11 +1897,12 @@
 			link: function(scope, $el, attrs, ctrl){
 			
 				var defaults = {};
-				var lasso = new DndLasso({ $el:$el }), dragged, selectable, keyPressed, opts = extend({}, defaults, $parse(attrs.dndLassoArea)() || {});
+				var lasso = new DndLasso({ $el:$el }), dragged = false, selectable, keyPressed, opts = extend({}, defaults, $parse(attrs.dndLassoArea)() || {});
 				var dragstartCallback = $parse(opts.onstart);
 				var dragCallback = $parse(opts.ondrag);
 				var dragendCallback = $parse(opts.onend);
 				var clickCallback = $parse(opts.onclick);
+				var handledPhase = {'start':false,'end':false};
 
 				ctrls.push(ctrl);
 
@@ -1881,9 +1934,7 @@
 				}
 
 				lasso.onstart = function(handler) {
-					dragged = true;
-					
-					
+
 					if(!ctrl.empty()) {
 					
 						var s = ctrl.get();
@@ -1929,43 +1980,44 @@
 						for(var i = 0; i < s.length; i++){
 							if(s[i].isSelecting()) s[i].toggleSelected().unselecting(); 
 						}
-						
 					}
 
 					dragendCallback(scope, { $rect: handler.getRect() });
 
 					scope.$apply();
 				}
-				//var event = ''
-				//if('ontouchstart' in document) event += 'touchstart';
 
+				var drag = throttle(function(){
+					if(!dragged) dragged = true;
+				}, 100);
 
-				$el.on('mousedown touchstart', function(event){
+				var end = throttle(function(){
+					$el.off('mouseup', end);
+					$el.off('mousemove', drag);
+					$el.off('touchend', end);
+					$el.off('touchmove', drag);
+				}, 100);
+
+				$el.on('mousedown touchstart', throttle(function (event){
 					if(ctrl.empty()) return;
-
 					selectable = ctrl.selectable(event.target);
-					
+
 					keyPressed = (event.metaKey || event.ctrlKey || event.shiftKey);
-					
-					//if(event.originalEvent) console.log('touchstart', event.originalEvent);
-					//else  console.log('touchstart', event);
-					
-					console.log( findEvents($(event.target)), 'touchstart', event );
-					console.log();
-					
+
 					dragstartCallback( scope );
-					
-					event.stopPropagation();
-					
+
 					scope.$apply();
-				});
 
-				$el.on('click', function(event){
-					if(ctrl.empty()) return;
+					$el.on('mousemove touchmove', drag);
+					$el.on('mouseup touchend', end);
 
+				}, 500) );
+
+				$el.on('click', throttle(function(event){
+					if(ctrl.empty()) { dragged = false; return; }
 					if(dragged) dragged = false;
 					else onclick();
-				});
+				}, 500) );
 
 				$el.on('$destroy', function(){
 					ctrls.remove(ctrl);
@@ -2209,7 +2261,7 @@
 			controller: Controller,
 			link: function(scope, $el, attrs) {
 
-				scope.$watch(attrs.dndRect, function (n, o) {
+				scope.$watch(attrs.dndRect, throttle(function (n, o) {
 
 					if(!n || typeof n != 'object') return;
 					if(o == undefined) o = {};
@@ -2227,7 +2279,7 @@
 
 					$el.dndCss(css);
 
-			    }, true);
+			    }, 10), true);
 
 			}
 		};
@@ -2283,60 +2335,58 @@
 			link: function(scope, $el, attrs) {
 
 				function updateSize(opts) {
-						opts = opts === undefined ? {} : opts;
-						var font = $el.dndCss(
-							['font-size','font-family','font-weight','text-transform','border-top','border-right','border-bottom','border-left','padding-top','padding-right','padding-bottom','padding-left']
-						), text = opts.text == undefined ? $el.text() : opts.text;
+					opts = opts === undefined ? {} : opts;
+					var font = $el.dndCss(
+						['font-size','font-family','font-weight','text-transform','border-top','border-right','border-bottom','border-left','padding-top','padding-right','padding-bottom','padding-left']
+					), text = opts.text == undefined ? $el.text() : opts.text;
 
-						var sizes = [];
-						if(opts.width === undefined) sizes.push('width');
-						if(opts.height === undefined) sizes.push('height');
+					var sizes = [];
+					if(opts.width === undefined) sizes.push('width');
+					if(opts.height === undefined) sizes.push('height');
 
-						if(sizes) sizes = $el.dndCss(sizes);
+					if(sizes) sizes = $el.dndCss(sizes);
 
-						for(var key in sizes){
-							var val = sizes[key];
+					for(var key in sizes){
+						var val = sizes[key];
 
-							if(val[val.length-1] == '%') return;
-							opts[key] = sizes[key];
-						}
+						if(val[val.length-1] == '%') return;
+						opts[key] = sizes[key];
+					}
 
-						var realSize = getRealSize(text, font), currSize = getCurrSize($el,0,0);
-						if(!realSize.width || !realSize.height) {
-							$el.dndCss('font-size', '');
-							return
-						}
+					var realSize = getRealSize(text, font), currSize = getCurrSize($el,0,0);
+					if(!realSize.width || !realSize.height) {
+						$el.dndCss('font-size', '');
+						return
+					}
 
-						currSize.width = parseFloat(opts.width);
-						currSize.height = parseFloat(opts.height);
+					currSize.width = parseFloat(opts.width);
+					currSize.height = parseFloat(opts.height);
 
-						var kof1 = currSize.height / realSize.height;
-						var kof2 = currSize.width / realSize.width;
+					var kof1 = currSize.height / realSize.height;
+					var kof2 = currSize.width / realSize.width;
 
-						var max = scope.$eval(attrs.dndFittextMax);
-						var min = scope.$eval(attrs.dndFittextMin);
+					var max = scope.$eval(attrs.dndFittextMax);
+					var min = scope.$eval(attrs.dndFittextMin);
 
-						if(min == undefined) min = 0;
-						if(max == undefined) max = Number.POSITIVE_INFINITY;
+					if(min == undefined) min = 0;
+					if(max == undefined) max = Number.POSITIVE_INFINITY;
 
-						var kof = (kof1 < kof2 ? kof1 : kof2);
+					var kof = (kof1 < kof2 ? kof1 : kof2);
 
-						//Корректировка плавности
-						kof *= 0.85;
-						if((kof > 0.95 && kof <= 1) || (kof >= 1 && kof < 1.05) ) return;
+					//Корректировка плавности
+					kof *= 0.85;
+					if((kof > 0.95 && kof <= 1) || (kof >= 1 && kof < 1.05) ) return;
 
-						var n = kof * parseFloat(font['font-size']);
+					var n = kof * parseFloat(font['font-size']);
 
-						n = getNumFromSegment(min, n, max);
+					n = getNumFromSegment(min, n, max);
 
-						$el.dndCss('font-size', n+'px');
+					$el.dndCss('font-size', n+'px');
 				}
 
-
-
-				scope.$watch( attrs.dndFittext, function(opts){
-					$timeout(function(){ updateSize(opts) });
-				}, true);
+				scope.$watch( attrs.dndFittext, throttle(function(opts){
+					updateSize(opts);
+				}), true);
 
 				$($window).on('resize', function(){
 					updateSize();
