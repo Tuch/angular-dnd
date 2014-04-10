@@ -74,6 +74,27 @@
 		return curr<min ? min : curr > max ? max : curr;
 	}
 	
+	 function findEvents(element) {
+	
+	    var events = element.data('events');
+	    if (events !== undefined) 
+	        return events;
+	
+	    events = $.data(element, 'events');
+	    if (events !== undefined) 
+	        return events;
+	
+	    events = $._data(element, 'events');
+	    if (events !== undefined)
+	        return events;
+	
+	    events = $._data(element[0], 'events');
+	    if (events !== undefined)
+	        return events;
+	
+	    return undefined;
+	}
+	
 	/* EXTEND NUMBER PROTOTYPE BY round */
 	
 	if(Number.prototype.round != undefined) console.warning('Number.prototype.round is defined');
@@ -386,53 +407,6 @@
 
 			return $(ret);
 		},
-
-		/* experemental: */
-
-		dndConverToAbsolute: function(){
-
-			forEach(this, function(element){
-				var $element = $(element);
-				var parents = $element.dndParents(), container = document.body;
-
-				forEach(parents, function(element){
-					var position = $(element).dndCss('position');
-
-					if(position == 'absolute' || position == 'relative' || position == 'fixed') {
-						container = element;
-						return false;
-					}
-				});
-
-				var transform1 = $(container).dndCss(TRANSFORM);
-				var transform2 = $element.dndCss(TRANSFORM);
-
-				var styled1 = !!container.style[TRANSFORM];
-				var styled2 = !!element.style[TRANSFORM];
-
-				$(container).dndCss(TRANSFORM, '');
-				$element.dndCss(TRANSFORM, '');
-
-				var client1 = container.getBoundingClientRect();
-				var client2 = element.getBoundingClientRect();
-
-				container.style[TRANSFORM] = styled1 ? transform1 : '';
-				element.style[TRANSFORM] = styled2 ? transform2 : '';
-
-				var styles = {
-					top: client2.top - client1.top + 'px',
-					left: client2.left - client1.left + 'px',
-					width: client2.width + 'px',
-					height: client2.height + 'px',
-					position: 'absolute'
-				};
-
-				$element.dndCss(styles);
-			});
-
-			return this;
-		},
-
 		dndGetAngle: function (degs){
 
 			var matrix = this.dndCss(TRANSFORM);
@@ -463,15 +437,57 @@
 				}).replace(MOZ_HACK_REGEXP, 'Moz$1');
 			}
 
+			var hooks = {};
+
+			(function(){
+				var arr = {
+					width: ['paddingLeft','paddingRight','borderLeftWidth', 'borderRightWidth'],
+					height: ['paddingTop','paddingBottom','borderTopWidth', 'borderBottomWidth']
+				};
+
+				forEach(arr, function(styles, prop){
+
+					hooks[prop] = {
+						get: function(element){
+							var computed = window.getComputedStyle(element);
+							var ret =  computed[prop];
+
+							if( computed.boxSizing != 'border-box' || ret[ret.length-1] == '%') return ret;
+
+							ret = parseFloat(ret);
+
+							for(var i = 0; i < styles.length; i++){
+								ret -= parseFloat(computed[ styles[i] ]);
+							}
+
+							return ret + 'px';
+						}
+					}
+
+				});
+
+			})();
+
+			var cssNumber = {
+				"columnCount": true,
+				"fillOpacity": true,
+				"fontWeight": true,
+				"lineHeight": true,
+				"opacity": true,
+				"order": true,
+				"orphans": true,
+				"widows": true,
+				"zIndex": true,
+				"zoom": true
+			};
+
 			var setCss = function($element, obj){
 				var styles = {};
 
 				for(var key in obj) {
-					styles[toCamelCase(key)] = obj[key];
-				}
-
-				for(var key in styles) {
-					if(typeof styles[key] == 'number') styles[key] = styles[key] + 'px';
+					var val = obj[key]
+					if( typeof val === "number" && !cssNumber[key] ) val += "px";
+					styles[toCamelCase(key)] = val;
 				}
 
 				$element.css(styles);
@@ -489,12 +505,12 @@
 
 				if(typeof arg == 'string') {
 					if(style[arg]) return style[arg];
-					else return computed.getPropertyValue( arg );
+					else return hooks[arg] && 'get' in hooks[arg] ? hooks[arg].get($element[0]) : computed.getPropertyValue( arg );
 				}
 
 				for(var i=0; i < arg.length; i++){
 					if(style[arg[i]]) ret[arg[i]] = style[ arg[i] ];
-					else ret[arg[i]] = computed.getPropertyValue( arg[i] );
+					else ret[arg[i]] = hooks[arg[i]] && 'get' in hooks[arg[i]] ? hooks[arg[i]].get($element[0]) : computed.getPropertyValue( arg[i] );
 				}
 
 				return ret;
@@ -804,7 +820,6 @@
 			},
 			
 			begin: function (event){
-				event.preventDefault();
 
 				this.event = event;
 
@@ -879,10 +894,13 @@
 
 			mousedown: function (event){
 				if( this.manipulator.dnd.getHandledState() ) return;
+
+				event.preventDefault();
 								
 				this.manipulator.dnd.setHandledState(true);
 			
-				this.manipulator.begin(event)
+				this.manipulator.begin(event);
+				
 			
 				this._startAxis = this.getClientAxis(event,0);
 				this._moved = false;
@@ -950,7 +968,7 @@
 				this.manipulator.begin(event);
 
 				$document.on('touchmove', this.touchmove );
-				$document.on('touchend', this.touchend );
+				$document.on('touchend touchcancel', this.touchend );
 				
 			},
 			
@@ -960,6 +978,8 @@
 					if( this._startAxis.top-sens >= currAxis.top || currAxis.top >= this._startAxis.top+sens || this._startAxis.left-sens >= currAxis.left || currAxis.left >= this._startAxis.left+sens ) this._moved = true;
 					else return;
 				}
+				
+				event.preventDefault();
 
 				this.manipulator.progress(event);
 			},
@@ -970,7 +990,9 @@
 				this.manipulator.end(event);
 
 				$document.off('touchmove', this.touchmove );
-				$document.off('touchend', this.touchend );
+				$document.off('touchend touchcancel', this.touchend );
+				
+				//if(!this._moved) this.manipulator.dnd.$el.triggerHandler('click');
 			},
 
 			destroy: function(){
@@ -1833,7 +1855,7 @@
 
 				function onclick(){
 					var s = ctrl.get();
-
+					
 					if(selectable) {
 						if(keyPressed) {
 							 selectable.toggleSelected();
@@ -1882,13 +1904,11 @@
 							}
 						}
 					}
-
 					scope.$apply();
 				}
 
 				lasso.ondrag = function(handler) {
 					if(!ctrl.empty()) {
-					
 						var s = ctrl.get(), rect = handler.getClientRect();
 						
 						for(var i = 0; i < s.length; i++) {
@@ -1904,7 +1924,6 @@
 
 				lasso.onend = function(handler) {
 					if(!ctrl.empty()) {
-					
 						var s = ctrl.get();
 						
 						for(var i = 0; i < s.length; i++){
@@ -1917,6 +1936,9 @@
 
 					scope.$apply();
 				}
+				//var event = ''
+				//if('ontouchstart' in document) event += 'touchstart';
+
 
 				$el.on('mousedown touchstart', function(event){
 					if(ctrl.empty()) return;
@@ -1925,17 +1947,24 @@
 					
 					keyPressed = (event.metaKey || event.ctrlKey || event.shiftKey);
 					
-					dragstartCallback(scope);
+					//if(event.originalEvent) console.log('touchstart', event.originalEvent);
+					//else  console.log('touchstart', event);
+					
+					console.log( findEvents($(event.target)), 'touchstart', event );
+					console.log();
+					
+					dragstartCallback( scope );
+					
+					event.stopPropagation();
 					
 					scope.$apply();
 				});
 
-				$el.on('mouseup touchend', function(event){
+				$el.on('click', function(event){
 					if(ctrl.empty()) return;
 
 					if(dragged) dragged = false;
 					else onclick();
-
 				});
 
 				$el.on('$destroy', function(){
@@ -2004,7 +2033,7 @@
 				if($scope.$selected) return this;
 
 				$scope.$selected = true;
-				if( selectedCallback($scope) === false ) $scope.$selected = false;
+				if( selectedCallback($scope, { '$dragged':$scope.$selecting }) === false ) $scope.$selected = false;
 
 				return this;
 			};
@@ -2013,7 +2042,7 @@
 				if(!$scope.$selected) return this;
 
 				$scope.$selected = false;
-				if( unselectedCallback($scope) === false ) $scope.$selected = true;
+				if( unselectedCallback($scope, { '$dragged':!$scope.$selecting }) === false ) $scope.$selected = true;
 
 				return this;
 			};
@@ -2219,7 +2248,7 @@
 	 */
 
 	module.directive('dndFittext', function( $timeout, $window ){
-		var $span = $('<span></span>').dndCss({'position':'absolute','left':-10000, 'top':-10000, 'opacity':0, 'z-index': -9999});
+		var $span = $('<span></span>').dndCss({'position':'absolute','left':-99999, 'top':-99999, 'opacity':0, 'z-index': -9999});
 
 		$(document.body).append( $span );
 
@@ -2232,7 +2261,6 @@
 
 		function getRealSize(text, font) {
 			$span.html( encodeStr(text) ).dndCss(font);
-
 			var rect = $span[0].getBoundingClientRect();
 
 			return {
@@ -2255,11 +2283,29 @@
 			link: function(scope, $el, attrs) {
 
 				function updateSize(opts) {
+						opts = opts === undefined ? {} : opts;
 						var font = $el.dndCss(
 							['font-size','font-family','font-weight','text-transform','border-top','border-right','border-bottom','border-left','padding-top','padding-right','padding-bottom','padding-left']
 						), text = opts.text == undefined ? $el.text() : opts.text;
 
+						var sizes = [];
+						if(opts.width === undefined) sizes.push('width');
+						if(opts.height === undefined) sizes.push('height');
+
+						if(sizes) sizes = $el.dndCss(sizes);
+
+						for(var key in sizes){
+							var val = sizes[key];
+
+							if(val[val.length-1] == '%') return;
+							opts[key] = sizes[key];
+						}
+
 						var realSize = getRealSize(text, font), currSize = getCurrSize($el,0,0);
+						if(!realSize.width || !realSize.height) {
+							$el.dndCss('font-size', '');
+							return
+						}
 
 						currSize.width = parseFloat(opts.width);
 						currSize.height = parseFloat(opts.height);
@@ -2276,7 +2322,7 @@
 						var kof = (kof1 < kof2 ? kof1 : kof2);
 
 						//Корректировка плавности
-						kof *= 0.9;
+						kof *= 0.85;
 						if((kof > 0.95 && kof <= 1) || (kof >= 1 && kof < 1.05) ) return;
 
 						var n = kof * parseFloat(font['font-size']);
@@ -2286,18 +2332,14 @@
 						$el.dndCss('font-size', n+'px');
 				}
 
+
+
 				scope.$watch( attrs.dndFittext, function(opts){
-					if(opts.width === undefined || opts.height === undefined) return;
-					
-					$timeout(function(){
-						updateSize(opts)
-					});
+					$timeout(function(){ updateSize(opts) });
 				}, true);
 
-				var rect = ['width', 'height'];
 				$($window).on('resize', function(){
-					var opts = $el.dndCss(rect);
-					updateSize(opt);
+					updateSize();
 				});
 			}
 		};

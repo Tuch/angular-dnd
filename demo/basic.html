@@ -6,7 +6,9 @@
 
 <link rel="stylesheet" href="demo.css" />
 
-<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.2.14/angular.js"></script>
+<script1 src="http://ajax.googleapis.com/ajax/libs/angularjs/1.2.14/angular.js"></script1>
+<script src="http://cdn.cat.urplanet.net/angular/1.2.8/angular.js"></script>
+
 
 <link rel="stylesheet" href="../css/stylesheet.css" />
 <script type="text/javascript" src = "../js/angular-dnd.js"></script>
@@ -54,7 +56,6 @@
         $scope.dragmodel = 'some dragmodel..';
         $scope.dropmodel = 'some dropmodel..';
     });
-
 </script>
 
 </head>
@@ -70,7 +71,7 @@
 
 	    </div>
 
-	    <div class = "title"> Basic example <br><em style = "font-size: 50%;">Draggable, Droppable, Rotatable, Resizable, Fittext...</em></div>
+	    <div class = "title" ng-click = "click($event)"> Basic example <br><em style = "font-size: 50%;">Draggable, Droppable, Rotatable, Resizable, Fittext...</em></div>
 
 	    top: <input ng-model = 'rect.top' type="text">
 	    left: <input ng-model = 'rect.left' type="text">
@@ -85,7 +86,6 @@
 		    	dnd-draggable = "{onstart: 'dragstart()', ondrag: 'drag()', onend: 'dragend($droptarget)', ns: 'area1'}"
 		        dnd-rotatable = "{onstart: 'dragstart()', ondrag: 'drag()', onend: 'dragend()'}"
 		        dnd-resizable = "{onstart: 'dragstart()', ondrag: 'drag()', onend: 'dragend()'}"
-
 		        dnd-rect = "rect"
                 dnd-fittext = "{width:rect.width, height:rect.height}"
                 dnd-model = "dragmodel">

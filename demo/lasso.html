@@ -70,7 +70,7 @@
         <div class = "article"> Selecting lasso </div>
         <div class = "lasso-area-creature" 
 	        ng-repeat = "model in models" 
-	        dnd-rect = "model.rect" 
+	        dnd-rect = "model.rect"
 	        ng-class = "{selected: $selected, selecting: $selecting}"
 			dnd-selectable = "{ selecting: 'onSelecting($selecting, $selected)', unselecting: 'onUnselecting($selecting, $selected)', selected: 'onSelected($selecting, $selected)', unselected: 'onUnselected($selecting, $selected)' }"
             dnd-draggable>
