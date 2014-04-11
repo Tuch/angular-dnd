@@ -920,6 +920,7 @@
 		};
 
 		function Mouse(dnd){
+			this.dnd = dnd;
 			this.manipulator = new Manipulator(dnd);
 			this.mousedown = proxy(this, this.mousedown);
 			this.mousemove = proxy(this, this.mousemove);
@@ -943,20 +944,21 @@
 
 			mousedown: function (event){
 
-				if( this.manipulator.dnd.getHandledState() ) return;
+				//if( this.manipulator.dnd.getHandledState() ) return;
 
 				event.preventDefault();
 								
-				this.manipulator.dnd.setHandledState(true);
+				//this.manipulator.dnd.setHandledState(true);
 			
 				this.manipulator.begin(event);
 				
 			
-				this._startAxis = this.getClientAxis(event,0);
+				//this._startAxis = this.getClientAxis(event,0);
 				//this._moved = false;
 
 				$document.on('mousemove', this.mousemove );
 				$document.on('mouseup', this.mouseup );
+				console.log(this.dnd.el)
 
 			},
 
@@ -971,7 +973,7 @@
 			},
 			
 			mouseup: function(event){
-				this.manipulator.dnd.setHandledState(false);
+				//this.manipulator.dnd.setHandledState(false);
 				
 				this.manipulator.end(event);
 
@@ -1010,11 +1012,11 @@
 			
 			touchstart: function (event){
 
-				if( this.manipulator.dnd.getHandledState() ) return;
+				//if( this.manipulator.dnd.getHandledState() ) return;
 				
-				this.manipulator.dnd.setHandledState(true);
+				//this.manipulator.dnd.setHandledState(true);
 						
-				this._startAxis = this.getClientAxis(event);
+				//this._startAxis = this.getClientAxis(event);
 				//this._moved = false;
 
 				this.manipulator.begin(event);
@@ -1765,7 +1767,8 @@
 
 					api.container(crect);
 
-					self.onstart(handler);
+					self.trigger('start', handler);
+					//self.onstart(handler);
 
 				},
 
@@ -1802,13 +1805,15 @@
 
 					$div.dndCss(local.rect);
 
-					self.ondrag(handler);
+					self.trigger('drag', handler);
+					//self.ondrag(handler);
 				},
 
 				dragend: function(api) {
 					handler.event = api.getEvent();
-				
-					self.onend(handler);
+
+					self.trigger('end', handler)
+					//self.onend();
 					
 					$div.addClass('ng-hide');
 
@@ -1819,13 +1824,30 @@
 			this.destroy = function(){
 				options.$el.dndUnbind();
 			};
+
+			var events = {};
+
+			this.on = function(name, fn) {
+				events[name] = events[name] || [];
+				events[name].push(fn);
+			};
+
+			this.trigger = function(name, args) {
+				events[name] = events[name] || [];
+				args = args || typeof args === 'string' ? [args] : [];
+				events[name].forEach(function(fn) {
+					fn.apply(this, args);
+				});
+			}
 		}
 
-		Lasso.prototype = {
-			onstart: function(){},
-			ondrag: function(){},
-			onend: function(){},
-		}
+
+
+		//Lasso.prototype = {
+		//	onstart: function(){},
+		//	ondrag: function(){},
+		//	onend: function(){},
+		//}
 
 		return Lasso;
 	});
@@ -1933,7 +1955,7 @@
 					scope.$apply();
 				}
 
-				lasso.onstart = function(handler) {
+				function onLassoStart(handler) {
 
 					if(!ctrl.empty()) {
 					
@@ -1958,7 +1980,7 @@
 					scope.$apply();
 				}
 
-				lasso.ondrag = function(handler) {
+				function onLassoDrag(handler) {
 					if(!ctrl.empty()) {
 						var s = ctrl.get(), rect = handler.getClientRect();
 						
@@ -1973,7 +1995,7 @@
 					scope.$apply();
 				}
 
-				lasso.onend = function(handler) {
+				function onLassoEnd(handler) {
 					if(!ctrl.empty()) {
 						var s = ctrl.get();
 						
@@ -2019,13 +2041,17 @@
 					else onclick();
 				}, 500) );
 
+
+
+				lasso.on('start', onLassoStart);
+				lasso.on('drag', onLassoDrag);
+				lasso.on('end', onLassoEnd);
+
 				$el.on('$destroy', function(){
 					ctrls.remove(ctrl);
 
 					scope.$apply();
 				});
-
-
 			}
 		};
 	});

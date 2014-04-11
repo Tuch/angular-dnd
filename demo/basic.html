@@ -22,33 +22,33 @@
         $scope.rect = {top:'20px', left:'240px', width: '100px', height: '100px'};
 
         $scope.dragstart = function(){
-	        console.log('dragstart', arguments);
+	        //console.log('dragstart', arguments);
         };
 
         $scope.drag = function(){
-	        console.log('drag', arguments);
+	        //console.log('drag', arguments);
         };
 
         $scope.dragend = function(){
-	        console.log('dragend', arguments);
+	        //console.log('dragend', arguments);
 
 	        if(!arguments[0]) $scope.dropped = false;
         };
 
         $scope.dragenter = function(){
-	        console.log('dragenter', arguments);
+	        //console.log('dragenter', arguments);
         };
 
         $scope.dragover = function(){
-	        console.log('dragover', arguments);
+	        //console.log('dragover', arguments);
         };
 
         $scope.dragleave = function(){
-	        console.log('dragleave', arguments);
+	        //console.log('dragleave', arguments);
         };
 
         $scope.drop = function(){
-	        console.log('drop', arguments);
+	        //console.log('drop', arguments);
 	        $scope.dropped = true;
         };
 
