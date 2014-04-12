@@ -15,6 +15,9 @@
 - ondrag($droptarget) - функция, срабатывающая при движении элемента 
 - onend($droptarget) - функция, срабатывающая в конце движения элемента 
 - ns - Имя namespace. Что бы droppable-элементы реагировали на draggable-элементы они должны иметь общий namespace. По умолчанию namespace = 'common'
+
+scope:
+- $dragged - флаг, который позволяют узнать было ли движение элемента в течении последнего цикла событий (последние ~5мс). (см. пример)
 	
 
 
@@ -102,7 +105,6 @@
 - unselected( [$dragged] ): срабатывает при изменении значения scope.$selected c true на false
 - selecting(): срабатывает при изменении значения scope.$selecting c false на true
 - unselecting(): срабатывает при изменении значения scope.$selecting c true на false
-* $dragged - это флаг, указывающий было ли движение мыши или зафиксировано только click событие
 
 
 
