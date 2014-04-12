@@ -99,9 +99,10 @@
 
 Параметр (задается в виде объекта, callbacks задаются в кавычках):
 - selected( [$dragged] ): срабатывает при изменении значения scope.$selected c false на true
-- unselected(): срабатывает при изменении значения scope.$selected c true на false
+- unselected( [$dragged] ): срабатывает при изменении значения scope.$selected c true на false
 - selecting(): срабатывает при изменении значения scope.$selecting c false на true
 - unselecting(): срабатывает при изменении значения scope.$selecting c true на false
+* $dragged - это флаг, указывающий было ли движение мыши или зафиксировано только click событие
 
 
 
