@@ -1294,8 +1294,11 @@
 					
 					local.startAxis = Point(axis.left - local.startBorders.left, axis.top - local.startBorders.top);
 
-					api.dragtarget = model ? model.get() : model;
+					api.dragmodel = model ? model.get() : model;
+					
 					scope.$dragged = true;
+					
+					scope.$dropmodel = api.dropmodel;
 
 					dragstartCallback(scope);
 
@@ -1315,8 +1318,10 @@
 
 					if(rect) rect.update(position);
 					else $el.dndCss(position);
+					
+					scope.$dropmodel = api.dropmodel;
 
-					dragCallback(scope, {$droptarget: api.droptarget});
+					dragCallback(scope);
 
 					scope.$apply();
 				}
@@ -1325,10 +1330,15 @@
 					if(!local.started) return;
 					
 					if(container) local.$scrollarea.off('scroll', local.onscroll); 
+					
+					scope.$dropmodel = api.dropmodel;
 
-					dragendCallback(scope, {$droptarget: api.droptarget});
+					dragendCallback(scope);
 
-					$timeout(function(){ scope.$dragged = false; });
+					$timeout(function(){ 
+						scope.$dragged = false; 
+						scope.$dropmodel = undefined;
+					});
 				}
 
 				function getBindings(){
@@ -1348,6 +1358,8 @@
 					cssPosition = 'relative';
 					$el.dndCss('position', cssPosition);
 				}
+				
+				scope.$dragged = false;
 
 				$el.dndBind( getBindings() );
 
@@ -1358,7 +1370,7 @@
 
 	/* DROPPABLE DIRECTIVE: */
 
-	module.directive('dndDroppable', function( $parse ){
+	module.directive('dndDroppable', function( $parse, $timeout ){
 		return {
 			require: '?dndModel',
 			link: function(scope, $el, attrs, model){
@@ -1374,41 +1386,52 @@
 				
 
 				function dragenter(api){
-					api.droptarget = model ? model.get() : model;
-					dragenterCallback(scope, { $dragtarget: api.dragtarget });
+					api.dropmodel = model ? model.get() : model;
+					
+					scope.$dragmodel = api.dragmodel;
+					
+					dragenterCallback(scope);
 				
 					scope.$apply();
 				}
 
 				function dragover(api){
-					dragoverCallback(scope, { $dragtarget: api.dragtarget });
+					scope.$dragmodel = api.dragmodel;
+					
+					dragoverCallback(scope);
 
 					scope.$apply();
 				}
 
 				function dragleave(api){
-					dragleaveCallback(scope, { $dragtarget: api.dragtarget });
-					api.droptarget = undefined;
-
+					api.dropmodel = undefined;
+					
+					scope.$dragmodel = api.dragmodel;					
+					dragleaveCallback(scope);
+					
 					scope.$apply();
 				}
 
 				function drop(api){
-					dropCallback(scope, { $dragtarget: api.dragtarget });
-
-					scope.$apply();
+					scope.$dragmodel = api.dragmodel;
+					
+					dropCallback(scope);
+										
+					$timeout(function(){
+						scope.$dragmodel = undefined;
+					});
 				}
 
 				function getBindings(){
 
-					var binding = {};
+					var bindings = {};
 
-					binding[namespace+'.dragenter'] = dragenter;
-					binding[namespace+'.dragover'] = dragover;
-					binding[namespace+'.dragleave'] = dragleave;
-					binding[namespace+'.drop'] = drop;
+					bindings[namespace+'.dragenter'] = dragenter;
+					bindings[namespace+'.dragover'] = dragover;
+					bindings[namespace+'.dragleave'] = dragleave;
+					bindings[namespace+'.drop'] = drop;
 
-					return binding;
+					return bindings;
 
 				}
 
@@ -1421,7 +1444,7 @@
 
 	/* RESIZABLE DIRECTIVE: */
 
-	module.directive('dndResizable', function($parse){
+	module.directive('dndResizable', function($parse, $timeout){
 	
 		function createHandleElement(side){
 			return angular.element('<div></div>').addClass('angular-dnd-resizable-handle angular-dnd-resizable-handle-' + side);
@@ -1435,6 +1458,7 @@
 	
 		return {
 			require: ['?dndRect', '?^dndContainer'],
+			scope: true,
 			link: function(scope, $el, attrs, ctrls){
 				var rect = ctrls[0], container = ctrls[1];
 
@@ -1493,6 +1517,7 @@
 						local.deltaX = crect.left - srect.left + crect.width / 2 - srect.width / 2;
 						local.deltaY = crect.top - srect.top + crect.height / 2 - srect.height / 2;
 						
+						scope.$resized = true;
 				
 						dragstartCallback(scope);
 	
@@ -1568,7 +1593,8 @@
 						
 						dragendCallback(scope);
 	
-						scope.$apply();
+						
+						$timeout(function(){ scope.$resized = false; });
 					}
 					
 					
@@ -1592,6 +1618,8 @@
 				for(var i=0; i < sides.length; i++) {
 					$el.append( createHandleElement( sides[i] ).dndBind( getBindings( sides[i] ) ) );
 				}
+				
+				scope.$resized = false;
 
 			}
 		};
@@ -1599,9 +1627,10 @@
 
 	/* ROTATABLE DIRECTIVE*/
 	
-	module.directive('dndRotatable', function($parse){
+	module.directive('dndRotatable', function($parse, $timeout){
 		return {
 			require: ['?dndRect', '?^dndContainer'],
+			scope: true,
 			link: function(scope, $el, attrs, ctrls){
 				var rect = ctrls[0], container = ctrls[1];
 				
@@ -1652,6 +1681,8 @@
 							
 							local.center = Point(crect.left + crect.width / 2, crect.top + crect.height / 2);
 							
+							scope.$rotated = true;
+							
 							dragstartCallback(scope);
 							
 							scope.$apply();
@@ -1685,13 +1716,15 @@
 							if(!local.started) return;
 							
 							dragendCallback(scope);
-		
-							scope.$apply();
+							
+							$timeout(function(){ scope.$rotated = false });
 						}
 					};
 				}
 				
 				handle.dndBind( getBindings() );
+				
+				scope.$rotated = false;
 			}
 		};
 	});

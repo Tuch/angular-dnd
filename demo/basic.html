@@ -52,12 +52,12 @@
 	        $scope.dropped = true;
         };
 
-        $scope.click = function(){
-	        console.log('click', arguments);
+        $scope.click = function(isclick, dropmodel){
+	        console.log('isclick ===', isclick, dropmodel);
         };
 
-        $scope.dragmodel = 'some dragmodel..';
-        $scope.dropmodel = 'some dropmodel..';
+        $scope.dragmodel = new ( function Dragmodel(){} );
+        $scope.dropmodel = new ( function Dropmodel(){} );
     });
 
 </script>
@@ -87,8 +87,8 @@
 
 		    <div class = "draggable" style = "position: absolute;"
 				ng-style = "{'line-height': rect.height}"
-				ng-click = "click($dragged)"
-		    	dnd-draggable = "{onstart: 'dragstart()', ondrag: 'drag($droptarget)', onend: 'dragend($droptarget)', ns: 'area1'}"
+				ng-click = "click(!$dragged && !$resized && !$rotated, $dropmodel)"
+		    	dnd-draggable = "{onstart: 'dragstart()', ondrag: 'drag($dropmodel)', onend: 'dragend($dropmodel)', ns: 'area1'}"
 		        dnd-rotatable = "{onstart: 'dragstart()', ondrag: 'drag()', onend: 'dragend()'}"
 		        dnd-resizable = "{onstart: 'dragstart()', ondrag: 'drag()', onend: 'dragend()'}"
 		        dnd-rect = "rect"
@@ -101,7 +101,7 @@
 
 		    <div class = "dropzone"
 		    ng-class = "{dropped: dropped}"
-		    dnd-droppable = "{ ondrop: 'drop($dragtarget)', onenter: 'dragenter($dragtarget)', onleave: 'dragleave($dragtarget)', onover: 'dragover($dragtarget)', ns: 'area1' }"
+		    dnd-droppable = "{ ondrop: 'drop($dragmodel)', onenter: 'dragenter($dragmodel)', onleave: 'dragleave($dragmodel)', onover: 'dragover($dragmodel)', ns: 'area1' }"
 		    dnd-model = "dropmodel" >
 
 		    </div>
