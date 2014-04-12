@@ -739,14 +739,6 @@
 					}
 				},
 				
-				setHandledState: function(state){
-					handled = state;
-				},
-				
-				getHandledState: function(){
-					return handled;
-				}
-				
 			};
 
 		
@@ -823,10 +815,6 @@
 
 				this.isTarget = function(){
 					return manipulator.isTarget();
-				};
-
-				this.interrupt = function(){
-					manipulator.interrupt();
 				};
 			}
 
@@ -976,8 +964,6 @@
 			this.mousedown = proxy(this, this.mousedown);
 			this.mousemove = proxy(this, this.mousemove);
 			this.mouseup = proxy(this, this.mouseup);
-
-			this.manipulator.interrupt = this.mouseup;
 			this.manipulator.getClientAxis = this.getClientAxis;
 
 			dnd.$el.on('mousedown', this.mousedown);
@@ -1027,8 +1013,6 @@
 			this.touchstart = proxy(this, this.touchstart);
 			this.touchmove = proxy(this, this.touchmove);
 			this.touchend = proxy(this, this.touchend);
-
-			this.manipulator.interrupt = this.touchend;
 			this.manipulator.getClientAxis = this.getClientAxis;
 
 			dnd.$el.on('touchstart', this.touchstart);
@@ -1265,6 +1249,7 @@
 	module.directive('dndDraggable', function($timeout, $parse){
 		return {
 			require: ['?dndRect', '?dndModel', '?^dndContainer'],
+			scope: true,
 			link: function(scope, $el, attrs, ctrls){
 				var local, rect = ctrls[0], model = ctrls[1], container = ctrls[2];
 
@@ -1310,7 +1295,7 @@
 					local.startAxis = Point(axis.left - local.startBorders.left, axis.top - local.startBorders.top);
 
 					api.dragtarget = model ? model.get() : model;
-					local.dragged = false;
+					scope.$dragged = true;
 
 					dragstartCallback(scope);
 
@@ -1319,7 +1304,6 @@
 
 				function drag(api){
 					if(!local.started) return;
-					if(!local.dragged) local.dragged = true;
 				
 					var axis = api.getAxis();
 					
@@ -1342,9 +1326,9 @@
 					
 					if(container) local.$scrollarea.off('scroll', local.onscroll); 
 
-					dragendCallback(scope, {$droptarget: api.droptarget, $dragged: local.dragged});
+					dragendCallback(scope, {$droptarget: api.droptarget});
 
-					scope.$apply();
+					$timeout(function(){ scope.$dragged = false; });
 				}
 
 				function getBindings(){
@@ -2097,7 +2081,7 @@
 				if($scope.$selected) return this;
 
 				$scope.$selected = true;
-				if( selectedCallback($scope, { '$dragged':!!$scope.$selecting }) === false ) $scope.$selected = false;
+				if( selectedCallback($scope) === false ) $scope.$selected = false;
 
 				return this;
 			};
@@ -2106,7 +2090,7 @@
 				if(!$scope.$selected) return this;
 
 				$scope.$selected = false;
-				if( unselectedCallback($scope, { '$dragged':!!$scope.$selecting }) === false ) $scope.$selected = true;
+				if( unselectedCallback($scope) === false ) $scope.$selected = true;
 
 				return this;
 			};
@@ -2157,7 +2141,7 @@
 
 				function ondestroy() {
 					ctrls[1].remove(ctrls[0]);
-debugger
+
 					if(!scope.$$phase) scope.$apply();
 				}
 

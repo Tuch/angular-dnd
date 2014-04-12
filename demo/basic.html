@@ -52,6 +52,10 @@
 	        $scope.dropped = true;
         };
 
+        $scope.click = function(){
+	        console.log('click', arguments);
+        };
+
         $scope.dragmodel = 'some dragmodel..';
         $scope.dropmodel = 'some dropmodel..';
     });
@@ -83,6 +87,7 @@
 
 		    <div class = "draggable" style = "position: absolute;"
 				ng-style = "{'line-height': rect.height}"
+				ng-click = "click($dragged)"
 		    	dnd-draggable = "{onstart: 'dragstart()', ondrag: 'drag($droptarget)', onend: 'dragend($droptarget)', ns: 'area1'}"
 		        dnd-rotatable = "{onstart: 'dragstart()', ondrag: 'drag()', onend: 'dragend()'}"
 		        dnd-resizable = "{onstart: 'dragstart()', ondrag: 'drag()', onend: 'dragend()'}"
