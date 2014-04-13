@@ -39,6 +39,10 @@
         $scope.onUnselected = function(selecting, selected){
             console.log('unselected:',selecting, selected);
         };
+
+        $scope.onClick = function(dragged){
+            console.log('dragged:', dragged);
+        };
     });
 
 </script>
@@ -58,7 +62,7 @@
 
     <div class = "title"> Some lasso examples </div>
 
-    <div class = "lasso-area" dnd-lasso-area = "{onend: 'createRect($rect)'}" dnd-rect = "test123">
+    <div class = "lasso-area" dnd-lasso-area = "{onend: 'createRect($rect)'}" ng-click = "onClick($dragged)">
         <div class = "article"> Creating lasso </div>
 
     </div>
