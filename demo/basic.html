@@ -35,29 +35,38 @@
 	        if(!arguments[0]) $scope.dropped = false;
         };
 
-        $scope.dragenter = function(){
-	        console.log('dragenter', arguments);
+        $scope.dragenter = function(dropmodel, dragmodel){
+	        $scope.active = dropmodel;
         };
 
         $scope.dragover = function(){
 	        console.log('dragover', arguments);
         };
 
-        $scope.dragleave = function(){
-	        console.log('dragleave', arguments);
+        $scope.dragleave = function(dropmodel, dragmodel){
+	        $scope.active = undefined;
         };
 
-        $scope.drop = function(){
+        $scope.drop = function(dragmodel, model){
 	        console.log('drop', arguments);
-	        $scope.dropped = true;
+	        $scope.dropped = model;
         };
 
         $scope.click = function(isclick, dropmodel){
 	        console.log('isclick ===', isclick, dropmodel);
         };
+        
+        $scope.isDropped = function(model){
+	        return $scope.dropped === model;
+        };
+        
+        $scope.isActive = function(model){
+	        return $scope.active === model;
+        };
+        
+        $scope.dragmodel = 'drag'; 
 
-        $scope.dragmodel = new ( function Dragmodel(){} );
-        $scope.dropmodel = new ( function Dropmodel(){} );
+        $scope.dropmodels = [ 'drop1', 'drop2', 'drop3' ]
     });
 
 </script>
@@ -98,10 +107,12 @@
 
             </div>
 
-		    <div class = "dropzone"
-		    ng-class = "{dropped: dropped}"
-		    dnd-droppable = "{ ondrop: 'drop($dragmodel)', onenter: 'dragenter($dragmodel)', onleave: 'dragleave($dragmodel)', onover: 'dragover($dragmodel)', ns: 'area1' }"
-		    dnd-model = "dropmodel" >
+		    <div 
+		    	ng-repeat = "dropmodel in dropmodels"
+				class = "dropzone"
+				ng-class = "{dropped: isDropped(dropmodel), active: isActive(dropmodel)}"
+				dnd-droppable = "{ ondrop: 'drop($dragmodel, dropmodel)', onenter: 'dragenter(dropmodel, $dragmodel)', onleave: 'dragleave(dropmodel, $dragmodel)', onover: 'dragover($dragmodel)', ns: 'area1' }"
+				dnd-model = "dropmodel" >
 
 		    </div>
 
