@@ -1,11 +1,11 @@
 
 /**
- * @license AngularJS-DND v0.1.1
+ * @license AngularJS-DND v0.1.2
  * (c) 2014-2015 Alexander Afonin (toafonin@gmail.com, http://github.com/Tuch)
  * License: MIT
  */
 
-;(function(angular, undefined){'use strict'
+;(function(angular, undefined, window, document){'use strict'
 
 	 /*
 
@@ -43,6 +43,7 @@
 			TRANSFORM = 'transform';
 			TRANSFORMORIGIN = 'transform-origin';
 		};
+
 	})();
 
 
@@ -72,6 +73,92 @@
 	function getNumFromSegment(min, curr, max){
 		return curr<min ? min : curr > max ? max : curr;
 	}
+
+	function findEvents(element) {
+	
+	    var events = element.data('events');
+	    if (events !== undefined) 
+	        return events;
+	
+	    events = $.data(element, 'events');
+	    if (events !== undefined) 
+	        return events;
+	
+	    events = $._data(element, 'events');
+	    if (events !== undefined)
+	        return events;
+	
+	    events = $._data(element[0], 'events');
+	    if (events !== undefined)
+	        return events;
+	
+	    return undefined;
+	}
+
+	function debounce(fn, timeout, invokeAsap, context) {
+		if(arguments.length == 3 && typeof invokeAsap != 'boolean') {
+			context = invokeAsap;
+			invokeAsap = false;
+		}
+
+		var timer;
+
+		return function() {
+			var args = arguments;
+			context = context || this;
+
+			invokeAsap && !timer && fn.apply(context, args);
+
+			clearTimeout(timer);
+
+			timer = setTimeout(function() {
+				!invokeAsap && fn.apply(context, args);
+				timer = null;
+			}, timeout);
+
+		};
+	}
+
+	function throttle(fn, timeout, context) {
+		var timer, args;
+
+		return function() {
+			if(timer) return;
+			args = arguments;
+			context = context || this;
+			fn.apply(context, args);
+			timer = setTimeout(function(){ timer = null; }, timeout);
+		};
+	}
+	
+		
+	/* parsing like: ' a = fn1(), b = fn2()' into {a: 'fn1()', b: 'fn2()'} */
+	
+	function parseStringAsVars(str){
+		if(!str) return undefined;
+	
+		var a = str.replace(/\s/g,'').split(','), ret = {};
+		
+		for( var i = 0; i < a.length; i++ ){
+			a[i] = a[i].split('=');
+			ret[a[i][0]] = a[i][1];
+		}
+		
+		return ret;
+	};
+
+	angular.dnd = {
+		noop: noop,
+		doTrue: doTrue,
+		doFalse: doFalse,
+		proxy: proxy,
+		radToDeg: radToDeg,
+		degToRad: degToRad,
+		getNumFromSegment: getNumFromSegment,
+		findEvents: findEvents,
+		throttle: throttle,
+		debounce: debounce,
+	};
 	
 	/* EXTEND NUMBER PROTOTYPE BY round */
 	
@@ -352,15 +439,21 @@
 		},
 
 		dndGetParentScrollArea: function(){
-			var ret, parent = this.parent()[0], parents = [];
+			var ret, parents = this.dndParents(), scrollX, clientX, scrollY, clientY, paddingX, paddingY, paddings;
 
-			while(parent){
-				parents.push(parent);
-				parent = parent.parentElement;
-			}
+			forEach(parents, function(element) {
 
-			forEach($(parents), function(element) {
-				if(element.scrollHeight !== element.clientHeight) {
+				paddings = $(element).dndCss(['padding-top', 'padding-right', 'padding-bottom', 'padding-left']);
+
+				scrollX = element.scrollWidth;
+				clientX = element.clientWidth;
+				scrollY = element.scrollHeight;
+				clientY = element.clientHeight;
+
+				paddingY = parseFloat(paddings['padding-top']) + parseFloat(paddings['padding-bottom']);
+				paddingX = parseFloat(paddings['padding-left']) + parseFloat(paddings['padding-right']);
+
+				if( scrollX - paddingX !== clientX || scrollY - paddingY !== clientY ) {
 					ret = element;
 					return false;
 				}
@@ -369,6 +462,16 @@
 			return $(ret);
 		},
 
+		dndParents: function(){
+			var parent = this[0].parentElement, ret = [];
+
+			while(parent){
+				ret.push(parent);
+				parent = parent.parentElement;
+			}
+
+			return $(ret);
+		},
 		dndGetAngle: function (degs){
 
 			var matrix = this.dndCss(TRANSFORM);
@@ -399,15 +502,57 @@
 				}).replace(MOZ_HACK_REGEXP, 'Moz$1');
 			}
 
+			var hooks = {};
+
+			(function(){
+				var arr = {
+					width: ['paddingLeft','paddingRight','borderLeftWidth', 'borderRightWidth'],
+					height: ['paddingTop','paddingBottom','borderTopWidth', 'borderBottomWidth']
+				};
+
+				forEach(arr, function(styles, prop){
+
+					hooks[prop] = {
+						get: function(element){
+							var computed = window.getComputedStyle(element);
+							var ret =  computed[prop];
+
+							if( computed.boxSizing != 'border-box' || ret[ret.length-1] == '%') return ret;
+
+							ret = parseFloat(ret);
+
+							for(var i = 0; i < styles.length; i++){
+								ret -= parseFloat(computed[ styles[i] ]);
+							}
+
+							return ret + 'px';
+						}
+					}
+
+				});
+
+			})();
+
+			var cssNumber = {
+				"columnCount": true,
+				"fillOpacity": true,
+				"fontWeight": true,
+				"lineHeight": true,
+				"opacity": true,
+				"order": true,
+				"orphans": true,
+				"widows": true,
+				"zIndex": true,
+				"zoom": true
+			};
+
 			var setCss = function($element, obj){
 				var styles = {};
 
 				for(var key in obj) {
-					styles[toCamelCase(key)] = obj[key];
-				}
-
-				for(var key in styles) {
-					if(typeof styles[key] == 'number') styles[key] = styles[key] + 'px';
+					var val = obj[key]
+					if( typeof val === "number" && !cssNumber[key] ) val += "px";
+					styles[toCamelCase(key)] = val;
 				}
 
 				$element.css(styles);
@@ -416,22 +561,23 @@
 			};
 			
 			var getCss = function($element, arg){
+				var ret = {};
+
+				if(!$element[0]) return undefined;
 
 				var style = $element[0].style;
 				var computed = window.getComputedStyle( $element[0], null );
-			
+
 				if(typeof arg == 'string') {
 					if(style[arg]) return style[arg];
-					else return computed.getPropertyValue( arg );
+					else return hooks[arg] && 'get' in hooks[arg] ? hooks[arg].get($element[0]) : computed.getPropertyValue( arg );
 				}
-				
-				var ret = {};
-				
+
 				for(var i=0; i < arg.length; i++){
 					if(style[arg[i]]) ret[arg[i]] = style[ arg[i] ];
-					else ret[arg[i]] = computed.getPropertyValue( arg[i] );
+					else ret[arg[i]] = hooks[arg[i]] && 'get' in hooks[arg[i]] ? hooks[arg[i]].get($element[0]) : computed.getPropertyValue( arg[i] );
 				}
-				
+
 				return ret;
 			};
 			
@@ -459,18 +605,17 @@
 	/* INIT ANGULAR MODULE */
 
 	var module = angular.module('dnd', []);
-
-
+	
 
 	/* ANGULAR.ELEMENT DND PLUGIN - CORE OF ANGULAR-DND */
 
 	(function(){
 
 		var Regions = (function(){
-			var arr = {};
+			var list = window.regions = {};
 
 			function Regions(namespace){
-				if(!arr[namespace]) arr[namespace] = [];
+				if(!list[namespace]) list[namespace] = [];
 
 				this.namespace = function(){
 					return namespace;
@@ -479,13 +624,13 @@
 
 			Regions.prototype = {
 				get: function(){
-					return arr[this.namespace()];
+					return list[this.namespace()];
 				},
 
 				remove: function(el){
 					var index = this.get().indexOf(el);
 
-					if(index  > -1) this.get().splice(index,1)
+					if(index > -1) this.get().splice(index,1)
 				},
 
 				has: function(el){
@@ -496,90 +641,109 @@
 					if(this.has(el)) return;
 
 					this.get().push(el);
-				}
+					
+					var self = this;
+					
+					$(el).on('$destroy', function(){ self.remove(el); });
+				},
 
 			}
 
 			return Regions;
 		})();
+		
+		var Dnd = (function(){
 
-		var draggables = [ 'dragstart', 'drag', 'dragend' ];
-		var droppables = [ 'dragenter', 'dragover', 'dragleave', 'drop' ];
-
-		draggables.has = droppables.has = function(event){
-			return this.indexOf(event) > -1;
-		};
-
-		function Dnd(el, namespace){
-			this.el = el;
-			this.$el = $(el);
-			this.listeners = { 'dragstart':[], 'drag':[], 'dragend':[], 'dragenter':[], 'dragover':[], 'dragleave':[], 'drop':[] };
-			this.regions = new Regions(namespace);
-			this.namespace = function(){ return namespace };
-		}
-
-		var events = [ 'dragstart', 'drag', 'dragend', 'dragenter', 'dragover', 'dragleave', 'drop' ];
-
-		Dnd.prototype = {
-			_isEmptyListeners: function(event){
-				if(event instanceof Array) {
-
-					for(var i=0; i < event.length; i++ ) {
-						if(!this.isEmptyListeners(event[i])) return false;
-					}
-
-				} else if(this.listeners[event].length > 0) return false;
-
-				return true;
-			},
-
-			addListener: function(event, handler){
-				if(events.indexOf(event) == -1) {
-					console.log('jquery.dnd: invalid event name - ', event);
-					return;
-				}
-
-				this.listeners[event].push( handler);
-
-				if( droppables.has(event) ) this.regions.add(this.el);
-				else if(draggables.has(event) && !this.mouse && !this.touch) {
-					if('onmousedown' in document) this.mouse = new Mouse(this);
-					if('ontouchstart' in document) this.touch = new Touch(this);
-				}
-			},
-
-			removeListener: function(event, handler){
-
-				var listeners = this.listeners[event];
-
-				for(var i=0; i < listeners.length; i++) {
-					if( listeners[i] === handler ) listeners[event].splice(i,1);
-				}
-
-				if( droppables.has(event) && this._isEmptyListeners(droppables)) this.regions.remove(this.el);
-				else if(draggables.has(event) && this._isEmptyListeners(draggables)) this.destroy();
-			},
-
-			trigger: function(event, api, el){
-				for(var i=0; i < this.listeners[event].length; i++) {
-					this.listeners[event][i].call(this.$el, api,  el);
-				}
-			},
-
-			destroy: function(){
-
-				if( this.mouse ) {
-					this.mouse.destroy();
-					delete this.mouse;
-				}
-
-				if( this.touch ) {
-					this.touch.destroy();
-					delete this.touch;
-				}
+			var events = [ 'dragstart', 'drag', 'dragend', 'dragenter', 'dragover', 'dragleave', 'drop' ];
+			var draggables = [ 'dragstart', 'drag', 'dragend' ];
+			var droppables = [ 'dragenter', 'dragover', 'dragleave', 'drop' ];
+			var handled = false;
+	
+			draggables.has = droppables.has = function(event){
+				return this.indexOf(event) > -1;
+			};
+			
+	
+			function Dnd(el, namespace){
+				this.el = el;
+				this.$el = $(el);
+				this.listeners = { 'dragstart':[], 'drag':[], 'dragend':[], 'dragenter':[], 'dragover':[], 'dragleave':[], 'drop':[] };
+				this.regions = new Regions(namespace);
+				this.namespace = function(){ return namespace };
+				this.propagation = true;
 			}
+	
+			Dnd.prototype = {
+				_isEmptyListeners: function(event){
+					if(event instanceof Array) {
+	
+						for(var i=0; i < event.length; i++ ) {
+							if(!this._isEmptyListeners(event[i])) return false;
+						}
+	
+					} else if(this.listeners[event].length > 0) return false;
+	
+					return true;
+				},
+	
+				addListener: function(event, handler){
+					if(events.indexOf(event) == -1) {
+						console.log('jquery.dnd: invalid event name - ', event);
+						return;
+					}
+					this.listeners[event].push( handler);
+	
+					if( droppables.has(event) ) this.regions.add(this.el);
+					else if(draggables.has(event) && !this.mouse && !this.touch) {
+						if('onmousedown' in window) this.mouse = new Mouse(this);
+						if( ('ontouchstart' in window) || ('onmsgesturechange' in window) ) this.touch = new Touch(this);
+					}
+				},
+	
+				removeListener: function(event, handler){
+				
+					var args = arguments;
+					
+					if(args.length === 0) for( var key in this.listeners ) this.listeners[key].length = 0;
+					else if(args.length === 1) this.listeners[event].length = 0;
+					else {
+						var listeners = this.listeners[event];
+					
+						for(var i=0; i < listeners.length; i++) {
+							if( listeners[i] === handler ) listeners[event].splice(i,1);
+						} 
+						
+					} 
+					
+					if( this._isEmptyListeners(droppables) ) this.regions.remove(this.el);
+					else if( this._isEmptyListeners(draggables)) this.destroy();
+					
+				},
+	
+				trigger: function(event, api, el){
+					for(var i=0; i < this.listeners[event].length; i++) {
+						this.listeners[event][i].call(this.$el, api,  el);
+					}
+				},
+	
+				destroy: function(){
+	
+					if( this.mouse ) {
+						this.mouse.destroy();
+						delete this.mouse;
+					}
+	
+					if( this.touch ) {
+						this.touch.destroy();
+						delete this.touch;
+					}
+				},
+				
+			};
 
-		};
+		
+			return Dnd;
+		})();
 
 		var Api = (function(){
 
@@ -645,129 +809,162 @@
 					return manipulator.target;
 				};
 
+				this.getEvent = function(){
+					return manipulator.event;
+				};
+
+				this.isTarget = function(){
+					return manipulator.isTarget();
+				};
 			}
 
 			return Api;
 
 		})();
-		
-		function Manipulator(dnd){
-			this.dnd = dnd;
-			
-			this.onscroll = proxy(this, this.onscroll);
-		}
 
-		Manipulator.prototype = {
 
-			start: function(){
-				this.started = true;
 
-				this.target = false;
+		var Manipulator = (function(){
+			var id = 0, targetId;
 
-				this.api = new Api(this);
+			function Manipulator(dnd){
+				var _id = ++id;
 
-				this.regions = this.prepare();
+				this.dnd = dnd;
+				this.onscroll = proxy(this, this.onscroll);
+				this.getId = function(){ return _id; };
 				
-				this.$scrollarea = this.dnd.$el.dndGetParentScrollArea();
-				
-				this.$scrollarea.on('scroll', this.onscroll);
+				//this.begin = throttle(this.begin, 10);
 
-				this.dnd.trigger('dragstart', this.api);
+			}
 
-			},
-			
-			onscroll: function(){
-				this.regions = this.prepare();
-			},
+			Manipulator.prototype = {
+				getTargetId: function(){
+					return targetId;
+				},
 
-			stop: function(){
-			
-				this.$scrollarea.off('scroll', this.onscroll);
+				setTargetId: function(id){
+					targetId = id;
+				},
 
-				if(this.target) $(this.target).data('dnd')[this.dnd.namespace()].trigger('drop', this.api, this.dnd.el);
+				isTarget: function(){
+					return this.getId() === this.getTargetId();
+				},
 
-				this.dnd.trigger('dragend', this.api, this.target);
-			},
-			
-			
-			prepare: function(){
-				var regions = this.dnd.regions.get();
+				start: function(){
+					this.started = true;
 
-				var ret = [];
+					this.target = false;
 
-				for(var key in regions) {
-					var dnd = $( regions[key] ).data('dnd')[this.dnd.namespace()];
+					this.api = new Api(this);
 
-					if(this.dnd === dnd) continue;
+					this.regions = this.prepare();
 
-					ret.push({
-						dnd: dnd,
-						rect: dnd.$el.dndClientRect()
-					});
-				}
+					this.$scrollarea = this.dnd.$el.dndGetParentScrollArea();
 
-				return ret;
+					this.$scrollarea.on('scroll', this.onscroll);
 
-			},
-			
-			begin: function (event){
-				this.event = event;
+					this.dnd.trigger('dragstart', this.api);
 
-				this.started = false;
+				},
 
-				angular.element(document.body).dndDisableSelection();
+				onscroll: function(){
+					this.regions = this.prepare();
+				},
 
-				event.preventDefault();
-				
-				event.stopPropagation();
-			},
-				
-			progress: function (event){
-				var self = this;
-				if(this.moving) return false;
-				this.moving = setTimeout(function(){ self.moving = undefined; }, 10);
-				
-				
-				this.event = event;
+				stop: function(){
 
-				if(!this.started) this.start();
+					this.$scrollarea.off('scroll', this.onscroll);
+
+					if(this.target) $(this.target).data('dnd')[this.dnd.namespace()].trigger('drop', this.api, this.dnd.el);
+
+					this.dnd.trigger('dragend', this.api, this.target);
+				},
 
 
-				this.dnd.trigger('drag', this.api);
+				prepare: function(){
+					var regions = this.dnd.regions.get();
 
-				var axis = this.api.getAxis(), x = axis.left, y = axis.top;
+					var ret = [];
 
-				for(var i = 0; i < this.regions.length; i++) {
-					var region = this.regions[i];
+					for(var key in regions) {
+						var dnd = $( regions[key] ).data('dnd')[this.dnd.namespace()];
 
-					if( (x > region.rect.left) && (x < region.rect.left + region.rect.width) && (y > region.rect.top) && (y < region.rect.top + region.rect.height) ){
+						if(this.dnd === dnd) continue;
 
-						if(this.target !== region.dnd.el) {
-							this.target = region.dnd.el;
-							region.dnd.trigger('dragenter', this.api, this.dnd.el);
-						} else region.dnd.trigger('dragover', this.api, this.dnd.el);
-
-					} else if(this.target) {
-						$(this.target).data('dnd')[this.dnd.namespace()].trigger('dragleave', this.api, this.dnd.el);
-						this.target = false;
+						ret.push({
+							dnd: dnd,
+							rect: dnd.$el.dndClientRect()
+						});
 					}
-				}
-			},
-			
-			end: function (event){
-				this.event = event;
 
-				if(this.started) this.stop();
+					return ret;
 
-				angular.element(document.body).dndEnableSelection();
-			},	
-		};
+				},
+
+				begin: function (event){
+
+					if(!this.getTargetId()) { this.setTargetId( this.getId() )};
+
+					this.event = event;
+
+					this.started = false;
+
+					angular.element(document.body).dndDisableSelection();
+				},
+
+				progress: function (event){
+
+					//var self = this;
+					//if(this.moving) return false;
+					//this.moving = setTimeout(function(){ self.moving = undefined; }, 10);
+
+
+					this.event = event;
+
+					if(!this.started) this.start();
+
+					this.dnd.trigger('drag', this.api);
+
+					var axis = this.api.getAxis(), x = axis.left, y = axis.top;
+
+					for(var i = 0; i < this.regions.length; i++) {
+						var region = this.regions[i];
+
+						if( (x > region.rect.left) && (x < region.rect.left + region.rect.width) && (y > region.rect.top) && (y < region.rect.top + region.rect.height) ){
+
+							if(this.target !== region.dnd.el) {
+								this.target = region.dnd.el;
+								region.dnd.trigger('dragenter', this.api, this.dnd.el);
+							} else region.dnd.trigger('dragover', this.api, this.dnd.el);
+
+						} else if(this.target === region.dnd.el) {
+							$(this.target).data('dnd')[this.dnd.namespace()].trigger('dragleave', this.api, this.dnd.el);
+							this.target = false;
+						}
+					}
+				},
+
+				end: function (event){
+					this.event = event;
+
+					if(this.started) this.stop();
+
+					angular.element(document.body).dndEnableSelection();
+
+					if(this.isTarget()) this.setTargetId();
+				},
+			};
+
+			return Manipulator;
+		})();
 
 		function Mouse(dnd){
+			this.dnd = dnd;
 			this.manipulator = new Manipulator(dnd);
 			this.mousedown = proxy(this, this.mousedown);
 			this.mousemove = proxy(this, this.mousemove);
-			this.mouseup = proxy(this, this.mousetup);
+			this.mouseup = proxy(this, this.mouseup);
 			this.manipulator.getClientAxis = this.getClientAxis;
 
 			dnd.$el.on('mousedown', this.mousedown);
@@ -775,35 +972,40 @@
 
 		Mouse.prototype = {
 
-			getClientAxis: function() {
+			getClientAxis: function(event,s) {
+				event = event ? event : this.event;
+
 				return {
-					top: this.event.clientY,
-					left: this.event.clientX
+					top: event.clientY,
+					left: event.clientX
 				};
 			},
 
 			mousedown: function (event){
+
+				event.preventDefault();
 			
 				this.manipulator.begin(event);
 
-				$document.on( 'mousemove', this.mousemove );
-				$document.on( 'mouseup', this.mouseup );
+				$document.on('mousemove', this.mousemove );
+				$document.on('mouseup', this.mouseup );
 			},
-			
+
 			mousemove: function(event){
+
 				this.manipulator.progress(event);
 			},
 			
-			mousetup: function(event){
+			mouseup: function(event){
 				this.manipulator.end(event);
 
-				$document.off(' mousemove', this.mousemove );
-				$document.off(' mouseup', this.mouseup );
+				$document.off('mousemove', this.mousemove );
+				$document.off('mouseup', this.mouseup );
 			},
 
 			destroy: function(){
 				this.dnd.$el.off('mousedown', this.mousedown);
-			}
+			},
 		};
 
 
@@ -819,31 +1021,36 @@
 
 		Touch.prototype = {
 
-			getClientAxis: function() {
-			
+			getClientAxis: function(event) {
+				event = event ? event : this.event;
+				event = event.originalEvent ? event.originalEvent : event;
+				
 				return {
-					top: this.event.changedTouches[0].clientY,
-					left: this.event.changedTouches[0].clientX
+					top: event.changedTouches[0].clientY,
+					left: event.changedTouches[0].clientX
 				};
 			},
 			
 			touchstart: function (event){
 				this.manipulator.begin(event);
 
-				$document.on( 'touchmove', this.touchmove );
-				$document.on( 'touchend', this.touchend );
+				$document.on('touchmove', this.touchmove );
+				$document.on('touchend touchcancel', this.touchend );
 				
 			},
 			
-			touchmove: function(event){
+			touchmove: function(event){				
+				event.preventDefault();
+
 				this.manipulator.progress(event);
 			},
 			
 			touchend: function(event){
+				
 				this.manipulator.end(event);
 
 				$document.off('touchmove', this.touchmove );
-				$document.off('touchend', this.touchend );
+				$document.off('touchend touchcancel', this.touchend );
 			},
 
 			destroy: function(){
@@ -877,11 +1084,11 @@
 		 * @returns {object} angular.element object.
 		 */
 
-		angular.element.prototype.dndBind = function ( event, handler ) {
+		$.prototype.dndBind = function ( event, handler ) {
 		
 			if(!this.length) return this;
 
-			var opts = [], events, obj, namespace;
+			var opts = [], events, obj, namespace, self = this;
 
 			if(typeof event === 'object') {
 				obj = event;
@@ -898,7 +1105,7 @@
 				}
 
 			} else if(typeof event === 'string' && typeof handler === 'function') {
-				events = event.replace(/\s+/g, ' ').split(' ');
+				events = event.trim().replace(/\s+/g, ' ').split(' ');
 
 				for(var i=0; i < events.length; i++) {
 					opts.push({
@@ -943,7 +1150,6 @@
 		 *
 		 * @description
 		 * Аналог jQuery.fn.unbind(), только для drag and drop событий
-		 * !!Функция не работает!!
 		 *
 		 * @param {(object=|string=)} arg1 Если не object и не string, то удаляются все обработчики с каждого слоя
 		 * 		Если object, то будут удалены callbacks события которые заданы в виде ключа и
@@ -955,36 +1161,79 @@
 		 * @returns {object} angular.element object.
 		 */
 
-		angular.element.dndUnbind =  function(){
-
-			/* TODO: supporting remove function */
+		$.prototype.dndUnbind =  function(){
+			
+			var args = arguments, events = [], default_ns = 'common';
 
 			if(!this.length) return this;
-
-			var args = arguments, opts = {}, namespace = 'common', clearall = false;
-
-			if(args.length === 0){
-				clearall = true;
-			} else if(typeof args[0] === 'object') {
-				opts = args[0];
-				if(typeof args[1] === 'string') namespace = args[1];
-			} else if(typeof args[0] === 'string'){
-				namespace = args[0];
-				clearall = true;
-			} else if(args.length > 1) {
-				opts[ args[0] ] = args[1];
-				if(typeof args[2] === 'string') namespace = args[2];
-			} else return this;
+			
+			if(typeof args[0] == 'string') {
+			
+				args[0] = args[0].trim().replace(/\s+/g, ' ').split(' ');
+			
+				if(typeof args[1] == 'function') {
+					
+					for(var i = 0; i < args[0].length; i++){
+						events.push({
+							event: args[0][i],
+							handler: args[1]
+						});
+					}
+					
+				} else {
+					for(var i = 0; i < args[0].length; i++){
+						events.push({
+							event: args[0][i]
+						});
+					}
+				}
+				
+			} else if( typeof args[0] == 'object') {
+				
+				for(var key in args[0]){
+					if(args[0].hasOwnProperty(key)) {
+						
+						events.push({
+							event: key.trim(),
+							handler: args[0][key]
+						});
+						
+					}
+				}
+				
+			} else if(args.length !== 0) return this;
 
 			forEach(this, function(element){
 				var data = $(element).data();
 
-				if(!data.dnd) return element;
-
-				if (clearall) data.dnd[namespace].removeListener();
-				else {
-					for(var event in opts) {
-						data.dnd[namespace].removeListener( opts[event], handler );
+				if(!data.dnd) return;
+				
+				if (args.length === 0) {
+				
+					for(var key in data.dnd){
+						data.dnd[key].removeListener();
+					}
+					
+				} else {
+				
+					for(var i = 0; i < events.length; i++) {
+						var obj = events[i];
+						
+						obj.event = obj.event.split('.');
+						
+						if(obj.event[1] == undefined) {
+							obj.event[1] = obj.event[0];
+							obj.event[0] = default_ns;
+						}
+						
+						if(obj.event[0] == '*') {
+							for(var key in data.dnd) {
+								data.dnd[key].removeListener( obj.event[1] );
+							}
+							
+						} else if(data.dnd[ obj.event[0] ]) {
+							obj.handler ? data.dnd[ obj.event[0] ].removeListener( obj.event[1], obj.handler ) : data.dnd[ obj.event[0] ].removeListener( obj.event[1] );		
+						}			
 					}
 				}
 			});
@@ -993,21 +1242,7 @@
 		}
 
 	})();
-	
-	/* parsing like: ' a = fn1(), b = fn2()' into {a: 'fn1()', b: 'fn2()'} */
-	
-	function parseStringAsVars(str){
-		if(!str) return undefined;
-	
-		var a = str.replace(/\s/g,'').split(','), ret = {};
-		
-		for( var i = 0; i < a.length; i++ ){
-			a[i] = a[i].split('=');
-			ret[a[i][0]] = a[i][1];
-		}
-		
-		return ret;
-	};
+
 
 
 	/* DRAGGABLE DIRECTIVE: */
@@ -1015,10 +1250,11 @@
 	module.directive('dndDraggable', function($timeout, $parse){
 		return {
 			require: ['?dndRect', '?dndModel', '?^dndContainer'],
+			scope: true,
 			link: function(scope, $el, attrs, ctrls){
-				var local, rect = ctrls[0], model = ctrls[1], container = ctrls[2];
+				var rect = ctrls[0], model = ctrls[1], container = ctrls[2] ? ( ctrls[2].$element() === $el ? undefined : ctrls[2] ) : undefined;
 
-				var opts = $parse(attrs.dndDraggable)() || {};
+				var opts = $parse(attrs.dndDraggable)(scope) || {};
 				var dragstartCallback = $parse(opts.onstart);
 				var dragCallback = $parse(opts.ondrag);
 				var dragendCallback = $parse(opts.onend);
@@ -1028,7 +1264,11 @@
 				if(!namespace) namespace = 'common';
 
 				function dragstart(api){
-					local = {};
+					var local = api.local = {};
+
+					if(!api.isTarget()) return;
+
+					local.started = true;
 
 					local.pos = $el.dndStyleRect();
 
@@ -1055,7 +1295,11 @@
 					
 					local.startAxis = Point(axis.left - local.startBorders.left, axis.top - local.startBorders.top);
 
-					api.dragtarget = model ? model.get() : model;
+					api.dragmodel = model ? model.get() : model;
+					
+					scope.$dragged = true;
+					
+					scope.$dropmodel = api.dropmodel;
 
 					dragstartCallback(scope);
 
@@ -1063,6 +1307,9 @@
 				}
 
 				function drag(api){
+					var local = api.local;
+					
+					if(!local.started) return;
 				
 					var axis = api.getAxis();
 					
@@ -1072,29 +1319,31 @@
 					
 					var position = { top: local.pos.top + subtract.y, left: local.pos.left + subtract.x };
 
-					// если draggable элемент имеет абсолютное позиционирование, то есть возможность расчитывать его координаты в процентах.
-					// Что чаще всего намного удобнее. При относительном позиционировании функция $el.dndCss(['top','left'])
-					// не верно расчитывает значение в некоторых мобильных браузерах. В частности Safari 7.0.4.
-
-					//if(cssPosition == 'absolute') {
-					//	position.top = position.top / parseFloat( local.parent.height() ) * 100 + '%';
-					//	position.left = position.left / parseFloat( local.parent.width() ) * 100 + '%';
-					//}
-
 					if(rect) rect.update(position);
 					else $el.dndCss(position);
+					
+					scope.$dropmodel = api.dropmodel;
 
-					dragCallback(scope, {$droptarget: api.droptarget});
+					dragCallback(scope);
 
 					scope.$apply();
 				}
 
 				function dragend(api){
+					var local = api.local;
+					
+					if(!local.started) return;
+					
 					if(container) local.$scrollarea.off('scroll', local.onscroll); 
+					
+					scope.$dropmodel = api.dropmodel;
 
-					dragendCallback(scope, {$droptarget: api.droptarget});
+					dragendCallback(scope);
 
-					scope.$apply();
+					$timeout(function(){ 
+						scope.$dragged = false; 
+						scope.$dropmodel = undefined;
+					});
 				}
 
 				function getBindings(){
@@ -1114,8 +1363,11 @@
 					cssPosition = 'relative';
 					$el.dndCss('position', cssPosition);
 				}
+				
+				scope.$dragged = false;
 
 				$el.dndBind( getBindings() );
+
 			}
 		};
 	});
@@ -1123,12 +1375,12 @@
 
 	/* DROPPABLE DIRECTIVE: */
 
-	module.directive('dndDroppable', function( $parse ){
+	module.directive('dndDroppable', function( $parse, $timeout ){
 		return {
 			require: '?dndModel',
 			link: function(scope, $el, attrs, model){
 				
-				var opts = $parse(attrs.dndDroppable)() || {};
+				var opts = $parse(attrs.dndDroppable)(scope) || {};
 				var dragenterCallback = $parse(opts.onenter);
 				var dragoverCallback = $parse(opts.onover);
 				var dragleaveCallback = $parse(opts.onleave);
@@ -1139,45 +1391,56 @@
 				
 
 				function dragenter(api){
-					api.droptarget = model ? model.get() : model;
-					dragenterCallback(scope, { $dragtarget: api.dragtarget });
+					api.dropmodel = model ? model.get() : model;
+					
+					scope.$dragmodel = api.dragmodel;
+					
+					dragenterCallback(scope);
 				
 					scope.$apply();
 				}
 
 				function dragover(api){
-					dragoverCallback(scope, { $dragtarget: api.dragtarget });
+					scope.$dragmodel = api.dragmodel;
+					
+					dragoverCallback(scope);
 
 					scope.$apply();
 				}
 
 				function dragleave(api){
-					dragleaveCallback(scope, { $dragtarget: api.dragtarget });
-					api.droptarget = undefined;
-
+					api.dropmodel = undefined;
+					
+					scope.$dragmodel = api.dragmodel;					
+					dragleaveCallback(scope);
+					
 					scope.$apply();
 				}
 
 				function drop(api){
-					dropCallback(scope, { $dragtarget: api.dragtarget });
-
-					scope.$apply();
+					scope.$dragmodel = api.dragmodel;
+					
+					dropCallback(scope);
+										
+					$timeout(function(){
+						scope.$dragmodel = undefined;
+					});
 				}
 
-				function getBinding(){
+				function getBindings(){
 
-					var binding = {};
+					var bindings = {};
 
-					binding[namespace+'.dragenter'] = dragenter;
-					binding[namespace+'.dragover'] = dragover;
-					binding[namespace+'.dragleave'] = dragleave;
-					binding[namespace+'.drop'] = drop;
+					bindings[namespace+'.dragenter'] = dragenter;
+					bindings[namespace+'.dragover'] = dragover;
+					bindings[namespace+'.dragleave'] = dragleave;
+					bindings[namespace+'.drop'] = drop;
 
-					return binding;
+					return bindings;
 
 				}
 
-				$el.dndBind( getBinding() );
+				$el.dndBind( getBindings() );
 
 			}
 		};
@@ -1186,7 +1449,7 @@
 
 	/* RESIZABLE DIRECTIVE: */
 
-	module.directive('dndResizable', function($parse){
+	module.directive('dndResizable', function($parse, $timeout){
 	
 		function createHandleElement(side){
 			return angular.element('<div></div>').addClass('angular-dnd-resizable-handle angular-dnd-resizable-handle-' + side);
@@ -1200,8 +1463,9 @@
 	
 		return {
 			require: ['?dndRect', '?^dndContainer'],
+			scope: true,
 			link: function(scope, $el, attrs, ctrls){
-				var rect = ctrls[0], container = ctrls[1];
+				var rect = ctrls[0], container = ctrls[1] ? ( ctrls[1].$element() === $el ? undefined : ctrls[1] ) : undefined;
 
 				var defaults = {
 					handles: 'ne, se, sw, nw, n, e, s, w',
@@ -1211,19 +1475,19 @@
 					maxHeight: 10000
 				};
 
-				var opts = extend({}, defaults, $parse(attrs.dndResizable)() || {});
+				var opts = extend({}, defaults, $parse(attrs.dndResizable)(scope) || {});
 				
 				var dragstartCallback = $parse(opts.onstart);
 				var dragCallback = $parse(opts.ondrag);
 				var dragendCallback = $parse(opts.onend);
 
 				function getBindings(side){
-					var local;
 					
 					function dragstart(api){
-					
-						local = {};
-		
+						var local = api.local = {};
+
+						if( !api.isTarget() ) return;
+
 						local.started = true;
 						local.$parent = $el.parent();
 						local.rads = $el.dndGetAngle();
@@ -1232,7 +1496,6 @@
 						local.parentRect = local.$parent.dndClientRect();
 		
 						var axis = api.getAxis(), crect = $el.dndClientRect(), srect = local.rect = $el.dndStyleRect();
-						
 					
 						local.onscroll = function(){
 							api.container(container.getRect());
@@ -1258,6 +1521,7 @@
 						local.deltaX = crect.left - srect.left + crect.width / 2 - srect.width / 2;
 						local.deltaY = crect.top - srect.top + crect.height / 2 - srect.height / 2;
 						
+						scope.$resized = true;
 				
 						dragstartCallback(scope);
 	
@@ -1265,6 +1529,8 @@
 					}
 	
 					function drag(api){
+						var local = api.local;
+						
 						if(!local.started) return;
 						
 						var axis = api.getAxis();
@@ -1318,17 +1584,6 @@
 
 						if(boundedRect.left+1 < local.startBorders.left || boundedRect.top+1 < local.startBorders.top || boundedRect.right-1 > local.startBorders.right || boundedRect.bottom-1 > local.startBorders.bottom) return;
 						
-						// если resizable элемент имеет абсолютное позиционирование, то есть возможность расчитывать его координаты в процентах.
-						// Что чаще всего намного удобнее. При относительном позиционировании функция $el.dndCss(['top','left'])
-						// не верно расчитывает значение в некоторых мобильных браузерах. В частности Safari 7.0.4.
-	
-						//if(cssPosition == 'absolute') {
-						//	styles.width = styles.width / parseFloat(local.parentRect.width) * 100 + '%';
-						//	styles.height = styles.height / parseFloat(local.parentRect.height) * 100 + '%';
-						//	styles.left = styles.left / parseFloat(local.parentRect.width) * 100 + '%';
-						//	styles.top = styles.top / parseFloat(local.parentRect.height) * 100 + '%';
-						//}
-						
 						if(rect) rect.update(styles);
 						else $el.dndCss(styles);
 					
@@ -1338,13 +1593,16 @@
 					}
 	
 					function dragend(api){
+						var local = api.local;
+					
 						if(!local.started) return;
 						
 						if(container) local.$scrollarea.off('scroll', local.onscroll); 
 						
 						dragendCallback(scope);
 	
-						scope.$apply();
+						
+						$timeout(function(){ scope.$resized = false; });
 					}
 					
 					
@@ -1365,10 +1623,11 @@
 				
 				var sides = opts.handles.replace(/\s/g,'').split(',');
 				
-				
 				for(var i=0; i < sides.length; i++) {
 					$el.append( createHandleElement( sides[i] ).dndBind( getBindings( sides[i] ) ) );
 				}
+				
+				scope.$resized = false;
 
 			}
 		};
@@ -1376,18 +1635,19 @@
 
 	/* ROTATABLE DIRECTIVE*/
 	
-	module.directive('dndRotatable', function($parse){
+	module.directive('dndRotatable', function($parse, $timeout){
 		return {
 			require: ['?dndRect', '?^dndContainer'],
+			scope: true,
 			link: function(scope, $el, attrs, ctrls){
-				var rect = ctrls[0], container = ctrls[1];
+				var rect = ctrls[0], container = ctrls[1] ? ( ctrls[1].$element() === $el ? undefined : ctrls[1] ) : undefined;
 				
 				var defaults = {
 
 				};
 
 
-				var opts = extend({}, defaults, $parse(attrs.dndRotatable)() || {});
+				var opts = extend({}, defaults, $parse(attrs.dndRotatable)(scope) || {});
 				
 				var dragstartCallback = $parse(opts.onstart);
 				var dragCallback = $parse(opts.ondrag);
@@ -1406,12 +1666,13 @@
 				$el.append(handle);
 				
 				function getBindings(){
-					var local;
-				
 					return {
 						dragstart: function(api, target){
-						
-							local = {};		
+							var local = api.local = {};
+
+							if(!api.isTarget()) return;
+
+							local.started = true;
 							
 							var axis = api.getAxis(), crect = $el.dndClientRect();
 							
@@ -1426,12 +1687,18 @@
 							
 							local.center = Point(crect.left + crect.width / 2, crect.top + crect.height / 2);
 							
+							scope.$rotated = true;
+							
 							dragstartCallback(scope);
 							
 							scope.$apply();
 						},
 			
 						drag: function(api, target){
+							var local = api.local;
+							
+							if(!local.started) return;
+
 							var axis = api.getAxis();
 							var angle = Point(axis).deltaAngle(local.startPoint, local.center);
 							var degs = radToDeg(local.currAngle+angle);
@@ -1454,16 +1721,20 @@
 						},
 						
 						dragend: function (api){
+							var local = api.local;
+							
 							if(!local.started) return;
 							
 							dragendCallback(scope);
-		
-							scope.$apply();
+							
+							$timeout(function(){ scope.$rotated = false });
 						}
 					};
 				}
 				
 				handle.dndBind( getBindings() );
+				
+				scope.$rotated = false;
 			}
 		};
 	});
@@ -1476,14 +1747,42 @@
 
 	module.factory('DndLasso', function () {
 
-		var local, $div = $('<div></div>').dndCss({position: 'absolute'}); 
+		var $div = $('<div></div>').dndCss({position: 'absolute'});
 
 		var defaults = {
 			className: 'angular-dnd-lasso',
 			container: 'body',
-			offsetX: -1,
-			offsetY: -1
+			offsetX: 0,
+			offsetY: 0
 		};
+		
+
+
+		function Handler(local){
+			this.getRect = function(){
+				return local.rect;
+			}
+
+			this.getClientRect = function(){
+				return $div.dndClientRect();
+			}
+		}
+		
+		function Local(api){
+			var isTarget = api.isTarget(), handler = new Handler(this);
+			
+			this.isTarget = function(){
+				return isTarget;
+			}
+			
+			this.handler = function(){
+				return handler;
+			}
+			
+			this.getEvent = function(){
+				return api.getEvent();
+			}
+		}
 
 		function Lasso(options){
 
@@ -1494,24 +1793,34 @@
 			options.$el.dndBind({
 
 				dragstart: function(api) {
-					local = {};
+					var local = api.local = new Local(api);
+						
+					if( !local.isTarget() )  {
+						self.trigger('start');
+						return;
+					}
 
-					local.start = {};
 					local.startAxis = api.getAxis();
 
 					$div.removeAttr('class style').removeClass('ng-hide').addClass(options.className);
 
 					options.$el.append( $div );
 
-					var $container = options.$el, crect = $container.dndClientRect(); 
+					var $container = options.$el, crect = $container.dndClientRect();
 
 					api.container(crect);
 
-					self.onstart();
+					self.trigger('start', local.handler() );
 
 				},
 
 				drag: function(api) {
+					var local = api.local;
+					
+					if( !local.isTarget() )  {
+						self.trigger('drag');
+						return;
+					}
 
 					var axis = api.getAxis();
 					var areaRect = options.$el.dndClientRect();
@@ -1538,31 +1847,48 @@
 
 					local.rect = rect;
 
-					rect.top = rect.top+options.offsetY;
-					rect.left = rect.left+options.offsetX;
+					rect.top = rect.top + options.offsetY;
+					rect.left = rect.left + options.offsetX;
 
-					$div.dndCss(local.rect);
+					$div.dndCss(rect);
 
-					self.ondrag(local.rect);
+					self.trigger('drag', local.handler() );
 				},
 
 				dragend: function(api) {
-				
-					self.onend(local.rect);
-					
+					var local = api.local;
+
+					if( !local.isTarget() ) {
+						self.trigger('end');
+						return;
+					}
+
 					$div.addClass('ng-hide');
 
 					$(document.body).append( $div );
+					
+					self.trigger('end', local.handler() );
 				}
 			});
 
+			this.destroy = function(){
+				options.$el.dndUnbind();
+			};
 
-		}
+			var events = {};
 
-		Lasso.prototype = {
-			onstart: function(){},
-			ondrag: function(){},
-			onend: function(){}
+			this.on = function(name, fn) {
+				events[name] = events[name] || [];
+				events[name].push(fn);
+			};
+
+			this.trigger = function(name, args) {
+				events[name] = events[name] || [];
+				args = args || typeof args === 'string' ? [args] : [];
+				events[name].forEach(function(fn) {
+					fn.apply(this, args);
+				});
+			}
 		}
 
 		return Lasso;
@@ -1570,41 +1896,17 @@
 
 
 
-
-
 	/* LASSO AREA DIRECTIVE: */
 
-	module.directive('dndLassoArea', function(DndLasso, $parse){
+	module.directive('dndLassoArea', function(DndLasso, $parse, $timeout){
 
-		var styles = {
-			'top':'height',
-			'right':'width',
-			'bottom':'height',
-			'left':'width',
-			'width':'width',
-			'height':'height'
-		};
+		function Controller(){
+			var ctrls = [], data = {};
 
-		function pxToPrct(rect, parentsize){
-			for(var key in styles){
-				var side = styles[key];
+			this.data = function(){
+				return data;
+			};
 
-				if(rect[key]) rect[key] = parseFloat(rect[key]) / parentsize[side] * 100 + '%';
-			}
-
-			return rect;
-		}
-
-		function Controller($element, $attrs, $scope){
-			var ctrls = [], selected;
-
-
-			this.unselectAll = function(){
-				for(var i = 0; i < ctrls.length; i++){
-					ctrls[i].unselect();
-				}
-			};	
-				
 			this.add = function(ctrl){
 				ctrls.push(ctrl);
 			};
@@ -1620,23 +1922,23 @@
 				return false;
 			};
 
-			this.hitChecking = function(rect){
-				for(var i = 0; i < ctrls.length; i++) {
-					if(ctrls[i].hit(rect)) {
-						if(!ctrls[i].selected()) ctrls[i].select();
-					} else ctrls[i].unselect();
+			this.selectable = function(element){
+				for(var i = 0; i < ctrls.length; i++){
+					if(ctrls[i].getElement()[0] == element) return ctrls[i];
 				}
+
+				return false;
 			};
 
-			this.hitReset = function(){
-				for(var i = 0; i < ctrls.length; i++) {
-					if(ctrls[i].selected()) ctrls[i].unselect();
-				};
+			this.empty = function(){
+				return !ctrls.length;
 			};
+
+			this.get = function(i){
+				return i === undefined ? ctrls : ctrls[i];
+			}
 		}
-
-
-
+		
 		var ctrls = [];
 
 		ctrls.remove = function (ctrl){
@@ -1657,41 +1959,156 @@
 			controller: Controller,
 			require: 'dndLassoArea',
 			link: function(scope, $el, attrs, ctrl){
-				var callback = $parse(attrs.dndLassoArea), lasso = new DndLasso({ $el:$el });
+			
+				var defaults = {};
+				var lasso = new DndLasso({ $el:$el }), selectable, keyPressed, opts = extend({}, defaults, $parse(attrs.dndLassoArea)() || {});
+				var dragstartCallback = $parse(opts.onstart);
+				var dragCallback = $parse(opts.ondrag);
+				var dragendCallback = $parse(opts.onend);
 
 				ctrls.push(ctrl);
 
-				lasso.onstart = function(rect) {
-					ctrl.hitReset();
-				}
-
-				lasso.ondrag = function(rect) {
-
-					ctrl.hitChecking(rect);
-
-					scope.$apply();
-				}
-
-				lasso.onend = function(rect) {
-					//rect = pxToPrct(rect, { width:$el.width(),height:$el.height() });
-					callback(scope, { $rect: rect });
+				function onClick(){
+					var s = ctrl.get();
 					
+					scope.$dragged = false;
+					
+					if(selectable) {
+						if(keyPressed) {
+							 selectable.toggleSelected();
+						} else {
+							for(var i = 0; i < s.length; i++) {
+								if(selectable !== s[i]) s[i].unselected().unselecting();
+							}
+
+							if(!selectable.isSelected()) selectable.selected().unselecting();
+						}
+
+					} else {
+						if(!keyPressed) {
+							for(var i = 0; i < s.length; i++){
+								s[i].unselected().unselecting();
+							}
+						}
+					}
+					
+					dragendCallback(scope, { $rect: false });
+
 					scope.$apply();
 				}
+
+				function onStart(handler) {
+					scope.$dragged = true;
+
+					scope.$apply();
+
+					if(!handler || ctrl.empty()) return;
+
+					var s = ctrl.get();
+
+					if(selectable) {
+
+						if(!keyPressed) {
+							for(var i = 0; i < s.length; i++){
+								s[i].unselected().unselecting();
+							}
+						}
+
+					} else {
+						if(!keyPressed) {
+							for(var i = 0; i < s.length; i++){
+								s[i].unselected().unselecting();
+							}
+						}
+					}
+				}
+
+				function onDrag(handler) {
+					scope.$dragged = true;
+
+					if(!handler) return;
+
+					if(!ctrl.empty()) {
+						var s = ctrl.get(), rect = handler.getClientRect();
+
+						for(var i = 0; i < s.length; i++) {
+							s[i].hit(rect) ? s[i].selecting() : s[i].unselecting();
+						}
+					}
+
+					dragCallback(scope, { $rect: handler.getRect() });
+
+					scope.$apply();
+				}
+
+				function onEnd(handler) {
+					$timeout(function(){ scope.$dragged = false; });
+
+					if(!handler) return;
+
+					if(!ctrl.empty()) {
+
+						var s = ctrl.get();
+
+						for(var i = 0; i < s.length; i++){
+							if(s[i].isSelecting()) s[i].toggleSelected().unselecting();
+						}
+					}
+
+					dragendCallback(scope, { $rect: handler.getRect() });
+				}
+
+
+				$el.on('mousedown touchstart', throttle(function (event){
+					scope.$dragged = false;
+					
+					if(ctrl.empty()) return;
+					
+					selectable = ctrl.selectable(event.target);
+
+					keyPressed = (event.metaKey || event.ctrlKey || event.shiftKey);
+
+					dragstartCallback( scope );
+
+					scope.$apply();
+
+
+				}, 500) );
+
+				$el.on('click', function(event){
+					if(ctrl.empty()) return;
+					if(!scope.$dragged) onClick();
+				} );
+
+				lasso.on('start', onStart);
+				lasso.on('drag', onDrag);
+				lasso.on('end', onEnd);
 
 				$el.on('$destroy', function(){
-					ctrl.unselectAll();
 					ctrls.remove(ctrl);
 
 					scope.$apply();
 				});
 
-				$el.on('mousedown', function(event){
-					if(event.target !== $el[0]) return;
+				/*
+				var started = false;
 
-					ctrl.unselectAll();
-					scope.$apply();
+				scope.$watch('$dragged', function(value){
+					if(value === undefined) return;
+
+
+					if(value) {
+						dragstartCallback( scope );
+
+					} else {
+
+						dragendCallback( scope );
+					}
+
 				});
+				*/
+				
+				scope.$dragged = false;
 			}
 		};
 	});
@@ -1705,40 +2122,77 @@
 		var defaults = {};
 
 		function Controller($element, $attrs, $scope){
-			var selected = false;
-			var opts = extend({}, defaults, $parse($attrs.dndSelectable)() || {});
+			$scope.$selected = false, $scope.$selecting = false;
 
-			var selectCallback = $parse(opts.select);
-			var unselectCallback = $parse(opts.unselect);
-			var progressCallback = $parse(opts.progress);
+			$scope.$select = function(){
+				self.selected();
+			}
+			
+			$scope.$unselect = function(){
+				self.unselected();
+			}
 
-			this.toggle = function(){
-				selected ? this.unselect() : this.select();
+			var self = this, opts = extend({}, defaults, $parse($attrs.dndSelectable)($scope) || {});
+
+			var selectedCallback = $parse(opts.selected);
+			var selectingCallback = $parse(opts.selecting);
+			var unselectedCallback = $parse(opts.unselected);
+			var unselectingCallback = $parse(opts.unselecting);
+
+			this.getElement = function(){
+				return $element;
 			};
 
-			this.select = function(){
-				selected = true;
+			this.isSelected = function(){
+				return $scope.$selected;
+			};
 
-				selectCallback($scope);
+			this.isSelecting = function(){
+				return $scope.$selecting;
+			};
+
+			this.toggleSelected = function(){
+				return this.isSelected() ? this.unselected() : this.selected();
+			};
+
+			this.selecting = function(){
+				if($scope.$selecting) return this;
+
+				$scope.$selecting = true;
+				if( selectingCallback($scope) === false ) $scope.$selecting = false;
+
+				return this;
+			};
+
+			this.unselecting = function(){
+				if(!$scope.$selecting) return this;
+				
+				$scope.$selecting = false;
+				if( unselectingCallback($scope) === false ) $scope.$selecting = true;
+
+				return this;
 			};
 
 			this.selected = function(){
-				return selected;
+				if($scope.$selected) return this;
+
+				$scope.$selected = true;
+				if( selectedCallback($scope) === false ) $scope.$selected = false;
+
+				return this;
 			};
+			
+			this.unselected = function(){
+				if(!$scope.$selected) return this;
 
-			this.unselect = function(){
-				selected = false;
+				$scope.$selected = false;
+				if( unselectedCallback($scope) === false ) $scope.$selected = true;
 
-				unselectCallback($scope);
-			};
-
-			this.progress = function(){
-
-				progressCallback($scope);
+				return this;
 			};
 
 			this.hit = function(a){
-				var b = this.rectCtrl.get();
+				var b = this.rectCtrl.getClient();
 
 				for(var key in b) {
 					b[key] = parseFloat(b[key]);
@@ -1750,38 +2204,49 @@
 				a.right = a.right == undefined ? a.left + a.width : a.right;
 
 				return (
-					a.top < b.top && b.top < a.bottom && ( a.left < b.left && b.left < a.right || a.left < b.right && b.right < a.right ) ||
-					a.top < b.bottom && b.bottom < a.bottom && ( a.left < b.left && b.left < a.right || a.left < b.right && b.right < a.right ) ||
-					a.left > b.left && a.right < b.right && ( b.top < a.bottom && a.bottom < b.bottom ||  b.bottom > a.top && a.top > b.top || a.top <= b.top && a.bottom >= b.bottom) || 
-					a.top > b.top && a.bottom < b.bottom && ( b.left < a.right && a.right < b.right || b.right > a.left && a.left > b.left || a.left <= b.left && a.right >= b.right) || 
-					a.top > b.top && a.right < b.right && a.bottom < b.bottom && a.left > b.left
+					a.top <= b.top && b.top <= a.bottom && ( a.left <= b.left && b.left <= a.right || a.left <= b.right && b.right <= a.right ) ||
+					a.top <= b.bottom && b.bottom <= a.bottom && ( a.left <= b.left && b.left <= a.right || a.left <= b.right && b.right <= a.right ) ||
+					a.left >= b.left && a.right <= b.right && ( b.top <= a.bottom && a.bottom <= b.bottom ||  b.bottom >= a.top && a.top >= b.top || a.top <= b.top && a.bottom >= b.bottom) ||
+					a.top >= b.top && a.bottom <= b.bottom && ( b.left <= a.right && a.right <= b.right || b.right >= a.left && a.left >= b.left || a.left <= b.left && a.right >= b.right) ||
+					a.top >= b.top && a.right <= b.right && a.bottom <= b.bottom && a.left >= b.left
 				);
 			};
 		}
 
+		function LikeRectCtrl($element){
+			this.$element = $element;
+		}
+
+		LikeRectCtrl.prototype = {
+			getClient: function(){
+				return this.$element.dndClientRect();
+			}
+		};
+
 		return {
 			restrict: 'A',
-			require: ['dndSelectable', '^dndLassoArea', 'dndRect'],
+			require: ['dndSelectable', '^dndLassoArea', '?dndRect', '?dndDraggable'],
 			controller: Controller,
+			scope: true,
 			link: function(scope, $el, attrs, ctrls) {
 
-				ctrls[0].rectCtrl = ctrls[2];
+				scope.$dndSelectable = ctrls[0];
+
+				var rectCtrl = ctrls[2];
+
+				ctrls[0].rectCtrl = rectCtrl ? rectCtrl : new LikeRectCtrl($el);
 
 				ctrls[1].add(ctrls[0]);
 
-				$el.on("$destroy", function() {
-					handler.destroy();
-					ctrls[1].remove(ctrls[0])
-					scope.$apply();
-				});
 
 
-				$el.on('click', function(event){
-					if(!event.ctrlKey && !event.shiftKey) ctrls[1].unselectAll();
-					ctrls[0].select();
+				function ondestroy() {
+					ctrls[1].remove(ctrls[0]);
 
-					scope.$apply();
-				});
+					if(!scope.$$phase) scope.$apply();
+				}
+
+				$el.on('$destroy', ondestroy);
 
 			}
 		};
@@ -1818,6 +2283,9 @@
 				return extend({}, $element.dndClientRect());
 			};
 			
+			this.$element = function(){
+				return $element;
+			}
 		}
 
 		return {
@@ -1830,14 +2298,13 @@
 	/* RECTANGLE DIRECTIVE: */
 
 	module.directive('dndRect', function($parse){
-		var styles = ['top','right','bottom','left','width','height','transform'], base = ['left','top','width','height'];
+		var styles = ['top','left','width','height','transform'];
 
 		styles.has = function(val){
 			return this.indexOf(val) > -1;
 		}
 
 		function Controller( $scope, $attrs, $element ){
-
 			var getter = $parse($attrs.dndRect), setter = getter.assign, rect = getter($scope);
 
 			this.update = function(prop, value) {
@@ -1863,6 +2330,10 @@
 				return extend({},rect);
 			}
 
+			this.getClient = function(){
+				return $element.dndClientRect();
+			}
+
 			rect = typeof rect == 'object' ? rect : {};
 
 			for(var key in rect){
@@ -1874,12 +2345,13 @@
 
 			for(var key in rect) if(!styles.has(key)) delete rect[key];
 
-			var css = $element.dndCss(base);
+			var css = $element.dndCss(['top','left','width','height',TRANSFORM]);
 
 			if(rect.top == undefined) rect.top = css.top;
 			if(rect.left == undefined) rect.left = css.left;
 			if(rect.width == undefined) rect.width = css.width;
 			if(rect.height == undefined) rect.height = css.height;
+			if(rect.transform == undefined) rect.transform = css[TRANSFORM] == 'none' ? 'matrix(1, 0, 0, 1, 0, 0)' : css[TRANSFORM];
 
 			this.update(rect);
 		}
@@ -1889,7 +2361,7 @@
 			controller: Controller,
 			link: function(scope, $el, attrs) {
 
-				scope.$watch(attrs.dndRect, function (n, o) {
+				scope.$watch(attrs.dndRect, throttle(function (n, o) {
 
 					if(!n || typeof n != 'object') return;
 					if(o == undefined) o = {};
@@ -1898,16 +2370,16 @@
 
 					for(var val, i=0; i < styles.length; i++ ){
 						val = styles[i];
-	
+
 						if(n[val] == undefined && o[val] != undefined) css[val] = '';
 						else if(n[val] != undefined) css[val] = n[val];
 					}
-					
-					if(css['transform']) css[TRANSFORM] = css['transform'];
+
+					if(css.transform) css[TRANSFORM] = css.transform;
 
 					$el.dndCss(css);
 
-			   }, true);
+			    }, 10), true);
 
 			}
 		};
@@ -1928,7 +2400,7 @@
 	 */
 
 	module.directive('dndFittext', function( $timeout, $window ){
-		var $span = $('<span></span>').dndCss({'position':'absolute','left':-10000, 'top':-10000, 'opacity':0, 'z-index': -9999});
+		var $span = $('<span></span>').dndCss({'position':'absolute','left':-99999, 'top':-99999, 'opacity':0, 'z-index': -9999});
 
 		$(document.body).append( $span );
 
@@ -1941,7 +2413,6 @@
 
 		function getRealSize(text, font) {
 			$span.html( encodeStr(text) ).dndCss(font);
-
 			var rect = $span[0].getBoundingClientRect();
 
 			return {
@@ -1963,46 +2434,66 @@
 			restrict: 'A',
 			link: function(scope, $el, attrs) {
 
-				function updateSize(size) {
-					$timeout(function(){
-						var font = $el.dndCss(
-							['font-size','font-family','font-weight','text-transform','border-top','border-right','border-bottom','border-left','padding-top','padding-right','padding-bottom','padding-left']
-						), text = $el.text();
+				function updateSize(opts) {
+					opts = opts === undefined ? {} : opts;
+					var font = $el.dndCss(
+						['font-size','font-family','font-weight','text-transform','border-top','border-right','border-bottom','border-left','padding-top','padding-right','padding-bottom','padding-left']
+					), text = opts.text == undefined ? $el.text() : opts.text;
 
-						var realSize = getRealSize(text, font), currSize = getCurrSize($el,0,0);
+					var sizes = [];
+					if(opts.width === undefined) sizes.push('width');
+					if(opts.height === undefined) sizes.push('height');
 
-						currSize.width = parseFloat(size.width);
-						currSize.height = parseFloat(size.height);
+					if(sizes) sizes = $el.dndCss(sizes);
 
-						var kof1 = currSize.height / realSize.height;
-						var kof2 = currSize.width / realSize.width;
+					for(var key in sizes){
+						var val = sizes[key];
 
-						var max = scope.$eval(attrs.dndFittextMax);
-						var min = scope.$eval(attrs.dndFittextMin);
+						if(val[val.length-1] == '%') return;
+						opts[key] = sizes[key];
+					}
 
-						if(min == undefined) min = 0;
-						if(max == undefined) max = Number.POSITIVE_INFINITY;
+					var realSize = getRealSize(text, font), currSize = getCurrSize($el,0,0);
+					if(!realSize.width || !realSize.height) {
+						$el.dndCss('font-size', '');
+						return
+					}
 
-						var kof = (kof1 < kof2 ? kof1 : kof2);
+					currSize.width = parseFloat(opts.width);
+					currSize.height = parseFloat(opts.height);
 
-						//Корректировка плавности
-						kof *= 0.75;
-						if((kof > 0.95 && kof <= 1) || (kof >= 1 && kof < 1.05) ) return;
+					var kof1 = currSize.height / realSize.height;
+					var kof2 = currSize.width / realSize.width;
 
-						var n = kof * parseFloat(font['font-size']);
+					var max = scope.$eval(attrs.dndFittextMax);
+					var min = scope.$eval(attrs.dndFittextMin);
 
-						n = getNumFromSegment(min, n, max);
+					if(min == undefined) min = 0;
+					if(max == undefined) max = Number.POSITIVE_INFINITY;
 
-						$el.dndCss('font-size', n+'px');
-					})
+					var kof = (kof1 < kof2 ? kof1 : kof2);
+
+					//Корректировка плавности
+					kof *= 0.85;
+					if((kof > 0.95 && kof <= 1) || (kof >= 1 && kof < 1.05) ) return;
+
+					var n = kof * parseFloat(font['font-size']);
+
+					n = getNumFromSegment(min, n, max);
+
+					$el.dndCss('font-size', n+'px');
 				}
 
-				scope.$watch( attrs.dndFittext, updateSize, true);
+				scope.$watch( attrs.dndFittext, throttle(function(opts){
+					updateSize(opts);
+				}), true);
 
-				$($window).on('resize', updateSize);
+				$($window).on('resize', function(){
+					updateSize();
+				});
 			}
 		};
 	});
 
 
-})(angular, undefined);
+})(angular, undefined, window, document);

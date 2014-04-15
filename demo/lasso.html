@@ -7,11 +7,9 @@
 <link rel="stylesheet" href="demo.css" />
 
 
-
 <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.2.10/angular.js"></script>
-
-<link rel="stylesheet" href="../css/stylesheet.css" />
 <script type="text/javascript" src = "../js/angular-dnd.js"></script>
+<link rel="stylesheet" href="../css/stylesheet.css" />
 
 
 
@@ -21,23 +19,51 @@
 
     app.controller('controller', function($scope){
         var models = $scope.models = [];
+        
+        window.$scope = $scope;
+        
+        function Model(rect){
+        	var self = this;
+        	this.rect = rect;
+	        this.init = function(select, unselect){
+		        self.select = select;
+		        self.unselect = unselect;
+	        }
+        }
 
-        $scope.createRect = function(rect){
-       	// console.log(rect);
-            models.push({
-                rect:rect,
-                selected: false
-            });
+        $scope.createRect = function(item){
+        	var model = new Model(item);
+        
+            models.push(model);
         };
 
-        $scope.onSelect = function(model){
-            model.selected = true;
+        $scope.onSelecting = function(selecting, selected){
+            console.log('selecting:',selecting, selected);
         };
 
-        $scope.onUnselect = function(model){
-            model.selected = false;
+        $scope.onSelected = function(selecting, selected, ctrl){
+            console.log('selected:',selecting, selected);
         };
 
+        $scope.onUnselecting = function(selecting, selected) {
+            console.log('unselecting:',selecting, selected);
+        };
+
+        $scope.onUnselected = function(selecting, selected){
+            console.log('unselected:',selecting, selected);
+        };
+
+        $scope.onClick = function(dragged){
+            console.log('dragged:', dragged);
+        };
+
+        $scope.selectableOptions = {
+            selecting: 'onSelecting($selecting, $selected)',
+            unselecting: 'onUnselecting($selecting, $selected)',
+            selected: 'onSelected($selecting, $selected, $dndSelectable)',
+            unselected: 'onUnselected($selecting, $selected)',
+            select: 'select',
+        }
     });
 
 </script>
@@ -57,18 +83,18 @@
 
     <div class = "title"> Some lasso examples </div>
 
-    <div class = "lasso-area" dnd-lasso-area = "createRect($rect)" dnd-rect = "test123">
+    <div class = "lasso-area" dnd-lasso-area = "{onend: 'createRect($rect)'}" ng-click = "onClick($dragged)">
         <div class = "article"> Creating lasso </div>
 
     </div>
 
     <div class = "lasso-area" dnd-lasso-area>
         <div class = "article"> Selecting lasso </div>
-        <div class = "lasso-area-creature" 
+        <div class = "lasso-area-creature" ng-init = "model.init($select, $unselect)"
 	        ng-repeat = "model in models" 
-	        dnd-rect = "model.rect" 
-	        ng-class = "{selected: model.selected, progress: model.progress}"
-			dnd-selectable = "{ select: 'onSelect(model)', unselect: 'onUnselect(model)' }"
+	        dnd-rect = "model.rect"
+	        ng-class = "{selected: $selected, selecting: $selecting}"
+			dnd-selectable = "selectableOptions"
             dnd-draggable>
         </div>
     </div>
