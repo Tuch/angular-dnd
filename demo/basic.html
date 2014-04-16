@@ -64,6 +64,10 @@
 	        return $scope.active === model;
         };
         
+        $scope.reset = function(){
+	        $scope.rect = {top:'20px', left:'240px', width: '100px', height: '100px'};
+        }
+        
         $scope.dragmodel = 'drag'; 
 
         $scope.dropmodels = [ 'drop1', 'drop2', 'drop3' ]
@@ -91,6 +95,7 @@
 	    height: <input ng-model = 'rect.height' type="text">
 	    width: <input ng-model = 'rect.width' type="text">
 	    transform: <input ng-model = 'rect.transform' type="text">
+	    <button ng-click = "reset()">Reset</button>
 
 		<div class = "dnd-container">
 		    <div class = "draggable" style = "position: absolute;"

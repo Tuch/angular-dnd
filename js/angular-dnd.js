@@ -870,6 +870,7 @@
 
 				onscroll: function(){
 					this.regions = this.prepare();
+					this.dnd.trigger('drag', this.api);
 				},
 
 				stop: function(){
@@ -2037,7 +2038,6 @@
 					}
 
 					dragCallback(scope, { $rect: handler.getRect() });
-
 					scope.$apply();
 				}
 
@@ -2058,7 +2058,12 @@
 					dragendCallback(scope, { $rect: handler.getRect() });
 				}
 
-
+				/*
+				throttle не позволяет в течении указаного периода времени запустить функцию еще раз. Это необходимо на тач устройствах, т.к. иначе происходит два запуска функции.
+				Один для оригинального события touchstart и второй для сэмулированного mousedown. Если взять большую задержку, то эти события могут игнорироваться, 
+				в случае когда пользователь будет часто инициировать их
+				*/
+				
 				$el.on('mousedown touchstart', throttle(function (event){
 					scope.$dragged = false;
 					
@@ -2071,12 +2076,11 @@
 					dragstartCallback( scope );
 
 					scope.$apply();
-
-
-				}, 500) );
+				}, 100) );
 
 				$el.on('click', function(event){
 					if(ctrl.empty()) return;
+
 					if(!scope.$dragged) onClick();
 				} );
 
@@ -2090,30 +2094,13 @@
 					scope.$apply();
 				});
 
-				/*
-				var started = false;
-
-				scope.$watch('$dragged', function(value){
-					if(value === undefined) return;
-
-
-					if(value) {
-						dragstartCallback( scope );
-
-					} else {
-
-						dragendCallback( scope );
-					}
-
-				});
-				*/
 				
 				scope.$dragged = false;
 			}
 		};
 	});
-
-
+	
+	
 
 	/* SELECTABLE DIRECTIVE: */
 
@@ -2237,9 +2224,7 @@
 				ctrls[0].rectCtrl = rectCtrl ? rectCtrl : new LikeRectCtrl($el);
 
 				ctrls[1].add(ctrls[0]);
-
-
-
+				
 				function ondestroy() {
 					ctrls[1].remove(ctrls[0]);
 
@@ -2307,6 +2292,10 @@
 		function Controller( $scope, $attrs, $element ){
 			var getter = $parse($attrs.dndRect), setter = getter.assign, rect = getter($scope);
 
+			//$attrs.$observe('dndRect', function(){
+			//	console.log(arguments);
+			//})
+
 			this.update = function(prop, value) {
 				var values;
 				
@@ -2359,10 +2348,9 @@
 		return {
 			restrict: 'A',
 			controller: Controller,
-			link: function(scope, $el, attrs) {
-
+			require: 'dndRect',
+			link: function(scope, $el, attrs, ctrl) {
 				scope.$watch(attrs.dndRect, throttle(function (n, o) {
-
 					if(!n || typeof n != 'object') return;
 					if(o == undefined) o = {};
 
