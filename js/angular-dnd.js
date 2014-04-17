@@ -2292,10 +2292,6 @@
 		function Controller( $scope, $attrs, $element ){
 			var getter = $parse($attrs.dndRect), setter = getter.assign, rect = getter($scope);
 
-			//$attrs.$observe('dndRect', function(){
-			//	console.log(arguments);
-			//})
-
 			this.update = function(prop, value) {
 				var values;
 				
@@ -2472,7 +2468,7 @@
 					$el.dndCss('font-size', n+'px');
 				}
 
-				scope.$watch( attrs.dndFittext, throttle(function(opts){
+				scope.$watch( attrs.dndFittext, setTimeout(function(opts){
 					updateSize(opts);
 				}), true);
 
