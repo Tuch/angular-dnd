@@ -1898,6 +1898,24 @@
 
 
 	/* LASSO AREA DIRECTIVE: */
+	
+	/*
+	
+	mousedown() -> dragged = false, dragstarCallback(), $apply()
+	
+	mousemove() -> start() -> unselected(), $apply() ->
+										-> drag() -> dragged = true, selecting(), dragCallback(), $apply()
+										-> drag() -> dragged = true, selecting(), dragCallback(), $apply()
+										...
+				
+	mouseup()   -> end() -> setTimeout(a), selected(), dragendCallback(), $apply()
+	
+	click()     -> if dragged == false -> dragged = false, unselected(), selected(), dragendCallback(), $apply() 
+				
+	fire a      -> dragged = false, unselecting(), $apply()
+	
+	
+	*/
 
 	module.directive('dndLassoArea', function(DndLasso, $parse, $timeout){
 
@@ -1999,11 +2017,16 @@
 				}
 
 				function onStart(handler) {
+				
+					if(!handler) return;
+					
 					scope.$dragged = true;
-
-					scope.$apply();
-
-					if(!handler || ctrl.empty()) return;
+					
+					if(ctrl.empty()) {
+						scope.$apply();
+						return;
+					}
+					
 
 					var s = ctrl.get();
 
@@ -2022,13 +2045,31 @@
 							}
 						}
 					}
+					
+					
+					scope.$apply();
 				}
 
+				//var time = [];
+
+				//var fn = debounce(function(){
+				//	var sum = 0;
+
+				//	for(var i=0; i < time.length; i++){
+				//		sum += time[i];
+				//	}
+
+				//	console.log( Math.round(sum / time.length) );
+				//	time = [];
+
+				//}, 1000)
+
 				function onDrag(handler) {
-					scope.$dragged = true;
 
 					if(!handler) return;
-
+										
+					scope.$dragged = true;
+					
 					if(!ctrl.empty()) {
 						var s = ctrl.get(), rect = handler.getClientRect();
 
@@ -2038,12 +2079,16 @@
 					}
 
 					dragCallback(scope, { $rect: handler.getRect() });
+
+					//var start = Date.now();
 					scope.$apply();
+					//time.push(Date.now() - start);
+					//fn();
+
 				}
 
 				function onEnd(handler) {
-					$timeout(function(){ scope.$dragged = false; });
-
+					
 					if(!handler) return;
 
 					if(!ctrl.empty()) {
@@ -2051,21 +2096,33 @@
 						var s = ctrl.get();
 
 						for(var i = 0; i < s.length; i++){
-							if(s[i].isSelecting()) s[i].toggleSelected().unselecting();
+							if(s[i].isSelecting()) s[i].toggleSelected();
 						}
 					}
+					
+					scope.$apply();
 
 					dragendCallback(scope, { $rect: handler.getRect() });
+					
+					
+					$timeout(function(){
+						scope.$dragged = false;
+						
+						if(!ctrl.empty()) {
+	
+							var s = ctrl.get();
+	
+							for(var i = 0; i < s.length; i++){
+								s[i].unselecting();
+							}
+						}
+					});
 				}
 
-				/*
-				throttle не позволяет в течении указаного периода времени запустить функцию еще раз. Это необходимо на тач устройствах, т.к. иначе происходит два запуска функции.
-				Один для оригинального события touchstart и второй для сэмулированного mousedown. Если взять большую задержку, то эти события могут игнорироваться, 
-				в случае когда пользователь будет часто инициировать их
-				*/
-				
+
 				$el.on('mousedown touchstart', throttle(function (event){
 					scope.$dragged = false;
+					//scope.$dragging = false;
 					
 					if(ctrl.empty()) return;
 					
@@ -2076,7 +2133,7 @@
 					dragstartCallback( scope );
 
 					scope.$apply();
-				}, 100) );
+				}, 500) );
 
 				$el.on('click', function(event){
 					if(ctrl.empty()) return;
@@ -2099,8 +2156,8 @@
 			}
 		};
 	});
-	
-	
+
+
 
 	/* SELECTABLE DIRECTIVE: */
 
@@ -2119,12 +2176,12 @@
 				self.unselected();
 			}
 
-			var self = this, opts = extend({}, defaults, $parse($attrs.dndSelectable)($scope) || {});
+			//var self = this, opts = extend({}, defaults, $parse($attrs.dndSelectable)($scope) || {});
 
-			var selectedCallback = $parse(opts.selected);
-			var selectingCallback = $parse(opts.selecting);
-			var unselectedCallback = $parse(opts.unselected);
-			var unselectingCallback = $parse(opts.unselecting);
+			//var selectedCallback = $parse(opts.selected);
+			//var selectingCallback = $parse(opts.selecting);
+			//var unselectedCallback = $parse(opts.unselected);
+			//var unselectingCallback = $parse(opts.unselecting);
 
 			this.getElement = function(){
 				return $element;
@@ -2146,16 +2203,16 @@
 				if($scope.$selecting) return this;
 
 				$scope.$selecting = true;
-				if( selectingCallback($scope) === false ) $scope.$selecting = false;
+				//if( selectingCallback($scope) === false ) $scope.$selecting = false;
 
 				return this;
 			};
 
 			this.unselecting = function(){
 				if(!$scope.$selecting) return this;
-				
+
 				$scope.$selecting = false;
-				if( unselectingCallback($scope) === false ) $scope.$selecting = true;
+				//if( unselectingCallback($scope) === false ) $scope.$selecting = true;
 
 				return this;
 			};
@@ -2164,16 +2221,16 @@
 				if($scope.$selected) return this;
 
 				$scope.$selected = true;
-				if( selectedCallback($scope) === false ) $scope.$selected = false;
+				//if( selectedCallback($scope) === false ) $scope.$selected = false;
 
 				return this;
 			};
-			
+
 			this.unselected = function(){
 				if(!$scope.$selected) return this;
 
 				$scope.$selected = false;
-				if( unselectedCallback($scope) === false ) $scope.$selected = true;
+				//if( unselectedCallback($scope) === false ) $scope.$selected = true;
 
 				return this;
 			};
@@ -2192,11 +2249,11 @@
 
 				return (
 					a.top <= b.top && b.top <= a.bottom && ( a.left <= b.left && b.left <= a.right || a.left <= b.right && b.right <= a.right ) ||
-					a.top <= b.bottom && b.bottom <= a.bottom && ( a.left <= b.left && b.left <= a.right || a.left <= b.right && b.right <= a.right ) ||
-					a.left >= b.left && a.right <= b.right && ( b.top <= a.bottom && a.bottom <= b.bottom ||  b.bottom >= a.top && a.top >= b.top || a.top <= b.top && a.bottom >= b.bottom) ||
-					a.top >= b.top && a.bottom <= b.bottom && ( b.left <= a.right && a.right <= b.right || b.right >= a.left && a.left >= b.left || a.left <= b.left && a.right >= b.right) ||
-					a.top >= b.top && a.right <= b.right && a.bottom <= b.bottom && a.left >= b.left
-				);
+						a.top <= b.bottom && b.bottom <= a.bottom && ( a.left <= b.left && b.left <= a.right || a.left <= b.right && b.right <= a.right ) ||
+						a.left >= b.left && a.right <= b.right && ( b.top <= a.bottom && a.bottom <= b.bottom ||  b.bottom >= a.top && a.top >= b.top || a.top <= b.top && a.bottom >= b.bottom) ||
+						a.top >= b.top && a.bottom <= b.bottom && ( b.left <= a.right && a.right <= b.right || b.right >= a.left && a.left >= b.left || a.left <= b.left && a.right >= b.right) ||
+						a.top >= b.top && a.right <= b.right && a.bottom <= b.bottom && a.left >= b.left
+					);
 			};
 		}
 
@@ -2217,6 +2274,14 @@
 			scope: true,
 			link: function(scope, $el, attrs, ctrls) {
 
+				var self = this, opts = extend({}, defaults, $parse(attrs.dndSelectable)(scope) || {});
+
+				var selectedCallback = $parse(opts.selected);
+				var selectingCallback = $parse(opts.selecting);
+				var unselectedCallback = $parse(opts.unselected);
+				var unselectingCallback = $parse(opts.unselecting);
+
+
 				scope.$dndSelectable = ctrls[0];
 
 				var rectCtrl = ctrls[2];
@@ -2224,7 +2289,20 @@
 				ctrls[0].rectCtrl = rectCtrl ? rectCtrl : new LikeRectCtrl($el);
 
 				ctrls[1].add(ctrls[0]);
-				
+
+				scope.$watch('$selected',function(val){
+					if(val === undefined) return;
+					val ? selectedCallback(scope) : unselectedCallback(scope);
+					//console.log('selected', val);
+				});
+
+				scope.$watch('$selecting',function(val){
+					if(val === undefined) return;
+					val ? selectingCallback(scope) :  unselectingCallback(scope);
+					//console.log('selecting', val);
+
+				});
+
 				function ondestroy() {
 					ctrls[1].remove(ctrls[0]);
 
@@ -2344,9 +2422,10 @@
 		return {
 			restrict: 'A',
 			controller: Controller,
-			require: 'dndRect',
-			link: function(scope, $el, attrs, ctrl) {
+			link: function(scope, $el, attrs) {
+
 				scope.$watch(attrs.dndRect, throttle(function (n, o) {
+
 					if(!n || typeof n != 'object') return;
 					if(o == undefined) o = {};
 
@@ -2468,7 +2547,7 @@
 					$el.dndCss('font-size', n+'px');
 				}
 
-				scope.$watch( attrs.dndFittext, setTimeout(function(opts){
+				scope.$watch( attrs.dndFittext, throttle(function(opts){
 					updateSize(opts);
 				}), true);
 
