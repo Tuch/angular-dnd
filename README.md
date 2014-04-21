@@ -1,4 +1,4 @@
-﻿## Angular-DND 0.1.2
+## Angular-DND 0.1.2
 
 ## Особенности:
 - Не jQueryUI обертка
@@ -153,4 +153,5 @@
  - new directive - sortable
  - touch specific events (rotate, resize)
  - supporting ng-animate
+ - supporting HTML5
  - translate to english

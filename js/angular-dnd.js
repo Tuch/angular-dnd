@@ -146,6 +146,38 @@
 		
 		return ret;
 	};
+	
+	function avgPerf(fn1, timeout, context, callback){
+		context = context || this;
+		timeout = timeout || 1000;
+		callback = callback || function(val){ console.log(val) }
+		
+		var time = [];
+
+		var fn2 = debounce(function(){
+			var sum = 0;
+	
+			for(var i=0; i < time.length; i++){
+				sum += time[i];
+			}
+	
+			callback( Math.round(sum / time.length) )
+			
+			time = [];
+			
+		}, timeout)
+			
+		return function(){
+			var start = Date.now();
+					
+			fn1.apply(context, arguments);
+			
+			time.push(Date.now() - start);
+			
+			fn2();
+			
+		}	
+	}
 
 	angular.dnd = {
 		noop: noop,
@@ -1899,24 +1931,6 @@
 
 	/* LASSO AREA DIRECTIVE: */
 	
-	/*
-	
-	mousedown() -> dragged = false, dragstarCallback(), $apply()
-	
-	mousemove() -> start() -> unselected(), $apply() ->
-										-> drag() -> dragged = true, selecting(), dragCallback(), $apply()
-										-> drag() -> dragged = true, selecting(), dragCallback(), $apply()
-										...
-				
-	mouseup()   -> end() -> setTimeout(a), selected(), dragendCallback(), $apply()
-	
-	click()     -> if dragged == false -> dragged = false, unselected(), selected(), dragendCallback(), $apply() 
-				
-	fire a      -> dragged = false, unselecting(), $apply()
-	
-	
-	*/
-
 	module.directive('dndLassoArea', function(DndLasso, $parse, $timeout){
 
 		function Controller(){
@@ -1990,8 +2004,6 @@
 				function onClick(){
 					var s = ctrl.get();
 					
-					scope.$dragged = false;
-					
 					if(selectable) {
 						if(keyPressed) {
 							 selectable.toggleSelected();
@@ -2049,20 +2061,12 @@
 					
 					scope.$apply();
 				}
-
-				//var time = [];
-
-				//var fn = debounce(function(){
-				//	var sum = 0;
-
-				//	for(var i=0; i < time.length; i++){
-				//		sum += time[i];
-				//	}
-
-				//	console.log( Math.round(sum / time.length) );
-				//	time = [];
-
-				//}, 1000)
+				
+				var $apply = avgPerf(function(){
+					scope.$apply();
+				}, 1000, this, function(val){
+					alert(val)
+				});
 
 				function onDrag(handler) {
 
@@ -2080,10 +2084,8 @@
 
 					dragCallback(scope, { $rect: handler.getRect() });
 
-					//var start = Date.now();
-					scope.$apply();
-					//time.push(Date.now() - start);
-					//fn();
+					//scope.
+					$apply();
 
 				}
 
@@ -2091,38 +2093,37 @@
 					
 					if(!handler) return;
 
-					if(!ctrl.empty()) {
+					var s = ctrl.get();
 
-						var s = ctrl.get();
+					if(!ctrl.empty()) {
 
 						for(var i = 0; i < s.length; i++){
 							if(s[i].isSelecting()) s[i].toggleSelected();
 						}
+
+						scope.$apply();
 					}
-					
-					scope.$apply();
 
 					dragendCallback(scope, { $rect: handler.getRect() });
-					
-					
+
+					if(!ctrl.empty()) {
+
+						for(var i = 0; i < s.length; i++){
+							s[i].unselecting();
+						}
+
+						scope.$apply();
+					}
+
+					/* что бы события click/dblclick получили флаг $dragged === true, переключение флага происходит после их выполнения */
 					$timeout(function(){
 						scope.$dragged = false;
-						
-						if(!ctrl.empty()) {
-	
-							var s = ctrl.get();
-	
-							for(var i = 0; i < s.length; i++){
-								s[i].unselecting();
-							}
-						}
 					});
 				}
 
 
 				$el.on('mousedown touchstart', throttle(function (event){
 					scope.$dragged = false;
-					//scope.$dragging = false;
 					
 					if(ctrl.empty()) return;
 					
@@ -2150,7 +2151,6 @@
 
 					scope.$apply();
 				});
-
 				
 				scope.$dragged = false;
 			}
@@ -2165,34 +2165,25 @@
 
 		var defaults = {};
 
-		function Controller($element, $attrs, $scope){
-			$scope.$selected = false, $scope.$selecting = false;
-
-			$scope.$select = function(){
-				self.selected();
-			}
-			
-			$scope.$unselect = function(){
-				self.unselected();
-			}
-
-			//var self = this, opts = extend({}, defaults, $parse($attrs.dndSelectable)($scope) || {});
-
-			//var selectedCallback = $parse(opts.selected);
-			//var selectingCallback = $parse(opts.selecting);
-			//var unselectedCallback = $parse(opts.unselected);
-			//var unselectingCallback = $parse(opts.unselecting);
+		function Controller($element, $attrs, $scope) {
+			var getterSelecting = $parse($attrs.dndSelecting), setterSelecting = getterSelecting.assign || noop;
+			var getterSelected = $parse($attrs.dndSelected), setterSelected = getterSelected.assign || noop;
+			var getterSelectable = $parse($attrs.dndSelectable), setterSelectable = getterSelectable.assign || noop;
 
 			this.getElement = function(){
 				return $element;
 			};
 
 			this.isSelected = function(){
-				return $scope.$selected;
+				return getterSelected($scope);
 			};
 
 			this.isSelecting = function(){
-				return $scope.$selecting;
+				return getterSelecting($scope);
+			};
+
+			this.isSelectable = function(){
+				return getterSelectable($scope);
 			};
 
 			this.toggleSelected = function(){
@@ -2200,37 +2191,25 @@
 			};
 
 			this.selecting = function(){
-				if($scope.$selecting) return this;
-
-				$scope.$selecting = true;
-				//if( selectingCallback($scope) === false ) $scope.$selecting = false;
+				if(this.isSelectable()) setterSelecting($scope, true);
 
 				return this;
 			};
 
 			this.unselecting = function(){
-				if(!$scope.$selecting) return this;
-
-				$scope.$selecting = false;
-				//if( unselectingCallback($scope) === false ) $scope.$selecting = true;
+				setterSelecting($scope, false);
 
 				return this;
 			};
 
 			this.selected = function(){
-				if($scope.$selected) return this;
-
-				$scope.$selected = true;
-				//if( selectedCallback($scope) === false ) $scope.$selected = false;
+				if(this.isSelectable()) setterSelected($scope, true);
 
 				return this;
 			};
 
 			this.unselected = function(){
-				if(!$scope.$selected) return this;
-
-				$scope.$selected = false;
-				//if( unselectedCallback($scope) === false ) $scope.$selected = true;
+				setterSelected($scope, false);
 
 				return this;
 			};
@@ -2269,19 +2248,9 @@
 
 		return {
 			restrict: 'A',
-			require: ['dndSelectable', '^dndLassoArea', '?dndRect', '?dndDraggable'],
+			require: ['dndSelectable', '^dndLassoArea', '?dndRect'],
 			controller: Controller,
-			scope: true,
 			link: function(scope, $el, attrs, ctrls) {
-
-				var self = this, opts = extend({}, defaults, $parse(attrs.dndSelectable)(scope) || {});
-
-				var selectedCallback = $parse(opts.selected);
-				var selectingCallback = $parse(opts.selecting);
-				var unselectedCallback = $parse(opts.unselected);
-				var unselectingCallback = $parse(opts.unselecting);
-
-
 				scope.$dndSelectable = ctrls[0];
 
 				var rectCtrl = ctrls[2];
@@ -2289,19 +2258,6 @@
 				ctrls[0].rectCtrl = rectCtrl ? rectCtrl : new LikeRectCtrl($el);
 
 				ctrls[1].add(ctrls[0]);
-
-				scope.$watch('$selected',function(val){
-					if(val === undefined) return;
-					val ? selectedCallback(scope) : unselectedCallback(scope);
-					//console.log('selected', val);
-				});
-
-				scope.$watch('$selecting',function(val){
-					if(val === undefined) return;
-					val ? selectingCallback(scope) :  unselectingCallback(scope);
-					//console.log('selecting', val);
-
-				});
 
 				function ondestroy() {
 					ctrls[1].remove(ctrls[0]);

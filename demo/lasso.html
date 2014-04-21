@@ -56,14 +56,6 @@
         $scope.onClick = function(dragged){
             console.log('dragged:', dragged);
         };
-
-        $scope.selectableOptions = {
-            selecting: 'onSelecting($selecting, $selected)',
-            unselecting: 'onUnselecting($selecting, $selected)',
-            selected: 'onSelected($selecting, $selected, $dndSelectable)',
-            unselected: 'onUnselected($selecting, $selected)',
-            select: 'select',
-        }
     });
 
 </script>
@@ -90,11 +82,12 @@
 
     <div class = "lasso-area" dnd-lasso-area>
         <div class = "article"> Selecting lasso </div>
-        <div class = "lasso-area-creature" ng-init = "model.init($select, $unselect)"
+        <div class = "lasso-area-creature" ng-init = "model.init()"
 	        ng-repeat = "model in models" 
 	        dnd-rect = "model.rect"
-	        ng-class = "{selected: $selected, selecting: $selecting}"
-			dnd-selectable = "selectableOptions"
+	        ng-class = "{selected: model.selected, selecting: model.selecting}"
+			dnd-selectable = "model.selectable"  dnd-selected = "model.selected" dnd-selecting = "model.selecting" 
+			dnd-selectable-watchers = "{ selected: model.onselect(), unselected: model.unselected(), selecting: model.selecting(), unselecting: models.unselecting() }"
             dnd-draggable>
         </div>
     </div>
