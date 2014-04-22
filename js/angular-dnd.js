@@ -1287,19 +1287,22 @@
 			link: function(scope, $el, attrs, ctrls){
 				var rect = ctrls[0], model = ctrls[1], container = ctrls[2] ? ( ctrls[2].$element() === $el ? undefined : ctrls[2] ) : undefined;
 
-				var opts = $parse(attrs.dndDraggable)(scope) || {};
-				var dragstartCallback = $parse(opts.onstart);
-				var dragCallback = $parse(opts.ondrag);
-				var dragendCallback = $parse(opts.onend);
-				
-				var namespace = opts.ns;
+				var defaults = {
+					ns: 'common'
+				};
 
-				if(!namespace) namespace = 'common';
+				var getterDraggable = $parse(attrs.dndDraggable);
+				var opts = extend({}, defaults, $parse(attrs.dndDraggableOpts)(scope) || {});
+				var dragstartCallback = $parse(attrs.dndOnDragstart);
+				var dragCallback = $parse(attrs.dndOnDrag);
+				var dragendCallback = $parse(attrs.dndOnDragend);
 
 				function dragstart(api){
-					var local = api.local = {};
+					var local = api.draglocal = {};
+					local.draggable = getterDraggable(scope);
+					local.draggable = local.draggable === undefined ? true : local.draggable;
 
-					if(!api.isTarget()) return;
+					if( !api.isTarget() || !local.draggable ) return;
 
 					local.started = true;
 
@@ -1340,9 +1343,9 @@
 				}
 
 				function drag(api){
-					var local = api.local;
-					
-					if(!local.started) return;
+					var local = api.draglocal;
+
+					if(!local.started || !local.draggable) return;
 				
 					var axis = api.getAxis();
 					
@@ -1363,9 +1366,9 @@
 				}
 
 				function dragend(api){
-					var local = api.local;
+					var local = api.draglocal;
 					
-					if(!local.started) return;
+					if(!local.started || !local.draggable) return;
 					
 					if(container) local.$scrollarea.off('scroll', local.onscroll); 
 					
@@ -1383,9 +1386,9 @@
 
 					var binding = {};
 
-					binding[namespace+'.dragstart'] = dragstart;
-					binding[namespace+'.drag'] = drag;
-					binding[namespace+'.dragend'] = dragend;
+					binding[opts.ns+'.dragstart'] = dragstart;
+					binding[opts.ns+'.drag'] = drag;
+					binding[opts.ns+'.dragend'] = dragend;
 
 					return binding;
 				}
@@ -1412,18 +1415,26 @@
 		return {
 			require: '?dndModel',
 			link: function(scope, $el, attrs, model){
-				
-				var opts = $parse(attrs.dndDroppable)(scope) || {};
-				var dragenterCallback = $parse(opts.onenter);
-				var dragoverCallback = $parse(opts.onover);
-				var dragleaveCallback = $parse(opts.onleave);
-				var dropCallback = $parse(opts.ondrop);
-				var namespace = opts.ns;
 
-				if(!namespace) namespace = 'common';
-				
+				var defaults = {
+					ns: 'common'
+				};
+
+				var getterDroppable = $parse(attrs.dndDroppable);
+				var opts = extend({}, defaults, $parse(attrs.dndDroppableOpts)(scope) || {});
+				var dragenterCallback = $parse(attrs.dndOnDragenter);
+				var dragoverCallback = $parse(attrs.dndOnDragover);
+				var dragleaveCallback = $parse(attrs.dndOnDragleave);
+				var dropCallback = $parse(attrs.dndOnDrop);
 
 				function dragenter(api){
+					var local = api.droplocal = {};
+
+					local.droppable = getterDroppable(scope);
+					local.droppable = local.droppable === undefined ? true : local.droppable;
+
+					if(!local.droppable) return;
+
 					api.dropmodel = model ? model.get() : model;
 					
 					scope.$dragmodel = api.dragmodel;
@@ -1434,6 +1445,10 @@
 				}
 
 				function dragover(api){
+					var local = api.droplocal;
+
+					if(!local.droppable) return;
+
 					scope.$dragmodel = api.dragmodel;
 					
 					dragoverCallback(scope);
@@ -1442,6 +1457,10 @@
 				}
 
 				function dragleave(api){
+					var local = api.droplocal;
+
+					if(!local.droppable) return;
+
 					api.dropmodel = undefined;
 					
 					scope.$dragmodel = api.dragmodel;					
@@ -1464,10 +1483,10 @@
 
 					var bindings = {};
 
-					bindings[namespace+'.dragenter'] = dragenter;
-					bindings[namespace+'.dragover'] = dragover;
-					bindings[namespace+'.dragleave'] = dragleave;
-					bindings[namespace+'.drop'] = drop;
+					bindings[opts.ns+'.dragenter'] = dragenter;
+					bindings[opts.ns+'.dragover'] = dragover;
+					bindings[opts.ns+'.dragleave'] = dragleave;
+					bindings[opts.ns+'.drop'] = drop;
 
 					return bindings;
 
@@ -1508,18 +1527,21 @@
 					maxHeight: 10000
 				};
 
-				var opts = extend({}, defaults, $parse(attrs.dndResizable)(scope) || {});
-				
-				var dragstartCallback = $parse(opts.onstart);
-				var dragCallback = $parse(opts.ondrag);
-				var dragendCallback = $parse(opts.onend);
+				var getterResizable = $parse(attrs.dndResizable);
+				var opts = extend({}, defaults, $parse(attrs.dndResizableOpts)(scope) || {});
+				var dragstartCallback = $parse(attrs.dndOnResizestart);
+				var dragCallback = $parse(attrs.dndOnResize);
+				var dragendCallback = $parse(attrs.dndOnResizeend);
 
 				function getBindings(side){
 					
 					function dragstart(api){
 						var local = api.local = {};
 
-						if( !api.isTarget() ) return;
+						local.resizable = getterResizable(scope);
+						local.resizable = local.resizable === undefined ? true : local.resizable;
+
+						if( !api.isTarget() || !local.resizable) return;
 
 						local.started = true;
 						local.$parent = $el.parent();
@@ -1564,7 +1586,7 @@
 					function drag(api){
 						var local = api.local;
 						
-						if(!local.started) return;
+						if(!local.started || !local.resizable) return;
 						
 						var axis = api.getAxis();
 						var borders = api.getBorders();
@@ -1628,7 +1650,7 @@
 					function dragend(api){
 						var local = api.local;
 					
-						if(!local.started) return;
+						if(!local.started || !local.resizable) return;
 						
 						if(container) local.$scrollarea.off('scroll', local.onscroll); 
 						
@@ -1676,16 +1698,14 @@
 				var rect = ctrls[0], container = ctrls[1] ? ( ctrls[1].$element() === $el ? undefined : ctrls[1] ) : undefined;
 				
 				var defaults = {
-
+					step: 5
 				};
 
-
-				var opts = extend({}, defaults, $parse(attrs.dndRotatable)(scope) || {});
-				
-				var dragstartCallback = $parse(opts.onstart);
-				var dragCallback = $parse(opts.ondrag);
-				var dragendCallback = $parse(opts.onend);
-				var step = opts.step ? opts.step : 5; //degs
+				var getterRotatable = $parse(attrs.dndRotatable);
+				var opts = extend({}, defaults, $parse(attrs.dndRotatableOpts)(scope) || {});
+				var dragstartCallback = $parse(attrs.dndOnRotatestart);
+				var dragCallback = $parse(attrs.dndOnRotate);
+				var dragendCallback = $parse(attrs.dndOnRotateend);
 				
 				var cssPosition = $el.dndCss('position');
 
@@ -1703,7 +1723,10 @@
 						dragstart: function(api, target){
 							var local = api.local = {};
 
-							if(!api.isTarget()) return;
+							local.rotatable = getterRotatable(scope);
+							local.rotatable = local.rotatable === undefined ? true : local.rotatable;
+
+							if(!api.isTarget() || !local.rotatable) return;
 
 							local.started = true;
 							
@@ -1730,14 +1753,14 @@
 						drag: function(api, target){
 							var local = api.local;
 							
-							if(!local.started) return;
+							if(!local.started || !local.rotatable) return;
 
 							var axis = api.getAxis();
 							var angle = Point(axis).deltaAngle(local.startPoint, local.center);
 							var degs = radToDeg(local.currAngle+angle);
 							
 							
-							degs = Math.round(degs/step)*step;
+							degs = Math.round(degs/opts.step)*opts.step;
 							var rads = degToRad(degs);
 							var matrix = Matrix().rotate(rads);	
 							
@@ -1756,7 +1779,7 @@
 						dragend: function (api){
 							var local = api.local;
 							
-							if(!local.started) return;
+							if(!local.started || !local.rotatable) return;
 							
 							dragendCallback(scope);
 							
@@ -2023,7 +2046,7 @@
 						}
 					}
 					
-					dragendCallback(scope, { $rect: false });
+					dragendCallback(scope, { $rect: false, $keyPressed: keyPressed });
 
 					scope.$apply();
 				}
@@ -2062,18 +2085,18 @@
 					scope.$apply();
 				}
 				
-				var $apply = avgPerf(function(){
-					scope.$apply();
-				}, 1000, this, function(val){
-					alert(val)
-				});
+				//var $apply = avgPerf(function(){
+				//	scope.$apply();
+				//}, 1000, this, function(val){
+				//	console.log(val)
+				//});
 
 				function onDrag(handler) {
 
-					if(!handler) return;
-										
 					scope.$dragged = true;
-					
+
+					if(!handler) return;
+
 					if(!ctrl.empty()) {
 						var s = ctrl.get(), rect = handler.getClientRect();
 
@@ -2084,8 +2107,7 @@
 
 					dragCallback(scope, { $rect: handler.getRect() });
 
-					//scope.
-					$apply();
+					scope.$apply();
 
 				}
 
@@ -2116,30 +2138,31 @@
 					}
 
 					/* что бы события click/dblclick получили флаг $dragged === true, переключение флага происходит после их выполнения */
-					$timeout(function(){
-						scope.$dragged = false;
-					});
+					$timeout(function(){ scope.$dragged = false; });
 				}
 
 
 				$el.on('mousedown touchstart', throttle(function (event){
 					scope.$dragged = false;
-					
+
 					if(ctrl.empty()) return;
-					
+
 					selectable = ctrl.selectable(event.target);
 
-					keyPressed = (event.metaKey || event.ctrlKey || event.shiftKey);
+					scope.$keypressed = keyPressed = (event.metaKey || event.ctrlKey || event.shiftKey);
 
 					dragstartCallback( scope );
 
 					scope.$apply();
-				}, 500) );
+				}, 300) );
 
 				$el.on('click', function(event){
 					if(ctrl.empty()) return;
 
 					if(!scope.$dragged) onClick();
+
+					/* что бы события dnd-on-* получили флаг $keypressed, переключение флага происходит после их выполнения */
+					if(scope.$keypressed) $timeout(function(){ scope.$keypressed = false; });
 				} );
 
 				lasso.on('start', onStart);
@@ -2166,8 +2189,8 @@
 		var defaults = {};
 
 		function Controller($element, $attrs, $scope) {
-			var getterSelecting = $parse($attrs.dndSelecting), setterSelecting = getterSelecting.assign || noop;
-			var getterSelected = $parse($attrs.dndSelected), setterSelected = getterSelected.assign || noop;
+			var getterSelecting = $parse($attrs.dndModelSelecting), setterSelecting = getterSelecting.assign || noop;
+			var getterSelected = $parse($attrs.dndModelSelected), setterSelected = getterSelected.assign || noop;
 			var getterSelectable = $parse($attrs.dndSelectable), setterSelectable = getterSelectable.assign || noop;
 
 			this.getElement = function(){
@@ -2250,6 +2273,7 @@
 			restrict: 'A',
 			require: ['dndSelectable', '^dndLassoArea', '?dndRect'],
 			controller: Controller,
+			scope: true,
 			link: function(scope, $el, attrs, ctrls) {
 				scope.$dndSelectable = ctrls[0];
 
@@ -2267,6 +2291,33 @@
 
 				$el.on('$destroy', ondestroy);
 
+				var selected = $parse(attrs.dndOnSelected);
+				var unselected = $parse(attrs.dndOnUnselected);
+				var selecting = $parse(attrs.dndOnSelecting);
+				var unselecting = $parse(attrs.dndOnUnselecting);
+
+				if(selected || unselected) {
+					selected = selected || noop;
+					unselected = unselected || noop;
+
+					scope.$watch(attrs.dndModelSelected, function(val){
+						if(val === undefined) return;
+
+						val ? selected(scope) : unselected(scope);
+					});
+				}
+
+
+				if(selecting || unselecting) {
+					selecting = selecting || noop;
+					unselecting = unselecting || noop;
+
+					scope.$watch(attrs.dndModelSelecting, function(val){
+						if(val === undefined) return;
+
+						val ? selecting(scope) : unselecting(scope);
+					});
+				}
 			}
 		};
 	});
@@ -2301,7 +2352,7 @@
 			this.getRect = function(){
 				return extend({}, $element.dndClientRect());
 			};
-			
+
 			this.$element = function(){
 				return $element;
 			}
