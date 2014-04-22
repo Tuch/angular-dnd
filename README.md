@@ -1,11 +1,12 @@
 ## Angular-DND 0.1.3
 =========
 
-## Особенности:
+Особенности:
+---------
 - Не jQueryUI обертка
 - Поддержка touch событий
 
-## Директивы:
+Директивы:
 ---------
 
 ### dnd-draggable [expression]
@@ -150,7 +151,7 @@
 
 
 
-## Сервисы:
+Сервисы:
 ---------
 
 ### DndLasso
@@ -171,14 +172,14 @@
 
 
 
-## Примеры
+Примеры
 ---------
 
 Все примеры внутри в папке Demo.
 Также доступна [ссылка](http://urplanet.net/angular-dnd/latest/demo/basic.html)
 
 
-## TODO:
+TODO:
 ---------
 
  * fixing bugs and optimize code
