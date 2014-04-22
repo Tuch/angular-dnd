@@ -1,15 +1,15 @@
 ## Angular-DND 0.1.3
+=========
 
 ## Особенности:
 - Не jQueryUI обертка
 - Поддержка touch событий
 
-
 ## Директивы:
-
+---------
 ### dnd-draggable [expression]
 Обеспечивает возможность перемещения элемент. Параметр 'false' отключает директиву.
-
+---------
 #### dnd-draggable-opts [expression] - опции директивы:
 - ns[string]: Имя namespace. Что бы droppable-элементы реагировали на draggable-элементы они должны иметь общий namespace. По умолчанию namespace = 'common'
 	
@@ -23,10 +23,10 @@
 - $dropmodel [string] - модель droppable элемента, заданная в директиве dnd-model
 
 
-
+---------
 ### dnd-droppable [expression]
 Позволяет определить droppable-элемент, который будет реагировать на draggable-элементы. Параметр 'false' отключает директиву.
-
+---------
 #### dnd-droppable-opts [expression]:
 - ns[string]: Имя namespace. Что бы droppable-элементы реагировали на draggable-элементы они должны иметь общий namespace. По умолчанию namespace = 'common'
 	
@@ -42,10 +42,10 @@
 
 
 
-
+---------
 ### dnd-rotatable [expression]
 Обеспечивает возможность вращения элемента. Параметр 'false' отключает директиву.
-
+---------
 #### watching attributes:
 - dnd-on-dragstart [function()]: срабатывает в начале вращения элемента
 - dnd-on-drag [function()]: срабатывает при вращении элемента
@@ -56,10 +56,10 @@
 
 
 
-
+---------
 ### dnd-resizable [expression]
 Обеспечивает возможность изменения размеров элемента. Параметр 'false' отключает директиву.
-
+---------
 #### watching attributes:
 - dnd-on-dragstart [function()]: срабатывает в начале изменения размеров элемента
 - dnd-on-drag [function()]: срабатывает при изменении размеров элемента
@@ -82,11 +82,11 @@
 - $dragged [boolean] - флаг, который позволяют узнать было ли движение lasso в течении последнего цикла событий (последние ~5мс). Удобно использовать например в ng-click (см. пример).
 
 
-
+---------
 ### dnd-selectable [expression]
 Директива, позволяющая выделять объекты. Как инструмент выделения используется lasso (см. пример). Параметр 'false' отключает директиву.
 Последователбность событий: если click - selected(true/false). Если не click - selecting(true) -> selected(true/false) -> selecting(false)
-
+---------
 ####Требования:
  - dnd-lasso-area как родительский элемент
 
@@ -103,17 +103,14 @@
 #### scope:
 - $keyPressed - флаг, который указывает, была ли нажата клавиша ctrl, shift или cmd во время события
 
-
+---------
 ### dnd-rect (string)
 Директива, которая представляет собой модель элемента, описывающую его координаты относительно верхнего левого угла, размеры и матрицу преобразования (top, left, width, height, transform).
 Директивы dnd-draggable, dnd-resizable, dnd-rotatable, dnd-fittext, а также dnd-selectable(опционально) работают в связке с dnd-rect.
-
-
-
-
+---------
 ### dnd-container
 Ограничивает область действия draggable/resizable/rotatable элементов. По умолчанию контейнером служит body.
-
+---------
 
 
 ### dnd-fittext 
@@ -125,7 +122,7 @@
 #### Параметр:
 - имя переменной scope изменение величины которой служит тригером (может быть объектом, например {width: rect.width, height: rect.height} или строкой, например rect.height, где rect это модель, определенная в атрибуте dnd-rect , см. пример). 
 
-
+---------
 ### dnd-key-model
 Директива позволяет определить в scope ссылку на состояние нажатых клавиш
 
@@ -134,7 +131,7 @@
 
 ### DndLasso
 Сервис-класс, предназначенный для обеспечения директивам интерфейса к одноименному инструменту прямоугольного lasso
-
+---------
 ### dndKey
 Сервис для отслеживания нажатых на клавиатуре клавиш
 
@@ -143,15 +140,15 @@
  - isset(code): Проверить состояние клавиши по коду клавиши
 
 ## Примеры
- http://urplanet.net/angular-dnd/latest/demo/basic.html
- все примеры внутри в папке Demo.
+	Все примеры внутри в папке Demo.
+	Также доступна [ссылка](http://urplanet.net/angular-dnd/latest/demo/basic.html)
 
 
 ## TODO:
- - fixing bugs and optimize code
- - more options
- - new directive - sortable
- - touch specific events (rotate, resize)
- - supporting ng-animate
- - supporting HTML5
+ * fixing bugs and optimize code
+ * more options
+ * new directive - sortable
+ * touch specific events (rotate, resize)
+ * supporting ng-animate
+ * supporting HTML5
  - translate to english
