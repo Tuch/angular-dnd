@@ -51,7 +51,7 @@
         };
 
         $scope.onSelected = function(model, keyPressed){
-            console.log('selected:', model, keyPressed);
+            console.log('selected:', model, $scope.key, keyPressed);
         };
 
         $scope.onUnselecting = function(model) {
@@ -73,8 +73,7 @@
 
 
 
-<body ng-controller="controller" style = "position: relative">
-
+<body ng-controller="controller" style = "position: relative" dnd-key-model = "key">
     <div class = "menu">
 
         <a class = "button" href = "basic.html">Basic example</a>

@@ -91,10 +91,10 @@
  - dnd-lasso-area как родительский элемент
 
 #### watching attributes:
- - dnd-on-selected: срабатывает при изменении значения selected (dnd-model-selected) c false на true
- - dnd-on-unselected: срабатывает при изменении значения selected (dnd-model-selected) c true на false
- - dnd-on-selecting: срабатывает при изменении значения selecting (dnd-model-selecting) c false на true
- - dnd-on-unselecting: срабатывает при изменении значения selecting (dnd-model-selecting) c true на false
+ - dnd-on-selected [function([$keyPressed])]: срабатывает при изменении значения selected (dnd-model-selected) c false на true
+ - dnd-on-unselected [function([$keyPressed])]: срабатывает при изменении значения selected (dnd-model-selected) c true на false
+ - dnd-on-selecting [function([$keyPressed])]: срабатывает при изменении значения selecting (dnd-model-selecting) c false на true
+ - dnd-on-unselecting [function([$keyPressed])]: срабатывает при изменении значения selecting (dnd-model-selecting) c true на false
 
 #### model attributes:
  - dnd-model-selected: указывается име переменной в scope, в которой хранится состояние selected
@@ -126,6 +126,8 @@
 - имя переменной scope изменение величины которой служит тригером (может быть объектом, например {width: rect.width, height: rect.height} или строкой, например rect.height, где rect это модель, определенная в атрибуте dnd-rect , см. пример). 
 
 
+### dnd-key-model
+Директива позволяет определить в scope ссылку на состояние нажатых клавиш
 
 
 ## Сервисы:
@@ -133,6 +135,12 @@
 ### DndLasso
 Сервис-класс, предназначенный для обеспечения директивам интерфейса к одноименному инструменту прямоугольного lasso
 
+### dndKey
+Сервис для отслеживания нажатых на клавиатуре клавиш
+
+#### Методы
+ - get(): Получить массив нажатых клавиш
+ - isset(code): Проверить состояние клавиши по коду клавиши
 
 ## Примеры
  http://urplanet.net/angular-dnd/latest/demo/basic.html

@@ -16,6 +16,7 @@
 	 */
 
 	angular.dnd = {};
+	angular.dnd.version = '0.1.3a';
 
 	/* ENVIRONMENT VARIABLES */
 
@@ -1954,7 +1955,7 @@
 
 	/* LASSO AREA DIRECTIVE: */
 	
-	module.directive('dndLassoArea', function(DndLasso, $parse, $timeout){
+	module.directive('dndLassoArea', function(DndLasso, $parse, $timeout, dndKey){
 
 		function Controller(){
 			var ctrls = [], data = {};
@@ -2148,7 +2149,7 @@
 
 				$el.on('mousedown touchstart', throttle(function (event){
 					scope.$dragged = false;
-					scope.$keypressed = keyPressed = (event.metaKey || event.ctrlKey || event.shiftKey);
+					scope.$keypressed = keyPressed = ( dndKey.isset(16) || dndKey.isset(17) || dndKey.isset(18) );
 					dragstartCallback( scope );
 					scope.$apply();
 
@@ -2361,6 +2362,79 @@
 		return {
 			restrict: 'CA',
 			controller: Controller,
+		}
+	});
+
+	module.factory('dndKey', function ($rootScope) {
+		var keys = [];
+
+		function DndKey(){
+
+		};
+
+		DndKey.prototype = {
+			get: function(){
+				return keys;
+			},
+			isset: function(code){
+				var index = keys.indexOf(code);
+				return (index !== -1);
+			}
+		};
+
+		function keydown(event){
+			var code = event.keyCode;
+			debounceKeyup(event);
+			if(keys.indexOf(code) > -1) return;
+
+			keys.push(code);
+			$rootScope.$digest();
+		}
+
+		function keyup(event){
+			var code = event.keyCode, index = keys.indexOf(code);
+			if(index === -1) return;
+
+			keys.splice(index,1);
+			$rootScope.$digest();
+		};
+
+
+
+		var debounceKeyup = debounce(keyup, 1000);
+		$document.on('keydown', keydown);
+		$document.on('keyup', keyup);
+
+		//var log = debounce(function(){
+		//	console.log('log');
+		//},500);
+
+		//$document.on('mousemove', function(){
+		//	log();
+		//});
+
+		//$document.on('blur', keyup);
+
+		return new DndKey;
+	});
+
+	/* DND-KEY-MODEL */
+
+	module.directive('dndKeyModel', function($parse, dndKey){
+		return {
+			restrict: 'A',
+			link: function(scope, $el, attrs) {
+				var getter = $parse(attrs.dndKeyModel), setter = getter.assign;
+				//var keys = dndKey.get();
+				//setter(scope, keys);
+				//getter($scope);
+				//keys = keys instanceof Array ? keys : [];
+
+				scope.$watch(function(){ return dndKey.get() }, function(n,o){
+					if(n === undefined) return;
+					setter(scope, n);
+				});
+			}
 		}
 	});
 
