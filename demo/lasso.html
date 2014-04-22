@@ -18,22 +18,35 @@
 	var app = angular.module('app', ['dnd']);
 
     app.controller('controller', function($scope){
-        var models = $scope.models = [];
-        
-        window.$scope = $scope;
+        $scope.data = {};
+        var models = $scope.data.models = [];
+
+        $scope.lassoEnable = true;
         
         function Model(rect){
         	this.rect = rect;
             this.selectable = true;
+            this.selecting = false;
+            this.selected = false;
         }
 
-        $scope.createRect = function(item){
-        	var model = new Model(item);
-        
-            models.push(model);
+        $scope.lassoOnStart = function(item){
+            console.log('lasso start');
         };
 
-        $scope.onSelecting1 = function(model){
+        $scope.lassoOnDrag = function(item){
+            console.log('lasso drag');
+        };
+        $scope.lassoOnEnd = function(item){
+            if(!item) return;
+
+            var model = new Model(item);
+
+            models.push(model);
+            console.log('lasso end');
+        };
+
+        $scope.onSelecting = function(model){
             console.log('selecting:', model);
         };
 
@@ -41,11 +54,11 @@
             console.log('selected:', model, keyPressed);
         };
 
-        $scope.onUnselecting1 = function(model) {
+        $scope.onUnselecting = function(model) {
             console.log('unselecting:', model);
         };
 
-        $scope.onUnselected1 = function(model){
+        $scope.onUnselected = function(model){
             console.log('unselected:', model);
         };
 
@@ -71,15 +84,23 @@
 
     <div class = "title"> Some lasso examples </div>
 
-    <div class = "lasso-area" dnd-lasso-area = "{onend: 'createRect($rect)'}" ng-click = "onClick($dragged)">
-        <div class = "article"> Creating lasso </div>
+    <div class = "lasso-area"
+         dnd-lasso-area = "lassoEnable"
+         dnd-lasso-onstart = "lassoOnStart()"
+         dnd-lasso-ondrag = "lassoOnDrag($rect)"
+         dnd-lasso-onend = "lassoOnEnd($rect)"
+         ng-click = "onClick($dragged)"
+     >
+     <div class = "article"> Creating lasso </div>
 
-    </div>
+     </div>
 
-    <div class = "lasso-area" dnd-lasso-area>
+     <div class = "lasso-area"
+         dnd-lasso-area = "lassoEnable"
+     >
         <div class = "article"> Selecting lasso </div>
         <div class = "lasso-area-creature"
-             ng-repeat = "model in models"
+             ng-repeat = "model in data.models"
              dnd-rect = "model.rect"
              ng-class = "{selected: model.selected, selecting: model.selecting}"
 
@@ -91,7 +112,8 @@
              dnd-on-selecting = "onSelecting(model)"
              dnd-on-unselecting = "onUnselecting(model)"
 
-             dnd-draggable = "true">
+             dnd-draggable = "true"
+        >
         </div>
     </div>
 

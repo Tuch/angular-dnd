@@ -1,6 +1,6 @@
 
 /**
- * @license AngularJS-DND v0.1.2
+ * @license AngularJS-DND v0.1.3
  * (c) 2014-2015 Alexander Afonin (toafonin@gmail.com, http://github.com/Tuch)
  * License: MIT
  */
@@ -2015,33 +2015,37 @@
 			controller: Controller,
 			require: 'dndLassoArea',
 			link: function(scope, $el, attrs, ctrl){
-			
+
 				var defaults = {};
-				var lasso = new DndLasso({ $el:$el }), selectable, keyPressed, opts = extend({}, defaults, $parse(attrs.dndLassoArea)() || {});
-				var dragstartCallback = $parse(opts.onstart);
-				var dragCallback = $parse(opts.ondrag);
-				var dragendCallback = $parse(opts.onend);
+				var getterLassoArea = $parse(attrs.dndLassoArea);
+				var opts = extend({}, defaults, $parse(attrs.dndLassoAreaOpts)(scope) || {});
+				var dragstartCallback = $parse(attrs.dndLassoOnstart);
+				var dragCallback = $parse(attrs.dndLassoOndrag);
+				var dragendCallback = $parse(attrs.dndLassoOnend);
+				var lasso = new DndLasso({ $el:$el }), selectable, keyPressed;
 
 				ctrls.push(ctrl);
 
 				function onClick(){
-					var s = ctrl.get();
-					
-					if(selectable) {
-						if(keyPressed) {
-							 selectable.toggleSelected();
-						} else {
-							for(var i = 0; i < s.length; i++) {
-								if(selectable !== s[i]) s[i].unselected().unselecting();
+					if(!ctrl.empty()) {
+						var s = ctrl.get();
+
+						if(selectable) {
+							if(keyPressed) {
+								selectable.toggleSelected();
+							} else {
+								for(var i = 0; i < s.length; i++) {
+									if(selectable !== s[i]) s[i].unselected().unselecting();
+								}
+
+								if(!selectable.isSelected()) selectable.selected().unselecting();
 							}
 
-							if(!selectable.isSelected()) selectable.selected().unselecting();
-						}
-
-					} else {
-						if(!keyPressed) {
-							for(var i = 0; i < s.length; i++){
-								s[i].unselected().unselecting();
+						} else {
+							if(!keyPressed) {
+								for(var i = 0; i < s.length; i++){
+									s[i].unselected().unselecting();
+								}
 							}
 						}
 					}
@@ -2144,21 +2148,17 @@
 
 				$el.on('mousedown touchstart', throttle(function (event){
 					scope.$dragged = false;
-
-					if(ctrl.empty()) return;
-
-					selectable = ctrl.selectable(event.target);
-
 					scope.$keypressed = keyPressed = (event.metaKey || event.ctrlKey || event.shiftKey);
-
 					dragstartCallback( scope );
-
 					scope.$apply();
+
+					if(!ctrl.empty()) {
+						selectable = ctrl.selectable(event.target);
+					}
+
 				}, 300) );
 
 				$el.on('click', function(event){
-					if(ctrl.empty()) return;
-
 					if(!scope.$dragged) onClick();
 
 					/* что бы события dnd-on-* получили флаг $keypressed, переключение флага происходит после их выполнения */
@@ -2300,10 +2300,10 @@
 					selected = selected || noop;
 					unselected = unselected || noop;
 
-					scope.$watch(attrs.dndModelSelected, function(val){
-						if(val === undefined) return;
+					scope.$watch(attrs.dndModelSelected, function(n, o){
+						if(n === undefined || o === undefined || n === o) return;
 
-						val ? selected(scope) : unselected(scope);
+						n ? selected(scope) : unselected(scope);
 					});
 				}
 
@@ -2312,10 +2312,10 @@
 					selecting = selecting || noop;
 					unselecting = unselecting || noop;
 
-					scope.$watch(attrs.dndModelSelecting, function(val){
-						if(val === undefined) return;
+					scope.$watch(attrs.dndModelSelecting, function(n, o){
+						if(n === undefined || o === undefined || n === o) return;
 
-						val ? selecting(scope) : unselecting(scope);
+						n ? selecting(scope) : unselecting(scope);
 					});
 				}
 			}

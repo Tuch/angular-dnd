@@ -1,4 +1,4 @@
-## Angular-DND 0.1.2
+## Angular-DND 0.1.3
 
 ## Особенности:
 - Не jQueryUI обертка
@@ -10,13 +10,13 @@
 ### dnd-draggable [expression]
 Обеспечивает возможность перемещения элемент. Параметр 'false' отключает директиву.
 
-#### dnd-draggable-opts [expression]
+#### dnd-draggable-opts [expression] - опции директивы:
 - ns[string]: Имя namespace. Что бы droppable-элементы реагировали на draggable-элементы они должны иметь общий namespace. По умолчанию namespace = 'common'
 	
-#### directive watchers:
-- dnd-on-dragstart [function]: срабатывающая в начале движения элемента 
-- dnd-on-drag [function]: срабатывающая при движении элемента 
-- dnd-on-dragend [function]: срабатывающая в конце движения элемента
+#### watching attributes:
+- dnd-on-dragstart [function()]: срабатывающая в начале движения элемента
+- dnd-on-drag [function()]: срабатывающая при движении элемента
+- dnd-on-dragend [function()]: срабатывающая в конце движения элемента
 
 #### scope:
 - $dragged [boolean] - флаг, который позволяют узнать было ли движение элемента в течении последнего цикла событий (последние ~5мс). Удобно использовать например в ng-click (см. пример).
@@ -27,14 +27,14 @@
 ### dnd-droppable [expression]
 Позволяет определить droppable-элемент, который будет реагировать на draggable-элементы. Параметр 'false' отключает директиву.
 
-#### dnd-droppable-opts [expression]
+#### dnd-droppable-opts [expression]:
 - ns[string]: Имя namespace. Что бы droppable-элементы реагировали на draggable-элементы они должны иметь общий namespace. По умолчанию namespace = 'common'
 	
-#### directive watchers:
-- dnd-on-dragenter [function]: срабатывающая при попадании draggable-элемента в пределы droppable-элемента  
-- dnd-on-dragover [function]: срабатывающая при движении draggable-элемента внутри droppable-элемента  
-- dnd-on-dragleave [function]: срабатывающая при выходе draggable-элемента за пределы droppable-элемента  
-- dnd-on-drop [function]: срабатывающая если отпустить draggable-элемент внутри границ droppable-элемента 
+#### watching attributes:
+- dnd-on-dragenter [function()]: срабатывающая при попадании draggable-элемента в пределы droppable-элемента
+- dnd-on-dragover [function()]: срабатывающая при движении draggable-элемента внутри droppable-элемента
+- dnd-on-dragleave [function()]: срабатывающая при выходе draggable-элемента за пределы droppable-элемента
+- dnd-on-drop [function()]: срабатывающая если отпустить draggable-элемент внутри границ droppable-элемента
 
 #### scope:
 - $dragmodel [string] модель draggable элемента, заданая в директиве dnd-model
@@ -46,13 +46,13 @@
 ### dnd-rotatable [expression]
 Обеспечивает возможность вращения элемента. Параметр 'false' отключает директиву.
 
-#### directive watchers:
-- dnd-on-dragstart [function]: срабатывает в начале вращения элемента  
-- dnd-on-drag [function]: срабатывает при вращении элемента
-- dnd-on-dragend [function]: срабатывает в конце вращения элемента 
+#### watching attributes:
+- dnd-on-dragstart [function()]: срабатывает в начале вращения элемента
+- dnd-on-drag [function()]: срабатывает при вращении элемента
+- dnd-on-dragend [function()]: срабатывает в конце вращения элемента
 
 #### scope:
-- $rotated [expression] - флаг, который позволяют узнать вращался ли элемент в течении последнего цикла событий (последние ~5мс). Удобно использовать например в ng-click (см. пример).
+- $rotated [boolean] - флаг, который позволяют узнать вращался ли элемент в течении последнего цикла событий (последние ~5мс). Удобно использовать например в ng-click (см. пример).
 
 
 
@@ -60,41 +60,26 @@
 ### dnd-resizable [expression]
 Обеспечивает возможность изменения размеров элемента. Параметр 'false' отключает директиву.
 
-#### directive watchers:
-- dnd-on-dragstart [function]: срабатывает в начале изменения размеров элемента  
-- dnd-on-drag [function]: срабатывает при изменении размеров элемента
-- dnd-on-dragend [function]: срабатывает в конце изменения размеров элемента 
+#### watching attributes:
+- dnd-on-dragstart [function()]: срабатывает в начале изменения размеров элемента
+- dnd-on-drag [function()]: срабатывает при изменении размеров элемента
+- dnd-on-dragend [function()]: срабатывает в конце изменения размеров элемента
 
 #### scope:
-- $resized [expression] - флаг, который позволяют узнать было ли изменение размеров элемента в течении последнего цикла событий (последние ~5мс). Удобно использовать например в ng-click (см. пример).
+- $resized [boolean] - флаг, который позволяют узнать было ли изменение размеров элемента в течении последнего цикла событий (последние ~5мс). Удобно использовать например в ng-click (см. пример).
 
 
+### dnd-lasso-area [expression]
+Директива, предназначенная для создания rect моделей с помощью инструмента lasso. Также эта директива работает в паре с selectable директивой (в роли контейнера) (см. пример). Параметр 'false' отключает директиву.
 
 
-### dnd-rect
-Директива, которая представляет собой модель элемента, описывающую его координаты относительно верхнего левого угла, размеры и матрицу преобразования (top, left, width, height, transform).
-Директивы dnd-draggable, dnd-resizable, dnd-rotatable, dnd-fittext, а также dnd-selectable(опционально) работают в связке с dnd-rect.
-
-#### Параметр (строка): 
- - имя переменной в scope
-
-
-
-### dnd-container 
-Ограничивает область действия draggable/resizable/rotatable элементов. По умолчанию контейнером служит body.
-
-
-
-### dnd-lasso-area
-Директива, предназначенная для создания rect моделей с помощью инструмента lasso. Также эта директива работает в паре с selectable директивой (в роли контейнера) (см. пример)
-
-Параметр (задаются в виде объекта, callbacks задаются в кавычках):
-- onstart() - функция, срабатывающая в начале изменения размеров элемента. В отличии от dragable, resizable и rotatable директив, где start событие срабатывет после начала движения манипулятора (mousemove/touchmove) здесь началом считаются события mousedown/touchstart
-- ondrag() - функция, срабатывающая при изменении размеров элемента 
-- onend() - функция, срабатывающая в конце изменения размеров элемента 
+#### watching attributes:
+ - dnd-lasso-onstart [function()]: срабатывает в начале изменения размеров lasso. В отличии от dragable, resizable и rotatable директив, где стартом считается момент сразу после начала движения манипулятора (mousemove/touchmove) здесь событие срабатывает при инициации событий mousedown/touchstart
+ - dnd-lasso-ondrag [function([rect])]: срабатывает при изменении размеров lasso
+ - dnd-lasso-onend [function([rect])]: срабатывает при окончании изменения размеров lasso
 
 #### scope:
-- $dragged [expression] - флаг, который позволяют узнать было ли движение lasso в течении последнего цикла событий (последние ~5мс). Удобно использовать например в ng-click (см. пример).
+- $dragged [boolean] - флаг, который позволяют узнать было ли движение lasso в течении последнего цикла событий (последние ~5мс). Удобно использовать например в ng-click (см. пример).
 
 
 
@@ -102,32 +87,32 @@
 Директива, позволяющая выделять объекты. Как инструмент выделения используется lasso (см. пример). Параметр 'false' отключает директиву.
 Последователбность событий: если click - selected(true/false). Если не click - selecting(true) -> selected(true/false) -> selecting(false)
 
-Требование:
-- dnd-lasso-area как родительский элемент
+####Требования:
+ - dnd-lasso-area как родительский элемент
 
-#### Параметр (задается в виде объекта, callbacks задаются в кавычках):
-- selected(): срабатывает при изменении значения scope.$selected c false на true
-- unselected(): срабатывает при изменении значения scope.$selected c true на false
-- selecting(): срабатывает при изменении значения scope.$selecting c false на true
-- unselecting(): срабатывает при изменении значения scope.$selecting c true на false
+#### watching attributes:
+ - dnd-on-selected: срабатывает при изменении значения selected (dnd-model-selected) c false на true
+ - dnd-on-unselected: срабатывает при изменении значения selected (dnd-model-selected) c true на false
+ - dnd-on-selecting: срабатывает при изменении значения selecting (dnd-model-selecting) c false на true
+ - dnd-on-unselecting: срабатывает при изменении значения selecting (dnd-model-selecting) c true на false
+
+#### model attributes:
+ - dnd-model-selected: указывается име переменной в scope, в которой хранится состояние selected
+ - dnd-model-selecting:  указывается име переменной в scope, в которой хранится состояние selecting
 
 #### scope:
-- $selected [boolean]
-- $selecting [boolean]
-- $select [function] функция для управления флагом selected (см. пример)
-- $unselect [function] функция для управления флагом selected (см. пример)
+- $keyPressed - флаг, который указывает, была ли нажата клавиша ctrl, shift или cmd во время события
 
 
- dnd-selectable = "model.selectable"
- dnd-model-selected = "model.selected"
- dnd-model-selecting = "model.selecting"
- dnd-on-selected = "onSelected(model, $keypressed)"
- dnd-on-unselected = "onUnselected(model)"
- dnd-on-selecting = "onSelecting(model)"
- dnd-on-unselecting = "onUnselecting(model)"
+### dnd-rect (string)
+Директива, которая представляет собой модель элемента, описывающую его координаты относительно верхнего левого угла, размеры и матрицу преобразования (top, left, width, height, transform).
+Директивы dnd-draggable, dnd-resizable, dnd-rotatable, dnd-fittext, а также dnd-selectable(опционально) работают в связке с dnd-rect.
 
 
 
+
+### dnd-container
+Ограничивает область действия draggable/resizable/rotatable элементов. По умолчанию контейнером служит body.
 
 
 
