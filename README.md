@@ -135,6 +135,7 @@
 
 
 ## Примеры
+ http://urplanet.net/angular-dnd/latest/demo/basic.html
  все примеры внутри в папке Demo.
 
 
