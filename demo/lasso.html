@@ -31,19 +31,17 @@
         }
 
         $scope.lassoOnStart = function(item){
-            console.log('lasso start');
+            console.log('lasso start', arguments);
         };
 
         $scope.lassoOnDrag = function(item){
-            console.log('lasso drag');
+            console.log('lasso drag', arguments);
         };
         $scope.lassoOnEnd = function(item){
-            if(!item) return;
-
             var model = new Model(item);
 
             models.push(model);
-            console.log('lasso end');
+            console.log('lasso end', arguments);
         };
 
         $scope.onSelecting = function(model){
@@ -73,7 +71,8 @@
 
 
 
-<body ng-controller="controller" style = "position: relative" dnd-key-model = "key">
+<body ng-controller="controller" style = "position: relative">
+
     <div class = "menu">
 
         <a class = "button" href = "basic.html">Basic example</a>
@@ -103,7 +102,7 @@
              dnd-rect = "model.rect"
              ng-class = "{selected: model.selected, selecting: model.selecting}"
 
-             dnd-selectable = "model.selectable"
+             dnd-selectable
              dnd-model-selected = "model.selected"
              dnd-model-selecting = "model.selecting"
              dnd-on-selected = "onSelected(model, $keypressed)"

@@ -12,7 +12,7 @@ Angular-DND 0.1.3
 ### dnd-draggable [expression]
 Обеспечивает возможность перемещения элемент. Параметр 'false' отключает директиву.
 
-#### dnd-draggable-opts [expression] - опции директивы:
+#### dnd-draggable-opts [object] - опции директивы:
 - ns[string]: Имя namespace. Что бы droppable-элементы реагировали на draggable-элементы они должны иметь общий namespace. По умолчанию namespace = 'common'
 	
 #### watching attributes:
@@ -31,7 +31,7 @@ Angular-DND 0.1.3
 ### dnd-droppable [expression]
 Позволяет определить droppable-элемент, который будет реагировать на draggable-элементы. Параметр 'false' отключает директиву.
 
-#### dnd-droppable-opts [expression]:
+#### dnd-droppable-opts [object]:
 - ns[string]: Имя namespace. Что бы droppable-элементы реагировали на draggable-элементы они должны иметь общий namespace. По умолчанию namespace = 'common'
 	
 #### watching attributes:
@@ -81,7 +81,7 @@ Angular-DND 0.1.3
 Директива, предназначенная для создания rect моделей с помощью инструмента lasso. Также эта директива работает в паре с selectable директивой (в роли контейнера) (см. пример). Параметр 'false' отключает директиву.
 
 #### watching attributes:
- - dnd-lasso-onstart [function()]: срабатывает в начале изменения размеров lasso. В отличии от dragable, resizable и rotatable директив, где стартом считается момент сразу после начала движения манипулятора (mousemove/touchmove) здесь событие срабатывает при инициации событий mousedown/touchstart
+ - dnd-lasso-onstart [function()]: срабатывает в начале изменения размеров lasso.
  - dnd-lasso-ondrag [function([rect])]: срабатывает при изменении размеров lasso
  - dnd-lasso-onend [function([rect])]: срабатывает при окончании изменения размеров lasso
 
@@ -110,7 +110,7 @@ Angular-DND 0.1.3
  - dnd-model-selecting:  указывается име переменной в scope, в которой хранится состояние selecting
 
 #### scope:
-- $keyPressed - флаг, который указывает, была ли нажата клавиша ctrl, shift или cmd во время события
+- $keypressed - флаг, который указывает, была ли нажата клавиша ctrl, shift или cmd во время события
 
 
 
@@ -141,11 +141,6 @@ Angular-DND 0.1.3
 - имя переменной scope изменение величины которой служит тригером (может быть объектом, например {width: rect.width, height: rect.height} или строкой, например rect.height, где rect это модель, определенная в атрибуте dnd-rect , см. пример). 
 
 
-
-
-
-### dnd-key-model
-Директива позволяет определить в scope ссылку на состояние нажатых клавиш
 
 
 
@@ -184,6 +179,7 @@ TODO:
 
  * fixing bugs and optimize code
  * more options
+ * dynamic options
  * new directive - sortable
  * touch specific events (rotate, resize)
  * supporting ng-animate
