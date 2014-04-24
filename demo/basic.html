@@ -64,6 +64,10 @@
 	        return $scope.active === model;
         };
         
+        $scope.reset = function(){
+	        $scope.rect = {top:'20px', left:'240px', width: '100px', height: '100px'};
+        }
+        
         $scope.dragmodel = 'drag'; 
 
         $scope.dropmodels = [ 'drop1', 'drop2', 'drop3' ]
@@ -91,14 +95,29 @@
 	    height: <input ng-model = 'rect.height' type="text">
 	    width: <input ng-model = 'rect.width' type="text">
 	    transform: <input ng-model = 'rect.transform' type="text">
+	    <button ng-click = "reset()">Reset</button>
 
 		<div class = "dnd-container">
 		    <div class = "draggable" style = "position: absolute;"
 				ng-style = "{'line-height': rect.height}"
 				ng-click = "click(!$dragged && !$resized && !$rotated, $dropmodel)"
-		    	dnd-draggable = "{onstart: 'dragstart()', ondrag: 'drag($dropmodel)', onend: 'dragend($dropmodel)', ns: 'area1'}"
-		        dnd-rotatable = "{onstart: 'dragstart()', ondrag: 'drag()', onend: 'dragend()'}"
-		        dnd-resizable = "{onstart: 'dragstart()', ondrag: 'drag()', onend: 'dragend()'}"
+
+		    	dnd-draggable = "true"
+                dnd-draggable-opts = "{ns: 'area1'}"
+                dnd-on-dragstart = "dragstart()"
+                dnd-on-drag = "drag($dropmodel)"
+                dnd-on-dragend = "dragend($dropmodel)"
+
+                dnd-rotatable = "true"
+                dnd-on-rotatestart = "dragstart()"
+                dnd-on-rotate = "drag()"
+                dnd-on-rotateend = "dragend()"
+
+                dnd-resizable = "true"
+                dnd-on-resizestart = "dragstart()"
+                dnd-on-resize = "drag()"
+                dnd-on-resizeend = "dragend()"
+
 		        dnd-rect = "rect"
                 dnd-fittext = "{width:rect.width, height:rect.height}"
                 dnd-model = "dragmodel">
@@ -111,8 +130,15 @@
 		    	ng-repeat = "dropmodel in dropmodels"
 				class = "dropzone"
 				ng-class = "{dropped: isDropped(dropmodel), active: isActive(dropmodel)}"
-				dnd-droppable = "{ ondrop: 'drop($dragmodel, dropmodel)', onenter: 'dragenter(dropmodel, $dragmodel)', onleave: 'dragleave(dropmodel, $dragmodel)', onover: 'dragover($dragmodel)', ns: 'area1' }"
-				dnd-model = "dropmodel" >
+
+                dnd-droppable = "true"
+                dnd-droppable-opts = "{ns: 'area1'}"
+                dnd-on-drop = "drop($dragmodel, dropmodel)"
+                dnd-on-dragenter = "dragenter(dropmodel, $dragmodel)"
+                dnd-on-dragleave = "dragleave(dropmodel, $dragmodel)"
+                dnd-on-dragover = "dragover($dragmodel)"
+
+                dnd-model = "dropmodel" >
 
 		    </div>
 
