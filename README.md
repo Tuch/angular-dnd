@@ -179,9 +179,9 @@ TODO:
 
  * fixing bugs and optimize code
  * more options
- * dynamic options
  * new directive - sortable
- * touch specific events (rotate, resize)
+ * supporting touch specific events (rotate, resize)
+ * supporting dynamic options
  * supporting ng-animate
  * supporting HTML5
  - translate to english

@@ -16,7 +16,7 @@
 	 */
 
 	angular.dnd = {};
-	angular.dnd.version = '0.1.3a';
+	angular.dnd.version = '0.1.3';
 
 	/* ENVIRONMENT VARIABLES */
 
@@ -645,7 +645,7 @@
 	(function(){
 
 		var Regions = (function(){
-			var list = window.regions = {};
+			var list = {};
 
 			function Regions(namespace){
 				if(!list[namespace]) list[namespace] = [];
