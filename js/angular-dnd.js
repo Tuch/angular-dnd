@@ -1,6 +1,6 @@
 
 /**
- * @license AngularJS-DND v0.1.3
+ * @license AngularJS-DND v0.1.4
  * (c) 2014-2015 Alexander Afonin (toafonin@gmail.com, http://github.com/Tuch)
  * License: MIT
  */
@@ -16,7 +16,7 @@
 	 */
 
 	angular.dnd = {};
-	angular.dnd.version = '0.1.3';
+	angular.dnd.version = '0.1.4';
 
 	/* ENVIRONMENT VARIABLES */
 
@@ -2023,6 +2023,8 @@
 			restrict: 'A',
 			controller: Controller,
 			require: 'dndLassoArea',
+			/* отрицательный приоритет необходим для того, что бы post link function dnd-lasso-area запускался раньше post link function ng-click */
+			priority: -1,
 			link: function(scope, $el, attrs, ctrl){
 
 				var defaults = {
@@ -2035,11 +2037,12 @@
 				var dragstartCallback = $parse(attrs.dndLassoOnstart);
 				var dragCallback = $parse(attrs.dndLassoOndrag);
 				var dragendCallback = $parse(attrs.dndLassoOnend);
+				var clickCallback = $parse(attrs.dndLassoOnclick);
 				var lasso = new DndLasso({ $el:$el }), selectable, keyPressed;
 
 				ctrls.push(ctrl);
 
-				function onClick(){
+				function onClick(event){
 					if(!ctrl.empty()) {
 
 						if(keyPressed) {
@@ -2056,6 +2059,8 @@
 						if(selectable) selectable.selected();
 						
 					}
+					
+					clickCallback( scope, {$event: event});
 
 					scope.$apply();
 				}
@@ -2148,7 +2153,7 @@
 
 				$el.on('click', function(event){
 
-					if(!scope.$dragged) onClick();
+					if(!scope.$dragged) onClick(event);
 
 					/* что бы события dnd-on-* получили флаг $keypressed, переключение флага происходит после их выполнения */
 					if(scope.$keypressed) $timeout(function(){ scope.$keypressed = false; });
