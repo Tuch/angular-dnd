@@ -456,7 +456,16 @@
 		},
 
 		dndClientRect: function(){
-			return extend({}, this[0].getBoundingClientRect());
+			var DOMRect = this[0].getBoundingClientRect();
+
+			return {
+				bottom: DOMRect.bottom,
+				height: DOMRect.height,
+				left: DOMRect.left,
+				right: DOMRect.right,
+				top: DOMRect.top,
+				width: DOMRect.width,
+			};
 		},
 
 		dndStyleRect: function(){
@@ -796,6 +805,8 @@
 					offset.right = right;
 					offset.bottom = bottom;
 					offset.left = left;
+
+
 				};
 
 				this.container = function(rect){
@@ -815,7 +826,7 @@
 
 				this.getBorders = function(){
 					var container = this.container();
-				
+					//console.log(offset);
 					return {
 						top: container.top + offset.top,
 						right: container.right + offset.right,
@@ -1018,7 +1029,6 @@
 			},
 
 			mousedown: function (event){
-
 				event.preventDefault();
 			
 				this.manipulator.begin(event);
@@ -1028,7 +1038,6 @@
 			},
 
 			mousemove: function(event){
-
 				this.manipulator.progress(event);
 			},
 			
@@ -1333,7 +1342,7 @@
 					}
 					
 					local.startBorders = api.getBorders();
-					
+
 					local.startAxis = Point(axis.left - local.startBorders.left, axis.top - local.startBorders.top);
 
 					api.dragmodel = model ? model.get() : model;
@@ -1355,9 +1364,9 @@
 					var axis = api.getAxis();
 					
 					var borders = api.getBorders();
-					
+
 					var subtract = Point(axis.left - borders.left, axis.top - borders.top).subtract(local.startAxis);
-					
+
 					var position = { top: local.pos.top + subtract.y, left: local.pos.left + subtract.x };
 
 					rect ? rect.update(position) : $el.dndCss(position);
