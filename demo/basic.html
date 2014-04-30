@@ -6,7 +6,8 @@
 
 <link rel="stylesheet" href="demo.css" />
 
-<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.2.14/angular.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.2.14/angular1.js"></script>
+<script src="http://cdn.cat.urplanet.net/angular/1.2.8/angular.js"></script>
 
 
 <link rel="stylesheet" href="../css/stylesheet.css" />
@@ -26,16 +27,23 @@
         };
 
         $scope.drag = function(){
-	        console.log('drag', arguments);
+	        //console.log('drag', arguments);
         };
 
         $scope.dragend = function(){
-	        console.log('dragend', arguments);
+	        //console.log('dragend', arguments);
+	        
+	        //$scope.rect.top = '20px';
+	        //$scope.rect.left = '240px';
+	        //$scope.rect.width = '100px';
+	        //$scope.rect.height = '100px';
+	        //console.log( $scope.rect);
 
 	        if(!arguments[0]) $scope.dropped = false;
         };
 
         $scope.dragenter = function(dropmodel, dragmodel){
+	        console.log( dropmodel);
 	        $scope.active = dropmodel;
         };
 
@@ -80,7 +88,7 @@
 
 
 <body ng-controller="controller" style = "position: relative; height:100%;">
-	<div style = "height: 100%; overflow: auto;">
+	<div style = "height: 100%; overflow1: auto;">
 	    <div class = "menu">
 
 	        <a class = "button" href = "basic.html">Basic example</a>
@@ -95,6 +103,7 @@
 	    height: <input ng-model = 'rect.height' type="text">
 	    width: <input ng-model = 'rect.width' type="text">
 	    transform: <input ng-model = 'rect.transform' type="text">
+	    <button ng-click = "reset()">Reset</button>
 
 		<div class = "dnd-container">
 		    <div class = "draggable" style = "position: absolute;"
@@ -102,7 +111,7 @@
 				ng-click = "click(!$dragged && !$resized && !$rotated, $dropmodel)"
 
 		    	dnd-draggable = "true"
-                dnd-draggable-opts = "{ns: 'area1'}"
+                dnd-draggable-opts = "{ns: 'area1', useAsPoint: true}"
                 dnd-on-dragstart = "dragstart()"
                 dnd-on-drag = "drag($dropmodel)"
                 dnd-on-dragend = "dragend($dropmodel)"

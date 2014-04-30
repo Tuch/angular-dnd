@@ -14,6 +14,7 @@ Angular-DND 0.1.4
 
 #### dnd-draggable-opts [object] - опции директивы:
 - ns[string]: Имя namespace. Что бы droppable-элементы реагировали на draggable-элементы они должны иметь общий namespace. По умолчанию namespace = 'common'
+- useAsPoint[boolean]: Droppable область будет взаимодействовать с элементом, только если курсор манипулятора окажется в пределах droppable элемента
 	
 #### watching attributes:
 - dnd-on-dragstart [function()]: срабатывающая в начале движения элемента
