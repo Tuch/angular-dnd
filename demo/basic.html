@@ -6,8 +6,7 @@
 
 <link rel="stylesheet" href="demo.css" />
 
-<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.2.14/angular1.js"></script>
-<script src="http://cdn.cat.urplanet.net/angular/1.2.8/angular.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.2.14/angular.js"></script>
 
 
 <link rel="stylesheet" href="../css/stylesheet.css" />
@@ -20,24 +19,17 @@
     var app = angular.module('app', ['dnd']);
 
     app.controller('controller', function($scope){
-        $scope.rect = {top:'20px', left:'240px', width: '100px', height: '100px'};
 
         $scope.dragstart = function(){
 	        console.log('dragstart', arguments);
         };
 
         $scope.drag = function(){
-	        //console.log('drag', arguments);
+	        console.log('drag', arguments);
         };
 
         $scope.dragend = function(){
-	        //console.log('dragend', arguments);
-	        
-	        //$scope.rect.top = '20px';
-	        //$scope.rect.left = '240px';
-	        //$scope.rect.width = '100px';
-	        //$scope.rect.height = '100px';
-	        //console.log( $scope.rect);
+	        console.log('dragend', arguments);
 
 	        if(!arguments[0]) $scope.dropped = false;
         };
@@ -76,6 +68,8 @@
             $scope.rect = {top:'20px', left:'240px', width: '100px', height: '100px'};
         }
         
+        $scope.reset();
+        
         $scope.dragmodel = 'drag'; 
 
         $scope.dropmodels = [ 'drop1', 'drop2', 'drop3' ]
@@ -88,7 +82,7 @@
 
 
 <body ng-controller="controller" style = "position: relative; height:100%;">
-	<div style = "height: 100%; overflow1: auto;">
+	<div style = "height: 100%; overflow: auto;">
 	    <div class = "menu">
 
 	        <a class = "button" href = "basic.html">Basic example</a>
@@ -103,6 +97,7 @@
 	    height: <input ng-model = 'rect.height' type="text">
 	    width: <input ng-model = 'rect.width' type="text">
 	    transform: <input ng-model = 'rect.transform' type="text">
+	    
 	    <button ng-click = "reset()">Reset</button>
 
 		<div class = "dnd-container">
