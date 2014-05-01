@@ -481,7 +481,7 @@
 		},
 
 		dndGetParentScrollArea: function(){
-			var ret, parents = this.dndParents(), scrollX, clientX, scrollY, clientY, paddingX, paddingY, paddings;
+			var ret, parents = this.dndParents(), scrollX, clientX, scrollY, clientY, paddingX, paddingY, paddings, htmlEl = document.getElementsByTagName('html');
 
 			forEach(parents, function(element) {
 
@@ -501,7 +501,7 @@
 				}
 			});
 			
-			if( ret === document.children[0] ) ret = window;
+			if(htmlEl && ret === htmlEl[0] ) ret = window;
 
 			return $(ret);
 		},
@@ -2463,66 +2463,73 @@
 		}
 
 		function Controller( $scope, $attrs, $element ){
-			var getter = $parse($attrs.dndRect), setter = getter.assign, rect;
+			var getter = $parse($attrs.dndRect), setter = getter.assign, prevRect;
 
 			this.update = function(prop, value) {
-				var values;
-				
-				if(prop === undefined) {
-					setter($scope, rect);
-					return;
-				}
+				var values, rect = getter($scope) || {};
 				
 				if(typeof prop != 'object') {
 					values = {};
 					values[prop] = value;	
 				} else values = prop;
-
-				for(var key in values){
-					if( setStyles.has(key) ) {
-						if(typeof values[key] === 'number') values[key] = values[key]+'px';
-
-						rect[key] = values[key];
-					}
-				} 
-
+				
+				for(var i = 0; i < setStyles.length; i++){
+					var style = setStyles[i];
+					
+					if(values[style] !== undefined) rect[style] = values[style];
+				}
+				
 				setter($scope, rect);
 			};
 
 			this.get = function(){
-				return extend({},rect);
+				return getter($scope);
 			};
 
 			this.getClient = function(){
 				return $element.dndClientRect();
 			};
 			
-			function prepare(rect){
+			function sanitize(rect){
+				var css;
+				
 				rect = typeof rect == 'object' ? rect : {};
-	
-				for(var key in rect){
-					if(key !== key.toLowerCase()) {
-						rect[key.toLowerCase()] = rect[key];
-						delete rect[key];
-					}
+				
+				for(var i = 0; i < setStyles.length; i++){
+				
+					var style = setStyles[i];
+					
+					if(rect[style] !== undefined) continue;
+					
+					if(!css) css = $element.dndCss(getStyles);
+					
+					rect[style] = style == 'transform' ? (css[TRANSFORM] == 'none' ? 'matrix(1, 0, 0, 1, 0, 0)' : css[TRANSFORM]) : css[style];
 				}
 	
-				for(var key in rect) if(!setStyles.has(key)) delete rect[key];
+				for(var key in rect){
+					rect[key.toLowerCase()] = rect[key];
+				}
 	
-				var css = $element.dndCss(getStyles);
-	
-				if(rect.top == undefined) rect.top = css.top;
-				if(rect.left == undefined) rect.left = css.left;
-				if(rect.width == undefined) rect.width = css.width;
-				if(rect.height == undefined) rect.height = css.height;
-				if(rect.transform == undefined) rect.transform = css[TRANSFORM] == 'none' ? 'matrix(1, 0, 0, 1, 0, 0)' : css[TRANSFORM];
+				for(var key in rect) {
+					if(setStyles.has(key)) {
+						if(typeof rect[key] === 'number') rect[key] = rect[key]+'px';
+					} else delete rect[key];
+				}
+				
+				return rect;
 			};
 			
-			$scope.$parent.$watch($attrs.dndRect, function (n, o) {
+			$scope.$parent.$watch(function(){
+				var rect = getter($scope.$parent);
+				
+				if(rect !== prevRect) setter($scope, rect);
+			});
+			
+			$scope.$watch($attrs.dndRect, function(n, o){
 				if(!n || typeof n != 'object') return;
 				if(o == undefined) o = {};
-				if(rect !== n) prepare(n);
-				rect = n;
+				
+				var prevRect = n = sanitize(n);
 
 				var css = {};
 
@@ -2534,13 +2541,9 @@
 				}
 
 				if(css.transform) css[TRANSFORM] = css.transform;
-				$element.dndCss(css); 
-
-		    }, true);
-		    
-		    rect = getter($scope.$parent);
-			prepare( rect );
-			this.update( );
+				$element.dndCss(css);
+				
+			}, true);
 		}
 
 		return {
@@ -2650,7 +2653,7 @@
 					$el.dndCss('font-size', n+'px');
 				}
 
-				scope.$watch( attrs.dndFittext, throttle(function(opts){
+				scope.$parent.$watch( attrs.dndFittext, throttle(function(opts){
 					updateSize(opts);
 				}), true);
 
