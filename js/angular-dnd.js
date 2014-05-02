@@ -2463,7 +2463,7 @@
 		}
 
 		function Controller( $scope, $attrs, $element ){
-			var getter = $parse($attrs.dndRect), setter = getter.assign, prevRect;
+			var getter = $parse($attrs.dndRect), setter = getter.assign, lastRect;
 
 			this.update = function(prop, value) {
 				var values, rect = getter($scope) || {};
@@ -2522,14 +2522,14 @@
 			$scope.$parent.$watch(function(){
 				var rect = getter($scope.$parent);
 				
-				if(rect !== prevRect) setter($scope, rect);
+				if(rect !== lastRect) setter($scope, rect);
 			});
 			
 			$scope.$watch($attrs.dndRect, function(n, o){
 				if(!n || typeof n != 'object') return;
 				if(o == undefined) o = {};
 				
-				var prevRect = n = sanitize(n);
+				var lastRect = n = sanitize(n);
 
 				var css = {};
 
@@ -2653,7 +2653,7 @@
 					$el.dndCss('font-size', n+'px');
 				}
 
-				scope.$parent.$watch( attrs.dndFittext, throttle(function(opts){
+				scope.$watch( attrs.dndFittext, throttle(function(opts){
 					updateSize(opts);
 				}), true);
 
