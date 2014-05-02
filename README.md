@@ -1,4 +1,4 @@
-Angular-DND 0.1.3
+Angular-DND 0.1.4
 =========
 
 Особенности:
@@ -14,6 +14,7 @@ Angular-DND 0.1.3
 
 #### dnd-draggable-opts [object] - опции директивы:
 - ns[string]: Имя namespace. Что бы droppable-элементы реагировали на draggable-элементы они должны иметь общий namespace. По умолчанию namespace = 'common'
+- useAsPoint[boolean]: Droppable область будет взаимодействовать с элементом, только если курсор манипулятора окажется в пределах droppable элемента
 	
 #### watching attributes:
 - dnd-on-dragstart [function()]: срабатывающая в начале движения элемента
@@ -179,9 +180,9 @@ TODO:
 
  * fixing bugs and optimize code
  * more options
- * dynamic options
  * new directive - sortable
- * touch specific events (rotate, resize)
+ * supporting touch specific events (rotate, resize)
+ * supporting dynamic options
  * supporting ng-animate
  * supporting HTML5
  - translate to english

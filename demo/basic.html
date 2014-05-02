@@ -19,7 +19,6 @@
     var app = angular.module('app', ['dnd']);
 
     app.controller('controller', function($scope){
-        $scope.rect = {top:'20px', left:'240px', width: '100px', height: '100px'};
 
         $scope.dragstart = function(){
 	        console.log('dragstart', arguments);
@@ -36,6 +35,7 @@
         };
 
         $scope.dragenter = function(dropmodel, dragmodel){
+	        console.log( dropmodel);
 	        $scope.active = dropmodel;
         };
 
@@ -63,10 +63,12 @@
         $scope.isActive = function(model){
 	        return $scope.active === model;
         };
-        
+
         $scope.reset = function(){
-	        $scope.rect = {top:'20px', left:'240px', width: '100px', height: '100px'};
+            $scope.rect = {top:'20px', left:'240px', width: '100px', height: '100px'};
         }
+        
+        $scope.reset();
         
         $scope.dragmodel = 'drag'; 
 
@@ -95,6 +97,7 @@
 	    height: <input ng-model = 'rect.height' type="text">
 	    width: <input ng-model = 'rect.width' type="text">
 	    transform: <input ng-model = 'rect.transform' type="text">
+	    
 	    <button ng-click = "reset()">Reset</button>
 
 		<div class = "dnd-container">
@@ -103,7 +106,7 @@
 				ng-click = "click(!$dragged && !$resized && !$rotated, $dropmodel)"
 
 		    	dnd-draggable = "true"
-                dnd-draggable-opts = "{ns: 'area1'}"
+                dnd-draggable-opts = "{ns: 'area1', useAsPoint: true}"
                 dnd-on-dragstart = "dragstart()"
                 dnd-on-drag = "drag($dropmodel)"
                 dnd-on-dragend = "dragend($dropmodel)"

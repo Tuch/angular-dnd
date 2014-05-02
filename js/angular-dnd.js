@@ -1,6 +1,6 @@
 
 /**
- * @license AngularJS-DND v0.1.3
+ * @license AngularJS-DND v0.1.4
  * (c) 2014-2015 Alexander Afonin (toafonin@gmail.com, http://github.com/Tuch)
  * License: MIT
  */
@@ -16,7 +16,7 @@
 	 */
 
 	angular.dnd = {};
-	angular.dnd.version = '0.1.3a';
+	angular.dnd.version = '0.1.4';
 
 	/* ENVIRONMENT VARIABLES */
 
@@ -456,7 +456,16 @@
 		},
 
 		dndClientRect: function(){
-			return extend({}, this[0].getBoundingClientRect());
+			var DOMRect = this[0].getBoundingClientRect();
+
+			return {
+				bottom: DOMRect.bottom,
+				height: DOMRect.height,
+				left: DOMRect.left,
+				right: DOMRect.right,
+				top: DOMRect.top,
+				width: DOMRect.width,
+			};
 		},
 
 		dndStyleRect: function(){
@@ -472,7 +481,7 @@
 		},
 
 		dndGetParentScrollArea: function(){
-			var ret, parents = this.dndParents(), scrollX, clientX, scrollY, clientY, paddingX, paddingY, paddings;
+			var ret, parents = this.dndParents(), scrollX, clientX, scrollY, clientY, paddingX, paddingY, paddings, htmlEl = document.getElementsByTagName('html');
 
 			forEach(parents, function(element) {
 
@@ -491,6 +500,8 @@
 					return false;
 				}
 			});
+			
+			if(htmlEl && ret === htmlEl[0] ) ret = window;
 
 			return $(ret);
 		},
@@ -645,7 +656,7 @@
 	(function(){
 
 		var Regions = (function(){
-			var list = window.regions = {};
+			var list = {};
 
 			function Regions(namespace){
 				if(!list[namespace]) list[namespace] = [];
@@ -781,7 +792,7 @@
 		var Api = (function(){
 
 			function Api(manipulator){
-				var offset = { top:0, right:0, bottom:0, left:0 }, container;
+				var offset = { top:0, right:0, bottom:0, left:0 }, container, asPoint = false;
 
 				this.offset = function(top,right,bottom,left){
 					if(!arguments.length) return offset;
@@ -796,6 +807,8 @@
 					offset.right = right;
 					offset.bottom = bottom;
 					offset.left = left;
+
+
 				};
 
 				this.container = function(rect){
@@ -815,7 +828,7 @@
 
 				this.getBorders = function(){
 					var container = this.container();
-				
+					//console.log(offset);
 					return {
 						top: container.top + offset.top,
 						right: container.right + offset.right,
@@ -852,6 +865,14 @@
 
 				this.unTarget = function(){
 					 manipulator.removeFromTargets();
+				};
+				
+				this.asPoint = function(){
+					return asPoint;	
+				};
+				
+				this.useAsPoint = function(value){
+					asPoint = value === false ? false : true;	
 				};
 			}
 
@@ -909,6 +930,7 @@
 				},
 
 				onscroll: function(){
+				console.log('scroll', this.$scrollarea);
 					this.regions = this.prepare();
 					this.dnd.trigger('drag', this.api);
 				},
@@ -962,12 +984,16 @@
 
 					this.dnd.trigger('drag', this.api);
 
-					var axis = this.api.getAxis(), x = axis.left, y = axis.top;
+					var axis = this.api.getAxis(), x = axis.left, y = axis.top, offset = this.api.offset(), asPoint = this.api.asPoint();
 
 					for(var i = 0; i < this.regions.length; i++) {
 						var region = this.regions[i];
-
-						if( (x > region.rect.left) && (x < region.rect.left + region.rect.width) && (y > region.rect.top) && (y < region.rect.top + region.rect.height) ){
+						
+						var trigger = asPoint ? 
+						(x > region.rect.left ) && (x < region.rect.left+region.rect.width ) && (y > region.rect.top) && (y < region.rect.top+region.rect.height) : 
+						(x-offset.right > region.rect.left ) && (x-offset.left < region.rect.left+region.rect.width ) && (y-offset.bottom > region.rect.top) && (y-offset.top < region.rect.top+region.rect.height);
+						
+						if( trigger ){
 
 							if(this.target !== region.dnd.el) {
 								this.target = region.dnd.el;
@@ -1018,7 +1044,6 @@
 			},
 
 			mousedown: function (event){
-
 				event.preventDefault();
 			
 				this.manipulator.begin(event);
@@ -1028,7 +1053,6 @@
 			},
 
 			mousemove: function(event){
-
 				this.manipulator.progress(event);
 			},
 			
@@ -1291,7 +1315,8 @@
 				var rect = ctrls[0], model = ctrls[1], container = ctrls[2] ? ( ctrls[2].$element() === $el ? undefined : ctrls[2] ) : undefined;
 
 				var defaults = {
-					ns: 'common'
+					ns: 'common',
+					useAsPoint: false
 				};
 
 				var getterDraggable = $parse(attrs.dndDraggable);
@@ -1312,6 +1337,8 @@
 					local.started = true;
 
 					local.pos = $el.dndStyleRect();
+					
+					api.useAsPoint(opts.useAsPoint);
 
 					var axis = api.getAxis(), offset = {}, crect = $el.dndClientRect();
 					offset.top = axis.top - crect.top;
@@ -1333,7 +1360,7 @@
 					}
 					
 					local.startBorders = api.getBorders();
-					
+
 					local.startAxis = Point(axis.left - local.startBorders.left, axis.top - local.startBorders.top);
 
 					api.dragmodel = model ? model.get() : model;
@@ -1355,9 +1382,9 @@
 					var axis = api.getAxis();
 					
 					var borders = api.getBorders();
-					
+
 					var subtract = Point(axis.left - borders.left, axis.top - borders.top).subtract(local.startAxis);
-					
+
 					var position = { top: local.pos.top + subtract.y, left: local.pos.left + subtract.x };
 
 					rect ? rect.update(position) : $el.dndCss(position);
@@ -1377,7 +1404,7 @@
 					if(container) local.$scrollarea.off('scroll', local.onscroll); 
 					
 					scope.$dropmodel = api.dropmodel;
-
+					
 					dragendCallback(scope);
 
 					$timeout(function(){ 
@@ -2023,6 +2050,8 @@
 			restrict: 'A',
 			controller: Controller,
 			require: 'dndLassoArea',
+			/* отрицательный приоритет необходим для того, что бы post link function dnd-lasso-area запускался раньше post link function ng-click */
+			priority: -1,
 			link: function(scope, $el, attrs, ctrl){
 
 				var defaults = {
@@ -2035,11 +2064,12 @@
 				var dragstartCallback = $parse(attrs.dndLassoOnstart);
 				var dragCallback = $parse(attrs.dndLassoOndrag);
 				var dragendCallback = $parse(attrs.dndLassoOnend);
+				var clickCallback = $parse(attrs.dndLassoOnclick);
 				var lasso = new DndLasso({ $el:$el }), selectable, keyPressed;
 
 				ctrls.push(ctrl);
 
-				function onClick(){
+				function onClick(event){
 					if(!ctrl.empty()) {
 
 						if(keyPressed) {
@@ -2056,6 +2086,8 @@
 						if(selectable) selectable.selected();
 						
 					}
+					
+					clickCallback( scope, {$event: event});
 
 					scope.$apply();
 				}
@@ -2148,7 +2180,7 @@
 
 				$el.on('click', function(event){
 
-					if(!scope.$dragged) onClick();
+					if(!scope.$dragged) onClick(event);
 
 					/* что бы события dnd-on-* получили флаг $keypressed, переключение флага происходит после их выполнения */
 					if(scope.$keypressed) $timeout(function(){ scope.$keypressed = false; });
@@ -2423,92 +2455,104 @@
 	/* RECTANGLE DIRECTIVE: */
 
 	module.directive('dndRect', function($parse){
-		var styles = ['top','left','width','height','transform'];
+		var setStyles = ['top','left','width','height', 'transform'];
+		var getStyles = ['top','left','width','height', TRANSFORM];
 
-		styles.has = function(val){
+		setStyles.has = function(val){
 			return this.indexOf(val) > -1;
 		}
 
 		function Controller( $scope, $attrs, $element ){
-			var getter = $parse($attrs.dndRect), setter = getter.assign, rect = getter($scope);
+			var getter = $parse($attrs.dndRect), setter = getter.assign, lastRect;
 
 			this.update = function(prop, value) {
-				var values;
+				var values, rect = getter($scope) || {};
 				
 				if(typeof prop != 'object') {
 					values = {};
 					values[prop] = value;	
 				} else values = prop;
-
-				for(var key in values){
-					if( styles.has(key) ) {
-						if(typeof values[key] === 'number') values[key] = values[key]+'px';
-
-						rect[key] = values[key];
-					}
-				} 
-
+				
+				for(var i = 0; i < setStyles.length; i++){
+					var style = setStyles[i];
+					
+					if(values[style] !== undefined) rect[style] = values[style];
+				}
+				
 				setter($scope, rect);
-			}
+			};
 
 			this.get = function(){
-				return extend({},rect);
-			}
+				return getter($scope);
+			};
 
 			this.getClient = function(){
 				return $element.dndClientRect();
-			}
-
-			rect = typeof rect == 'object' ? rect : {};
-
-			for(var key in rect){
-				if(key !== key.toLowerCase()) {
-					rect[key.toLowerCase()] = rect[key];
-					delete rect[key];
+			};
+			
+			function sanitize(rect){
+				var css;
+				
+				rect = typeof rect == 'object' ? rect : {};
+				
+				for(var i = 0; i < setStyles.length; i++){
+				
+					var style = setStyles[i];
+					
+					if(rect[style] !== undefined) continue;
+					
+					if(!css) css = $element.dndCss(getStyles);
+					
+					rect[style] = style == 'transform' ? (css[TRANSFORM] == 'none' ? 'matrix(1, 0, 0, 1, 0, 0)' : css[TRANSFORM]) : css[style];
 				}
-			}
+	
+				for(var key in rect){
+					rect[key.toLowerCase()] = rect[key];
+				}
+	
+				for(var key in rect) {
+					if(setStyles.has(key)) {
+						if(typeof rect[key] === 'number') rect[key] = rect[key]+'px';
+					} else delete rect[key];
+				}
+				
+				return rect;
+			};
+			
+			$scope.$parent.$watch(function(){
+				var rect = getter($scope.$parent);
+				
+				if(rect !== lastRect) setter($scope, rect);
+			});
+			
+			$scope.$watch($attrs.dndRect, function(n, o){
+				if(!n || typeof n != 'object') return;
+				if(o == undefined) o = {};
+				
+				var lastRect = n = sanitize(n);
 
-			for(var key in rect) if(!styles.has(key)) delete rect[key];
+				var css = {};
 
-			var css = $element.dndCss(['top','left','width','height',TRANSFORM]);
+				for(var val, i=0; i < setStyles.length; i++ ){
+					val = setStyles[i];
 
-			if(rect.top == undefined) rect.top = css.top;
-			if(rect.left == undefined) rect.left = css.left;
-			if(rect.width == undefined) rect.width = css.width;
-			if(rect.height == undefined) rect.height = css.height;
-			if(rect.transform == undefined) rect.transform = css[TRANSFORM] == 'none' ? 'matrix(1, 0, 0, 1, 0, 0)' : css[TRANSFORM];
+					if(n[val] == undefined && o[val] != undefined) css[val] = '';
+					else if(n[val] != undefined) css[val] = n[val];
+				}
 
-			this.update(rect);
+				if(css.transform) css[TRANSFORM] = css.transform;
+				$element.dndCss(css);
+				
+			}, true);
 		}
 
 		return {
 			restrict: 'A',
-			controller: Controller,
-			link: function(scope, $el, attrs) {
-
-				scope.$watch(attrs.dndRect, throttle(function (n, o) {
-
-					if(!n || typeof n != 'object') return;
-					if(o == undefined) o = {};
-
-					var css = {};
-
-					for(var val, i=0; i < styles.length; i++ ){
-						val = styles[i];
-
-						if(n[val] == undefined && o[val] != undefined) css[val] = '';
-						else if(n[val] != undefined) css[val] = n[val];
-					}
-
-					if(css.transform) css[TRANSFORM] = css.transform;
-
-					$el.dndCss(css);
-
-			    }, 10), true);
-
-			}
+			controller: Controller
 		};
 	});
+	
+	
 
 	/* FITTEXT DIRECTIVE: */
 
