@@ -702,11 +702,19 @@
 			var draggables = [ 'dragstart', 'drag', 'dragend' ];
 			var droppables = [ 'dragenter', 'dragover', 'dragleave', 'drop' ];
 			var handled = false;
+			
+			
 	
 			draggables.has = droppables.has = function(event){
 				return this.indexOf(event) > -1;
 			};
 			
+			var touchevents;
+			if('ontouchstart' in document.documentElement) touchevents = {start: 'touchstart', move: 'touchmove', end: 'touchend', cancel: 'touchcancel'};
+			else if('pointerEnabled' in window.navigator) touchevents = {start: 'pointerdown', move: 'pointermove', end: 'pointerup', cancel: 'pointercancel'};
+			else if('msPointerEnabled' in window.navigator) touchevents = {start: 'MSPointerDown', move: 'MSPointerMove', end: 'MSPointerUp', cancel: 'MSPointerCancel'};
+			else touchevents = {start: 'touchstart', move: 'touchmove', end: 'touchend', cancel: 'touchcancel'};
+				
 	
 			function Dnd(el, namespace){
 				this.el = el;
@@ -740,7 +748,7 @@
 					if( droppables.has(event) ) this.regions.add(this.el);
 					else if(draggables.has(event) && !this.mouse && !this.touch) {
 						if('onmousedown' in window) this.mouse = new Mouse(this);
-						if( ('ontouchstart' in window) || ('onmsgesturechange' in window) ) this.touch = new Touch(this);
+						if( ('ontouchstart' in window) || ('onmsgesturechange' in window) ) this.touch = new Touch(this, touchevents);
 					}
 				},
 	
@@ -1069,14 +1077,15 @@
 		};
 
 
-		function Touch(dnd){
+		function Touch(dnd, te){
+			this.te = te;
 			this.manipulator = new Manipulator(dnd);
 			this.touchstart = proxy(this, this.touchstart);
 			this.touchmove = proxy(this, this.touchmove);
 			this.touchend = proxy(this, this.touchend);
 			this.manipulator.getClientAxis = this.getClientAxis;
-
-			dnd.$el.on('touchstart', this.touchstart);
+			
+			dnd.$el.on(this.te.start, this.touchstart);
 		}
 
 		Touch.prototype = {
@@ -1094,8 +1103,8 @@
 			touchstart: function (event){
 				this.manipulator.begin(event);
 
-				$document.on('touchmove', this.touchmove );
-				$document.on('touchend touchcancel', this.touchend );
+				$document.on(this.te.move, this.touchmove );
+				$document.on(this.te.end + ' ' + this.te.cancel, this.touchend );
 				
 			},
 			
@@ -1109,12 +1118,12 @@
 				
 				this.manipulator.end(event);
 
-				$document.off('touchmove', this.touchmove );
-				$document.off('touchend touchcancel', this.touchend );
+				$document.off(this.te.move, this.touchmove );
+				$document.off(this.te.end + ' ' + this.te.cancel, this.touchend );
 			},
 
 			destroy: function(){
-				this.dnd.$el.off('touchstart', this.touchstart);
+				this.dnd.$el.off(this.te.start, this.touchstart);
 			}
 		};
 
