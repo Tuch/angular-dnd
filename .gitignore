@@ -1,11 +1,4 @@
-# phpstorm project files
+node_modules
 .idea
-
-# netbeans project files
-nbproject
-
-# windows thumbnail cache
-Thumbs.db
-
-# Mac DS_Store Files
 .DS_Store
+._*

@@ -1313,7 +1313,7 @@
 
 	/* DRAGGABLE DIRECTIVE: */
 
-	module.directive('dndDraggable', function($timeout, $parse){
+	module.directive('dndDraggable', ['$timeout', '$parse', function($timeout, $parse){
 		return {
 			require: ['?dndRect', '?dndModel', '?^dndContainer'],
 			scope: true,
@@ -1440,12 +1440,12 @@
 
 			}
 		};
-	});
+	}]);
 
 
 	/* DROPPABLE DIRECTIVE: */
 
-	module.directive('dndDroppable', function( $parse, $timeout ){
+	module.directive('dndDroppable', ['$parse', '$timeout', function( $parse, $timeout ){
 		return {
 			require: '?dndModel',
 			link: function(scope, $el, attrs, model){
@@ -1525,12 +1525,12 @@
 
 			}
 		};
-	});
+	}]);
 
 
 	/* RESIZABLE DIRECTIVE: */
 
-	module.directive('dndResizable', function($parse, $timeout){
+	module.directive('dndResizable', ['$parse', '$timeout', function($parse, $timeout){
 	
 		function createHandleElement(side){
 			return angular.element('<div></div>').addClass('angular-dnd-resizable-handle angular-dnd-resizable-handle-' + side);
@@ -1716,11 +1716,11 @@
 
 			}
 		};
-	});	
+	}]);	
 
 	/* ROTATABLE DIRECTIVE*/
 	
-	module.directive('dndRotatable', function($parse, $timeout){
+	module.directive('dndRotatable', ['$parse', '$timeout', function($parse, $timeout){
 		return {
 			require: ['?dndRect', '?^dndContainer'],
 			scope: true,
@@ -1828,12 +1828,12 @@
 
 			}
 		};
-	});
+	}]);
 
 
 	/* LASSO CLASS: */
 
-	module.factory('DndLasso', function () {
+	module.factory('DndLasso', [function () {
 
 		var $div = $('<div></div>').dndCss({position: 'absolute'});
 
@@ -1992,14 +1992,15 @@
 		}
 
 		return Lasso;
-	});
+	}]);
 
 
 
 	/* LASSO AREA DIRECTIVE: */
 	
-	module.directive('dndLassoArea', function(DndLasso, $parse, $timeout, dndKey){
+	module.directive('dndLassoArea', ['DndLasso', '$parse', '$timeout', 'dndKey', function(DndLasso, $parse, $timeout, dndKey){
 
+		Controller.$inject = [];
 		function Controller(){
 			var ctrls = [], data = {};
 
@@ -2205,17 +2206,18 @@
 				scope.$dragged = false;
 			}
 		};
-	});
+	}]);
 
 
 
 	/* SELECTABLE DIRECTIVE: */
 
-	module.directive('dndSelectable', function($parse){
+	module.directive('dndSelectable', ['$parse', function($parse){
 
 		var defaults = {};
 
-		function Controller($element, $attrs, $scope) {
+		Controller.$inject = ['$scope', '$attrs', '$element'];
+		function Controller($scope, $attrs, $element) {
 			var getterSelecting = $parse($attrs.dndModelSelecting), setterSelecting = getterSelecting.assign || noop;
 			var getterSelected = $parse($attrs.dndModelSelected), setterSelected = getterSelected.assign || noop;
 			var getterSelectable = $parse($attrs.dndSelectable), setterSelectable = getterSelectable.assign || noop;
@@ -2354,12 +2356,13 @@
 				}
 			}
 		};
-	});
+	}]);
 
 	/* DND-MODEL */
 
-	module.directive('dndModel', function($parse){
+	module.directive('dndModel', ['$parse', function($parse){
 
+		Controller.$inject = ['$scope', '$attrs'];
 		function Controller( $scope, $attrs ){
 			var getter = $parse($attrs.dndModel), setter = getter.assign
 
@@ -2376,12 +2379,13 @@
 			restrict: 'A',
 			controller: Controller
 		}
-	});
+	}]);
 
 	/* DND-CONTAINER */
 
-	module.directive('dndContainer', function($parse){
+	module.directive('dndContainer', ['$parse', function($parse){
 
+		Controller.$inject = ['$element'];
 		function Controller( $element ){
 			this.getRect = function(){
 				return extend({}, $element.dndClientRect());
@@ -2396,9 +2400,9 @@
 			restrict: 'CA',
 			controller: Controller,
 		}
-	});
+	}]);
 
-	module.factory('dndKey', function ($rootScope) {
+	module.factory('dndKey', ['$rootScope', function ($rootScope) {
 		var keys = [];
 
 		function DndKey(){
@@ -2439,11 +2443,11 @@
 		$document.on('keyup', keyup);
 
 		return new DndKey;
-	});
+	}]);
 
 	/* DND-KEY-MODEL */
 
-	module.directive('dndKeyModel', function($parse, dndKey){
+	module.directive('dndKeyModel', ['$parse', 'dndKey', function($parse, dndKey){
 		return {
 			restrict: 'A',
 			link: function(scope, $el, attrs) {
@@ -2455,19 +2459,20 @@
 				});
 			}
 		}
-	});
+	}]);
 
 
 	/* RECTANGLE DIRECTIVE: */
 
-	module.directive('dndRect', function($parse){
+	module.directive('dndRect', ['$parse', function($parse){
 		var setStyles = ['top','left','width','height', 'transform'];
 		var getStyles = ['top','left','width','height', TRANSFORM];
 
 		setStyles.has = function(val){
 			return this.indexOf(val) > -1;
 		}
-
+		
+		Controller.$inject = ['$scope', '$attrs', '$element'];
 		function Controller( $scope, $attrs, $element ){
 			var getter = $parse($attrs.dndRect), setter = getter.assign, lastRect;
 
@@ -2551,12 +2556,14 @@
 				
 			}, true);
 		}
+		
+		
 
 		return {
 			restrict: 'A',
 			controller: Controller
 		};
-	});
+	}]);
 	
 	
 
@@ -2574,7 +2581,7 @@
 	 *
 	 */
 
-	module.directive('dndFittext', function( $timeout, $window ){
+	module.directive('dndFittext', ['$timeout', '$window', function( $timeout, $window ){
 		var $span = $('<span></span>').dndCss({'position':'absolute','left':-99999, 'top':-99999, 'opacity':0, 'z-index': -9999});
 
 		$(document.body).append( $span );
@@ -2668,7 +2675,7 @@
 				});
 			}
 		};
-	});
+	}]);
 
 
 })(angular, undefined, window, document);
