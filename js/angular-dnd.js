@@ -702,8 +702,6 @@
 			var draggables = [ 'dragstart', 'drag', 'dragend' ];
 			var droppables = [ 'dragenter', 'dragover', 'dragleave', 'drop' ];
 			var handled = false;
-			
-			
 	
 			draggables.has = droppables.has = function(event){
 				return this.indexOf(event) > -1;
@@ -714,7 +712,6 @@
 			else if('pointerEnabled' in window.navigator) touchevents = {start: 'pointerdown', move: 'pointermove', end: 'pointerup', cancel: 'pointercancel'};
 			else if('msPointerEnabled' in window.navigator) touchevents = {start: 'MSPointerDown', move: 'MSPointerMove', end: 'MSPointerUp', cancel: 'MSPointerCancel'};
 			else touchevents = {start: 'touchstart', move: 'touchmove', end: 'touchend', cancel: 'touchcancel'};
-				
 	
 			function Dnd(el, namespace){
 				this.el = el;
