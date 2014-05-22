@@ -2256,25 +2256,25 @@
 			};
 
 			this.selecting = function(){
-				if(this.isSelectable() && onSelecting(scope) !== false) setterSelecting($scope, true);
+				if(this.isSelectable() && onSelecting($scope) !== false) setterSelecting($scope, true);
 
 				return this;
 			};
 
 			this.unselecting = function(){
-				if(this.isSelectable() && onUnselecting(scope) !== false) setterSelecting($scope, false);
+				if(this.isSelectable() && onUnselecting($scope) !== false) setterSelecting($scope, false);
 
 				return this;
 			};
 
 			this.selected = function(){
-				if(this.isSelectable() && onSelected(scope) !== false) setterSelected($scope, true);
+				if(this.isSelectable() && onSelected($scope) !== false) setterSelected($scope, true);
 
 				return this;
 			};
 
 			this.unselected = function(){
-				if(this.isSelectable() && onUnselected(scope) !== false) setterSelected($scope, false);
+				if(this.isSelectable() && onUnselected($scope) !== false) setterSelected($scope, false);
 
 				return this;
 			};
