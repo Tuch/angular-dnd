@@ -2221,6 +2221,13 @@
 			var getterSelecting = $parse($attrs.dndModelSelecting), setterSelecting = getterSelecting.assign || noop;
 			var getterSelected = $parse($attrs.dndModelSelected), setterSelected = getterSelected.assign || noop;
 			var getterSelectable = $parse($attrs.dndSelectable), setterSelectable = getterSelectable.assign || noop;
+			var onSelected = $parse($attrs.dndOnSelected);
+			var onUnselected = $parse($attrs.dndOnUnselected);
+			var onSelecting = $parse($attrs.dndOnSelecting);
+			var onUnselecting = $parse($attrs.dndOnUnselecting);
+
+
+
 
 			setterSelected($scope, false);
 			setterSelecting($scope, false);
@@ -2249,25 +2256,25 @@
 			};
 
 			this.selecting = function(){
-				if(this.isSelectable()) setterSelecting($scope, true);
+				if(this.isSelectable() && onSelecting(scope) !== false) setterSelecting($scope, true);
 
 				return this;
 			};
 
 			this.unselecting = function(){
-				setterSelecting($scope, false);
+				if(this.isSelectable() && onUnselecting(scope) !== false) setterSelecting($scope, false);
 
 				return this;
 			};
 
 			this.selected = function(){
-				if(this.isSelectable()) setterSelected($scope, true);
+				if(this.isSelectable() && onSelected(scope) !== false) setterSelected($scope, true);
 
 				return this;
 			};
 
 			this.unselected = function(){
-				setterSelected($scope, false);
+				if(this.isSelectable() && onUnselected(scope) !== false) setterSelected($scope, false);
 
 				return this;
 			};
