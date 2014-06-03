@@ -707,6 +707,14 @@
 				return this.indexOf(event) > -1;
 			};
 			
+<<<<<<< HEAD
+=======
+			var touchevents;
+			if('ontouchstart' in document.documentElement) touchevents = {start: 'touchstart', move: 'touchmove', end: 'touchend', cancel: 'touchcancel'};
+			else if('pointerEnabled' in window.navigator) touchevents = {start: 'pointerdown', move: 'pointermove', end: 'pointerup', cancel: 'pointercancel'};
+			else if('msPointerEnabled' in window.navigator) touchevents = {start: 'MSPointerDown', move: 'MSPointerMove', end: 'MSPointerUp', cancel: 'MSPointerCancel'};
+			else touchevents = {start: 'touchstart', move: 'touchmove', end: 'touchend', cancel: 'touchcancel'};
+>>>>>>> dev
 	
 			function Dnd(el, namespace){
 				this.el = el;
@@ -740,7 +748,11 @@
 					if( droppables.has(event) ) this.regions.add(this.el);
 					else if(draggables.has(event) && !this.mouse && !this.touch) {
 						if('onmousedown' in window) this.mouse = new Mouse(this);
+<<<<<<< HEAD
 						if( ('ontouchstart' in window) || ('onmsgesturechange' in window) ) this.touch = new Touch(this);
+=======
+						if( ('ontouchstart' in window) || ('onmsgesturechange' in window) ) this.touch = new Touch(this, touchevents);
+>>>>>>> dev
 					}
 				},
 	
@@ -1069,14 +1081,15 @@
 		};
 
 
-		function Touch(dnd){
+		function Touch(dnd, te){
+			this.te = te;
 			this.manipulator = new Manipulator(dnd);
 			this.touchstart = proxy(this, this.touchstart);
 			this.touchmove = proxy(this, this.touchmove);
 			this.touchend = proxy(this, this.touchend);
 			this.manipulator.getClientAxis = this.getClientAxis;
-
-			dnd.$el.on('touchstart', this.touchstart);
+			
+			dnd.$el.on(this.te.start, this.touchstart);
 		}
 
 		Touch.prototype = {
@@ -1094,8 +1107,13 @@
 			touchstart: function (event){
 				this.manipulator.begin(event);
 
+<<<<<<< HEAD
 				$document.on('touchmove', this.touchmove );
 				$document.on('touchend touchcancel', this.touchend );
+=======
+				$document.on(this.te.move, this.touchmove );
+				$document.on(this.te.end + ' ' + this.te.cancel, this.touchend );
+>>>>>>> dev
 				
 			},
 			
@@ -1109,12 +1127,17 @@
 				
 				this.manipulator.end(event);
 
+<<<<<<< HEAD
 				$document.off('touchmove', this.touchmove );
 				$document.off('touchend touchcancel', this.touchend );
+=======
+				$document.off(this.te.move, this.touchmove );
+				$document.off(this.te.end + ' ' + this.te.cancel, this.touchend );
+>>>>>>> dev
 			},
 
 			destroy: function(){
-				this.dnd.$el.off('touchstart', this.touchstart);
+				this.dnd.$el.off(this.te.start, this.touchstart);
 			}
 		};
 
@@ -1307,7 +1330,7 @@
 
 	/* DRAGGABLE DIRECTIVE: */
 
-	module.directive('dndDraggable', function($timeout, $parse){
+	module.directive('dndDraggable', ['$timeout', '$parse', function($timeout, $parse){
 		return {
 			require: ['?dndRect', '?dndModel', '?^dndContainer'],
 			scope: true,
@@ -1434,12 +1457,16 @@
 
 			}
 		};
-	});
+	}]);
 
 
 	/* DROPPABLE DIRECTIVE: */
 
+<<<<<<< HEAD
 	module.directive('dndDroppable', function( $parse, $timeout ){
+=======
+	module.directive('dndDroppable', ['$parse', '$timeout', function( $parse, $timeout ){
+>>>>>>> dev
 		return {
 			require: '?dndModel',
 			link: function(scope, $el, attrs, model){
@@ -1486,9 +1513,15 @@
 
 				function dragleave(api){
 					var local = api.droplocal;
+<<<<<<< HEAD
 
 					if(!local.droppable) return;
 
+=======
+
+					if(!local.droppable) return;
+
+>>>>>>> dev
 					api.dropmodel = undefined;
 					
 					scope.$dragmodel = api.dragmodel;					
@@ -1507,6 +1540,7 @@
 					});
 				}
 
+<<<<<<< HEAD
 
 				var bindings = {};
 
@@ -1515,16 +1549,30 @@
 				bindings[opts.ns+'.dragleave'] = dragleave;
 				bindings[opts.ns+'.drop'] = drop;
 
+=======
+
+				var bindings = {};
+
+				bindings[opts.ns+'.dragenter'] = dragenter;
+				bindings[opts.ns+'.dragover'] = dragover;
+				bindings[opts.ns+'.dragleave'] = dragleave;
+				bindings[opts.ns+'.drop'] = drop;
+
+>>>>>>> dev
 				$el.dndBind( bindings );
 
 			}
 		};
-	});
+	}]);
 
 
 	/* RESIZABLE DIRECTIVE: */
 
+<<<<<<< HEAD
 	module.directive('dndResizable', function($parse, $timeout){
+=======
+	module.directive('dndResizable', ['$parse', '$timeout', function($parse, $timeout){
+>>>>>>> dev
 	
 		function createHandleElement(side){
 			return angular.element('<div></div>').addClass('angular-dnd-resizable-handle angular-dnd-resizable-handle-' + side);
@@ -1710,11 +1758,15 @@
 
 			}
 		};
-	});	
+	}]);	
 
 	/* ROTATABLE DIRECTIVE*/
 	
+<<<<<<< HEAD
 	module.directive('dndRotatable', function($parse, $timeout){
+=======
+	module.directive('dndRotatable', ['$parse', '$timeout', function($parse, $timeout){
+>>>>>>> dev
 		return {
 			require: ['?dndRect', '?^dndContainer'],
 			scope: true,
@@ -1741,6 +1793,7 @@
 				var handle = angular.element('<div class = "angular-dnd-rotatable-handle"></div>');
 				
 				$el.append(handle);
+<<<<<<< HEAD
 
 				function dragstart(api, target){
 					var local = api.local = {};
@@ -1823,8 +1876,99 @@
 			}
 		};
 	});
+=======
+
+				function dragstart(api, target){
+					var local = api.local = {};
+
+					local.rotatable = getterRotatable(scope);
+					local.rotatable = local.rotatable === undefined ? true : local.rotatable;
+
+					if( !local.rotatable ) api.unTarget();
+
+					if(!api.isTarget()) return;
+
+					local.started = true;
+
+					var axis = api.getAxis(), crect = $el.dndClientRect();
+
+					local.srect = $el.dndStyleRect();
+
+					local.currAngle = $el.dndGetAngle();
+					local.startPoint = Point(axis);
+
+					if(container) api.container(container.getRect());
+
+					local.borders = api.getBorders();
+
+					local.center = Point(crect.left + crect.width / 2, crect.top + crect.height / 2);
+
+					scope.$rotated = true;
+
+					dragstartCallback(scope);
+
+					scope.$apply();
+				}
+
+				function drag(api, target){
+					var local = api.local;
+
+					if(!local.started) return;
+
+					var axis = api.getAxis();
+					var angle = Point(axis).deltaAngle(local.startPoint, local.center);
+					var degs = radToDeg(local.currAngle+angle);
 
 
+					degs = Math.round(degs/opts.step)*opts.step;
+					var rads = degToRad(degs);
+					var matrix = Matrix().rotate(rads);
+
+					var compute = Rect( local.center.x - local.srect.width/2, local.center.y - local.srect.height/2, local.srect.width, local.srect.height).applyMatrix( matrix, local.center ).client();
+
+					if(compute.left < local.borders.left-1 || compute.top < local.borders.top-1 || (compute.left+compute.width) > local.borders.right+1 || (compute.top+compute.height) > local.borders.bottom+1) return;
+
+					if(rect) rect.update('transform', matrix.toStyle());
+					else $el.dndCss('transform',  matrix.toStyle());
+
+					dragCallback(scope);
+
+					scope.$apply();
+				}
+
+				function dragend(api){
+					var local = api.local;
+
+					if(!local.started) return;
+
+					dragendCallback(scope);
+
+					$timeout(function(){ scope.$rotated = false });
+				}
+
+				scope.$rotated = false;
+
+				var bindings = {
+					'$$rotatable.dragstart': dragstart,
+					'$$rotatable.drag': drag,
+					'$$rotatable.dragend': dragend
+				};
+
+				handle.dndBind( bindings );
+
+			}
+		};
+	}]);
+
+
+	/* LASSO CLASS: */
+
+	module.factory('DndLasso', [function () {
+>>>>>>> dev
+
+		var $div = $('<div></div>').dndCss({position: 'absolute'});
+
+<<<<<<< HEAD
 	/* LASSO CLASS: */
 
 	module.factory('DndLasso', function () {
@@ -1909,6 +2053,86 @@
 					return;
 				}
 
+=======
+		var defaults = {
+			className: 'angular-dnd-lasso',
+			container: 'body',
+			offsetX: 0,
+			offsetY: 0
+		};
+
+		function Handler(local){
+
+			this.getRect = function(){
+				return this.isActive ? local.rect : undefined;
+			}
+
+			this.getClientRect = function(){
+				return this.isActive ? $div.dndClientRect() : undefined;
+			}
+
+			this.isActive = function(){
+				return local.active;
+			}
+		}
+		
+		function Local(api){
+			var isTarget = api.isTarget(), handler = new Handler(this);
+			
+			this.isTarget = function(){
+				return isTarget;
+			}
+			
+			this.handler = function(){
+				return handler;
+			}
+			
+			this.getEvent = function(){
+				return api.getEvent();
+			}
+		}
+
+		function Lasso(opts){
+
+			var self = this;
+
+			opts = extend( {}, defaults, opts );
+
+			function dragstart(api) {
+				var local = api.local = new Local(api);
+
+				if( !local.isTarget() ) {
+					self.trigger('start', local.handler() );
+					return;
+				}
+
+				local.active = true;
+
+				self.trigger('start', local.handler() );
+
+				local.startAxis = api.getAxis();
+
+				$div.removeAttr('class style').removeClass('ng-hide').addClass(opts.className);
+
+				opts.$el.append( $div );
+
+				var $container = opts.$el, crect = $container.dndClientRect();
+
+				api.container(crect);
+
+
+
+			};
+
+			function drag(api) {
+				var local = api.local;
+
+				if( !local.active )  {
+					self.trigger('drag', local.handler());
+					return;
+				}
+
+>>>>>>> dev
 				var axis = api.getAxis();
 				var areaRect = opts.$el.dndClientRect();
 
@@ -1986,14 +2210,24 @@
 		}
 
 		return Lasso;
+<<<<<<< HEAD
 	});
+=======
+	}]);
+>>>>>>> dev
 
 
 
 	/* LASSO AREA DIRECTIVE: */
 	
+<<<<<<< HEAD
 	module.directive('dndLassoArea', function(DndLasso, $parse, $timeout, dndKey){
 
+=======
+	module.directive('dndLassoArea', ['DndLasso', '$parse', '$timeout', 'dndKey', function(DndLasso, $parse, $timeout, dndKey){
+
+		Controller.$inject = [];
+>>>>>>> dev
 		function Controller(){
 			var ctrls = [], data = {};
 
@@ -2199,16 +2433,17 @@
 				scope.$dragged = false;
 			}
 		};
-	});
+	}]);
 
 
 
 	/* SELECTABLE DIRECTIVE: */
 
-	module.directive('dndSelectable', function($parse){
+	module.directive('dndSelectable', ['$parse', function($parse){
 
 		var defaults = {};
 
+<<<<<<< HEAD
 		function Controller($element, $attrs, $scope) {
 			var getterSelecting = $parse($attrs.dndModelSelecting), setterSelecting = getterSelecting.assign || noop;
 			var getterSelected = $parse($attrs.dndModelSelected), setterSelected = getterSelected.assign || noop;
@@ -2217,6 +2452,24 @@
 			setterSelected($scope, false);
 			setterSelecting($scope, false);
 
+=======
+		Controller.$inject = ['$scope', '$attrs', '$element'];
+		function Controller($scope, $attrs, $element) {
+			var getterSelecting = $parse($attrs.dndModelSelecting), setterSelecting = getterSelecting.assign || noop;
+			var getterSelected = $parse($attrs.dndModelSelected), setterSelected = getterSelected.assign || noop;
+			var getterSelectable = $parse($attrs.dndSelectable), setterSelectable = getterSelectable.assign || noop;
+			var onSelected = $parse($attrs.dndOnSelected);
+			var onUnselected = $parse($attrs.dndOnUnselected);
+			var onSelecting = $parse($attrs.dndOnSelecting);
+			var onUnselecting = $parse($attrs.dndOnUnselecting);
+
+
+
+
+			setterSelected($scope, false);
+			setterSelecting($scope, false);
+
+>>>>>>> dev
 			this.getElement = function(){
 				return $element;
 			};
@@ -2232,6 +2485,7 @@
 			this.isSelectable = function(){
 				var selectable = getterSelectable($scope);
 				return selectable === undefined || selectable;
+<<<<<<< HEAD
 			};
 
 			this.toggleSelected = function(val){
@@ -2254,12 +2508,41 @@
 
 			this.selected = function(){
 				if(this.isSelectable()) setterSelected($scope, true);
+=======
+			};
+
+			this.toggleSelected = function(val){
+				val = val === undefined ? !this.isSelected() : val;
+
+				return val ? this.selected() : this.unselected();
+			};
+
+			this.selecting = function(){
+				if(this.isSelectable() && onSelecting($scope) !== false) setterSelecting($scope, true);
+>>>>>>> dev
+
+				return this;
+			};
+
+<<<<<<< HEAD
+			this.unselected = function(){
+				setterSelected($scope, false);
+=======
+			this.unselecting = function(){
+				if(this.isSelectable() && onUnselecting($scope) !== false) setterSelecting($scope, false);
+
+				return this;
+			};
+
+			this.selected = function(){
+				if(this.isSelectable() && onSelected($scope) !== false) setterSelected($scope, true);
 
 				return this;
 			};
 
 			this.unselected = function(){
-				setterSelected($scope, false);
+				if(this.isSelectable() && onUnselected($scope) !== false) setterSelected($scope, false);
+>>>>>>> dev
 
 				return this;
 			};
@@ -2285,12 +2568,21 @@
 					);
 			};
 
+<<<<<<< HEAD
 		}
 
 		function LikeRectCtrl($element){
 			this.$element = $element;
 		}
 
+=======
+		}
+
+		function LikeRectCtrl($element){
+			this.$element = $element;
+		}
+
+>>>>>>> dev
 		LikeRectCtrl.prototype = {
 			getClient: function(){
 				return this.$element.dndClientRect();
@@ -2304,9 +2596,15 @@
 			scope: true,
 			link: function(scope, $el, attrs, ctrls) {
 				scope.$dndSelectable = ctrls[0];
+<<<<<<< HEAD
 
 				var rectCtrl = ctrls[2];
 
+=======
+
+				var rectCtrl = ctrls[2];
+
+>>>>>>> dev
 				ctrls[0].rectCtrl = rectCtrl ? rectCtrl : new LikeRectCtrl($el);
 
 				ctrls[1].add(ctrls[0]);
@@ -2318,6 +2616,7 @@
 				}
 
 				$el.on('$destroy', ondestroy);
+<<<<<<< HEAD
 
 				var selected = $parse(attrs.dndOnSelected);
 				var unselected = $parse(attrs.dndOnUnselected);
@@ -2336,6 +2635,26 @@
 				}
 
 
+=======
+
+				var selected = $parse(attrs.dndOnSelected);
+				var unselected = $parse(attrs.dndOnUnselected);
+				var selecting = $parse(attrs.dndOnSelecting);
+				var unselecting = $parse(attrs.dndOnUnselecting);
+
+				if(selected || unselected) {
+					selected = selected || noop;
+					unselected = unselected || noop;
+
+					scope.$watch(attrs.dndModelSelected, function(n, o){
+						if(n === undefined || o === undefined || n === o) return;
+
+						n ? selected(scope) : unselected(scope);
+					});
+				}
+
+
+>>>>>>> dev
 				if(selecting || unselecting) {
 					selecting = selecting || noop;
 					unselecting = unselecting || noop;
@@ -2348,12 +2667,13 @@
 				}
 			}
 		};
-	});
+	}]);
 
 	/* DND-MODEL */
 
-	module.directive('dndModel', function($parse){
+	module.directive('dndModel', ['$parse', function($parse){
 
+		Controller.$inject = ['$scope', '$attrs'];
 		function Controller( $scope, $attrs ){
 			var getter = $parse($attrs.dndModel), setter = getter.assign
 
@@ -2370,12 +2690,13 @@
 			restrict: 'A',
 			controller: Controller
 		}
-	});
+	}]);
 
 	/* DND-CONTAINER */
 
-	module.directive('dndContainer', function($parse){
+	module.directive('dndContainer', ['$parse', function($parse){
 
+		Controller.$inject = ['$element'];
 		function Controller( $element ){
 			this.getRect = function(){
 				return extend({}, $element.dndClientRect());
@@ -2390,7 +2711,66 @@
 			restrict: 'CA',
 			controller: Controller,
 		}
-	});
+	}]);
+
+	module.factory('dndKey', ['$rootScope', function ($rootScope) {
+		var keys = [];
+
+		function DndKey(){
+
+		};
+
+		DndKey.prototype = {
+			get: function(){
+				return keys;
+			},
+			isset: function(code){
+				var index = keys.indexOf(code);
+				return (index !== -1);
+			}
+		};
+
+		function keydown(event){
+			var code = event.keyCode;
+			debounceKeyup(event);
+			if(keys.indexOf(code) > -1) return;
+
+			keys.push(code);
+			$rootScope.$digest();
+		}
+
+		function keyup(event){
+			var code = event.keyCode, index = keys.indexOf(code);
+			if(index === -1) return;
+
+			keys.splice(index,1);
+			$rootScope.$digest();
+		};
+
+
+
+		var debounceKeyup = debounce(keyup, 1000);
+		$document.on('keydown', keydown);
+		$document.on('keyup', keyup);
+
+		return new DndKey;
+	}]);
+
+	/* DND-KEY-MODEL */
+
+	module.directive('dndKeyModel', ['$parse', 'dndKey', function($parse, dndKey){
+		return {
+			restrict: 'A',
+			link: function(scope, $el, attrs) {
+				var getter = $parse(attrs.dndKeyModel), setter = getter.assign;
+
+				scope.$watch(function(){ return dndKey.get() }, function(n,o){
+					if(n === undefined) return;
+					setter(scope, n);
+				});
+			}
+		}
+	}]);
 
 	module.factory('dndKey', function ($rootScope) {
 		var keys = [];
@@ -2454,14 +2834,19 @@
 
 	/* RECTANGLE DIRECTIVE: */
 
+<<<<<<< HEAD
 	module.directive('dndRect', function($parse){
+=======
+	module.directive('dndRect', ['$parse', function($parse){
+>>>>>>> dev
 		var setStyles = ['top','left','width','height', 'transform'];
 		var getStyles = ['top','left','width','height', TRANSFORM];
 
 		setStyles.has = function(val){
 			return this.indexOf(val) > -1;
 		}
-
+		
+		Controller.$inject = ['$scope', '$attrs', '$element'];
 		function Controller( $scope, $attrs, $element ){
 			var getter = $parse($attrs.dndRect), setter = getter.assign, lastRect;
 
@@ -2545,12 +2930,18 @@
 				
 			}, true);
 		}
+		
+		
 
 		return {
 			restrict: 'A',
 			controller: Controller
 		};
+<<<<<<< HEAD
 	});
+=======
+	}]);
+>>>>>>> dev
 	
 	
 
@@ -2568,7 +2959,11 @@
 	 *
 	 */
 
+<<<<<<< HEAD
 	module.directive('dndFittext', function( $timeout, $window ){
+=======
+	module.directive('dndFittext', ['$timeout', '$window', function( $timeout, $window ){
+>>>>>>> dev
 		var $span = $('<span></span>').dndCss({'position':'absolute','left':-99999, 'top':-99999, 'opacity':0, 'z-index': -9999});
 
 		$(document.body).append( $span );
@@ -2608,6 +3003,7 @@
 					var font = $el.dndCss(
 						['font-size','font-family','font-weight','text-transform','border-top','border-right','border-bottom','border-left','padding-top','padding-right','padding-bottom','padding-left']
 					), text = opts.text == undefined ? $el.text() : opts.text;
+<<<<<<< HEAD
 
 					var sizes = [];
 					if(opts.width === undefined) sizes.push('width');
@@ -2646,6 +3042,46 @@
 					kof *= 0.85;
 					if((kof > 0.95 && kof <= 1) || (kof >= 1 && kof < 1.05) ) return;
 
+=======
+
+					var sizes = [];
+					if(opts.width === undefined) sizes.push('width');
+					if(opts.height === undefined) sizes.push('height');
+
+					if(sizes) sizes = $el.dndCss(sizes);
+
+					for(var key in sizes){
+						var val = sizes[key];
+
+						if(val[val.length-1] == '%') return;
+						opts[key] = sizes[key];
+					}
+
+					var realSize = getRealSize(text, font), currSize = getCurrSize($el,0,0);
+					if(!realSize.width || !realSize.height) {
+						$el.dndCss('font-size', '');
+						return
+					}
+
+					currSize.width = parseFloat(opts.width);
+					currSize.height = parseFloat(opts.height);
+
+					var kof1 = currSize.height / realSize.height;
+					var kof2 = currSize.width / realSize.width;
+
+					var max = scope.$eval(attrs.dndFittextMax);
+					var min = scope.$eval(attrs.dndFittextMin);
+
+					if(min == undefined) min = 0;
+					if(max == undefined) max = Number.POSITIVE_INFINITY;
+
+					var kof = (kof1 < kof2 ? kof1 : kof2);
+
+					//Корректировка плавности
+					kof *= 0.85;
+					if((kof > 0.95 && kof <= 1) || (kof >= 1 && kof < 1.05) ) return;
+
+>>>>>>> dev
 					var n = kof * parseFloat(font['font-size']);
 
 					n = getNumFromSegment(min, n, max);
@@ -2662,7 +3098,7 @@
 				});
 			}
 		};
-	});
+	}]);
 
 
 })(angular, undefined, window, document);
