@@ -935,7 +935,6 @@
 				},
 
 				onscroll: function(){
-				console.log('scroll', this.$scrollarea);
 					this.regions = this.prepare();
 					this.dnd.trigger('drag', this.api);
 				},
@@ -1049,7 +1048,7 @@
 			},
 
 			mousedown: function (event){
-				event.preventDefault();
+				//event.preventDefault();
 			
 				this.manipulator.begin(event);
 
