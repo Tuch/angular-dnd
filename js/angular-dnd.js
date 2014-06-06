@@ -481,7 +481,7 @@
 		},
 
 		dndGetParentScrollArea: function(){
-			var ret, parents = this.dndParents(), scrollX, clientX, scrollY, clientY, paddingX, paddingY, paddings, htmlEl = document.getElementsByTagName('html');
+			var ret, parents = this.dndParents(), scrollX, clientX, scrollY, clientY, paddingX, paddingY, paddings, htmlEl = document.documentElement;
 
 			forEach(parents, function(element) {
 
@@ -1089,7 +1089,7 @@
 			getClientAxis: function(event) {
 				event = event ? event : this.event;
 				event = event.originalEvent ? event.originalEvent : event;
-				
+
 				return {
 					top: event.changedTouches[0].clientY,
 					left: event.changedTouches[0].clientX
