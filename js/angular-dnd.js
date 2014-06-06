@@ -1,6 +1,6 @@
 
 /**
- * @license AngularJS-DND v0.1.4
+ * @license AngularJS-DND v0.1.4.1
  * (c) 2014-2015 Alexander Afonin (toafonin@gmail.com, http://github.com/Tuch)
  * License: MIT
  */
