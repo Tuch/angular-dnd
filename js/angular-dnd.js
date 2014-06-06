@@ -1,6 +1,6 @@
 
 /**
- * @license AngularJS-DND v0.1.4
+ * @license AngularJS-DND v0.1.4.1
  * (c) 2014-2015 Alexander Afonin (toafonin@gmail.com, http://github.com/Tuch)
  * License: MIT
  */
@@ -16,7 +16,7 @@
 	 */
 
 	angular.dnd = {};
-	angular.dnd.version = '0.1.4';
+	angular.dnd.version = '0.1.4.1';
 
 	/* ENVIRONMENT VARIABLES */
 
@@ -481,7 +481,7 @@
 		},
 
 		dndGetParentScrollArea: function(){
-			var ret, parents = this.dndParents(), scrollX, clientX, scrollY, clientY, paddingX, paddingY, paddings, htmlEl = document.getElementsByTagName('html');
+			var ret, parents = this.dndParents(), scrollX, clientX, scrollY, clientY, paddingX, paddingY, paddings, htmlEl = document.documentElement;
 
 			forEach(parents, function(element) {
 
@@ -1096,7 +1096,7 @@
 			getClientAxis: function(event) {
 				event = event ? event : this.event;
 				event = event.originalEvent ? event.originalEvent : event;
-				
+
 				return {
 					top: event.changedTouches[0].clientY,
 					left: event.changedTouches[0].clientX
