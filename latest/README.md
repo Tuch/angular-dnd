@@ -1,4 +1,4 @@
-Angular-DND 0.1.4.1
+Angular-DND 0.1.5
 =========
 
 Особенности:
@@ -101,17 +101,10 @@ Angular-DND 0.1.4.1
  - dnd-lasso-area как родительский элемент
 
 #### watching attributes:
-<<<<<<< HEAD
- - dnd-on-selected [function([$keyPressed])]: срабатывает при изменении значения selected (dnd-model-selected) c false на true
- - dnd-on-unselected [function([$keyPressed])]: срабатывает при изменении значения selected (dnd-model-selected) c true на false
- - dnd-on-selecting [function([$keyPressed])]: срабатывает при изменении значения selecting (dnd-model-selecting) c false на true
- - dnd-on-unselecting [function([$keyPressed])]: срабатывает при изменении значения selecting (dnd-model-selecting) c true на false
-=======
  - dnd-on-selected [function([$keyPressed])]: срабатывает ПЕРЕД изменением значения selected (dnd-model-selected) c false на true. В случае если функция вернет false значение останется прежним.
  - dnd-on-unselected [function([$keyPressed])]: срабатывает ПЕРЕД изменениеми значения selected (dnd-model-selected) c true на false. В случае если функция вернет false значение останется прежним.
  - dnd-on-selecting [function([$keyPressed])]: срабатывает ПЕРЕД изменением значения selecting (dnd-model-selecting) c false на true. В случае если функция вернет false значение останется прежним.
  - dnd-on-unselecting [function([$keyPressed])]: срабатывает ПЕРЕД изменением значения selecting (dnd-model-selecting) c true на false. В случае если функция вернет false значение останется прежним.
->>>>>>> dev
 
 #### model attributes:
  - dnd-model-selected: указывается име переменной в scope, в которой хранится состояние selected
@@ -179,7 +172,7 @@ Angular-DND 0.1.4.1
 ---------
 
 Все примеры внутри в папке Demo.
-Также доступна [ссылка](http://urplanet.net/angular-dnd/latest/demo/basic.html)
+Также доступна [ссылка](http://tuch.github.io/angular-dnd/latest/demo)
 
 
 TODO:
