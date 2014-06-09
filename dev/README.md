@@ -1,4 +1,4 @@
-Angular-DND 0.1.4.1
+Angular-DND 0.1.5
 =========
 
 Особенности:
@@ -172,7 +172,7 @@ Angular-DND 0.1.4.1
 ---------
 
 Все примеры внутри в папке Demo.
-Также доступна [ссылка](http://urplanet.net/angular-dnd/latest/demo/basic.html)
+Также доступна [ссылка](http://tuch.github.io/angular-dnd/latest/demo)
 
 
 TODO:
