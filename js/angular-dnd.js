@@ -1,6 +1,6 @@
 
 /**
- * @license AngularJS-DND v0.1.5
+ * @license AngularJS-DND v0.1.6
  * (c) 2014-2015 Alexander Afonin (toafonin@gmail.com, http://github.com/Tuch)
  * License: MIT
  */
@@ -16,7 +16,7 @@
 	 */
 
 	angular.dnd = {};
-	angular.dnd.version = '0.1.5';
+	angular.dnd.version = '0.1.6';
 
 	/* ENVIRONMENT VARIABLES */
 
