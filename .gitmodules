@@ -1,0 +1,16 @@
+[submodule "latest"]
+    path = latest
+    url = git@github.com:Tuch/angular-dnd.git
+    branch = master
+[submodule "dev"]
+    path = dev
+    url = git@github.com:Tuch/angular-dnd.git
+    branch = dev
+[submodule "0.1.5"]
+    path = 0.1.5
+    url = git@github.com:Tuch/angular-dnd.git
+    branch = 0.1.5
+[submodule "0.1.6"]
+    path = 0.1.6
+    url = git@github.com:Tuch/angular-dnd.git
+    branch = 0.1.6
