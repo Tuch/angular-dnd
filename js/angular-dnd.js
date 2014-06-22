@@ -2088,7 +2088,7 @@
 						for(var i = 0; i < s.length; i++){
 							s[i].unselected().unselecting();
 						}
-						
+
 						if(selectable) selectable.selected();
 						
 					}
@@ -2261,7 +2261,7 @@
 			};
 
 			this.unselecting = function(){
-				if(this.isSelectable() && onUnselecting($scope) !== false) setterSelecting($scope, false);
+				if(onUnselecting($scope) !== false) setterSelecting($scope, false);
 
 				return this;
 			};
@@ -2273,7 +2273,7 @@
 			};
 
 			this.unselected = function(){
-				if(this.isSelectable() && onUnselected($scope) !== false) setterSelected($scope, false);
+				if(onUnselected($scope) !== false) setterSelected($scope, false);
 
 				return this;
 			};
