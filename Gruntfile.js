@@ -1,9 +1,6 @@
 module.exports = function (grunt) {
 	grunt.initConfig({
 		uglify: {
-			options: {
-				//report: 'min'
-			},
 			build: {
 				src: 'js/angular-dnd.js',
 				dest: 'js/angular-dnd.min.js'
