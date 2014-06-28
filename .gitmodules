@@ -11,6 +11,6 @@
     url = https://github.com/Tuch/angular-dnd
     branch = 0.1.6
 [submodule "0.1.7"]
-    path = 0.1.7
-    url = https://github.com/Tuch/angular-dnd
-    branch = 0.1.7
+	path = 0.1.7
+	url = https://github.com/Tuch/angular-dnd
+	branch = 0.1.7
