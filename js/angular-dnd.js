@@ -1,6 +1,6 @@
 
 /**
- * @license AngularJS-DND v0.1.6
+ * @license AngularJS-DND v0.1.4.1
  * (c) 2014-2015 Alexander Afonin (toafonin@gmail.com, http://github.com/Tuch)
  * License: MIT
  */
@@ -2088,7 +2088,7 @@
 						for(var i = 0; i < s.length; i++){
 							s[i].unselected().unselecting();
 						}
-
+						
 						if(selectable) selectable.selected();
 						
 					}
