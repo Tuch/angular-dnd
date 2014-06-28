@@ -16,7 +16,7 @@
 	 */
 
 	angular.dnd = {};
-	angular.dnd.version = '0.1.6';
+	angular.dnd.version = '0.1.7';
 
 	/* ENVIRONMENT VARIABLES */
 
