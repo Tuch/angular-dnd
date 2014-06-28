@@ -1,16 +1,16 @@
 [submodule "latest"]
     path = latest
-    url = git@github.com:Tuch/angular-dnd.git
+    url = https://github.com/Tuch/angular-dnd
     branch = master
 [submodule "0.1.5"]
     path = 0.1.5
-    url = git@github.com:Tuch/angular-dnd.git
+    url = https://github.com/Tuch/angular-dnd
     branch = 0.1.5
 [submodule "0.1.6"]
     path = 0.1.6
-    url = git@github.com:Tuch/angular-dnd.git
+    url = https://github.com/Tuch/angular-dnd
     branch = 0.1.6
 [submodule "0.1.7"]
     path = 0.1.7
-    url = git@github.com:Tuch/angular-dnd.git
+    url = https://github.com/Tuch/angular-dnd
     branch = 0.1.7
