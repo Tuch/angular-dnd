@@ -16,6 +16,7 @@ Angular-DND 0.1.7
 - layer[string]: Имя layer. Что бы droppable-элементы реагировали на draggable-элементы они должны находиться на одном layer. По умолчанию layer = 'common'
 - useAsPoint[boolean]: Droppable область будет взаимодействовать с элементом, только если курсор манипулятора окажется в пределах droppable элемента
 - helper[string]: 'clone' или templateUrl - позволяют для перемещения использовать helper, а не сам элемент
+- restrictTheMovement[boolean]: игнорирование контейнера (читайте ниже dnd-contaier)
 	
 #### watching attributes:
 - dnd-on-dragstart [function()]: срабатывающая в начале движения элемента

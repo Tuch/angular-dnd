@@ -834,17 +834,6 @@
 
 		var Api = (function(){
 
-//            var Container = Bounder = function($element, offset){
-//
-//                this.getRect = function(){
-//
-//                };
-//
-//                this.clearCache = function(){
-//
-//                };
-//            };
-
 			function Api(manipulator){
 				var offset = { top:0, right:0, bottom:0, left:0 }, asPoint = false;
 
@@ -863,32 +852,32 @@
 					offset.left = left;
 				};
 
-                var container = {};
+                var reference = {};
 
-                this.setContainer = function(element){
-                    container.element = element;
+                this.setReference = function(element){
+                    reference.element = element;
 
-                    this.clearContainerCache();
+                    this.clearReferenceCache();
                 };
 
-                this.clearContainerCache = function(){
-                    container.rect = null
+                this.clearReferenceCache = function(){
+                    reference.rect = null
                 };
 
-                this.getContainer = function(){
-                    return container.element;
+                this.getReference = function(){
+                    return reference.element;
                 };
 
-				this.getContainerRect = function(){
-                    if(!container.rect) container.rect = container.element.dndClientRect();
+				this.getReferenceRect = function(){
+                    if(!reference.rect) reference.rect = reference.element.dndClientRect();
 
 					return {
-						top: container.rect.top + offset.top,
-						right: container.rect.right + offset.right,
-						bottom: container.rect.bottom + offset.bottom,
-						left: container.rect.left + offset.left,
-                        width: container.rect.right + offset.right - (container.rect.left + offset.left),
-                        height: container.rect.bottom + offset.bottom - (container.rect.top + offset.top)
+						top: reference.rect.top + offset.top,
+						right: reference.rect.right + offset.right,
+						bottom: reference.rect.bottom + offset.bottom,
+						left: reference.rect.left + offset.left,
+                        width: reference.rect.right + offset.right - (reference.rect.left + offset.left),
+                        height: reference.rect.bottom + offset.bottom - (reference.rect.top + offset.top)
 					}
 				};
 
@@ -937,7 +926,7 @@
 				};
 
                 this.getRelativeAxis = function(){
-                    return Point( this.getAxis() ).minus( this.getContainerRect() );
+                    return Point( this.getAxis() ).minus( this.getReferenceRect() );
                 };
 
 				this.getDragTarget = function(){
@@ -1016,16 +1005,16 @@
 
                     this.$scrollarea.on('scroll', this.onscroll);
 
-                    this.$container = this.dnd.$el.dndGetFirstNotStaticParent();
+                    this.$reference = this.dnd.$el.dndGetFirstNotStaticParent();
 
-                    this.api.setContainer(this.$container);
+                    this.api.setReference(this.$reference);
 
 					this.dnd.trigger('dragstart', this.api);
 				},
 
 				onscroll: function(){
 					this.regions = this.prepare();
-                    this.api.clearContainerCache();
+                    this.api.clearReferenceCache();
                     this.api.clearBounderCache();
                     this.dnd.trigger('drag', this.api);
 				},
@@ -1586,7 +1575,7 @@
 					layer: 'common',
 					useAsPoint: false,
                     helper: null,
-                    restrictTheMovement: 'body'
+                    restrictTheMovement: true
 				};
 
 				var getterDraggable = $parse(attrs.dndDraggable);
@@ -1626,7 +1615,7 @@
                     scope.$dropmodel = api.dropmodel;
 
                     if(opts.restrictTheMovement) {
-                        var $bounder = angular.isString(opts.restrictTheMovement) ? angular.element(document.querySelectorAll(opts.restrictTheMovement)) : api.getContainerElement();
+                        var $bounder = container ? container.getElement() : angular.element(document.body);
 
                         api.setBounder( $bounder );
                     }
@@ -2608,11 +2597,7 @@
 
         Controller.$inject = ['$element'];
         function Controller( $element ){
-            this.getRect = function(){
-                return extend({}, $element.dndClientRect());
-            };
-
-            this.$element = function(){
+            this.getElement = function(){
                 return $element;
             }
         }
