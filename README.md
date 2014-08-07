@@ -13,8 +13,9 @@ Angular-DND 0.1.7
 Обеспечивает возможность перемещения элемент. Параметр 'false' отключает директиву.
 
 #### dnd-draggable-opts [object] - опции директивы:
-- ns[string]: Имя namespace. Что бы droppable-элементы реагировали на draggable-элементы они должны иметь общий namespace. По умолчанию namespace = 'common'
+- layer[string]: Имя layer. Что бы droppable-элементы реагировали на draggable-элементы они должны находиться на одном layer. По умолчанию layer = 'common'
 - useAsPoint[boolean]: Droppable область будет взаимодействовать с элементом, только если курсор манипулятора окажется в пределах droppable элемента
+- helper[string]: 'clone' или templateUrl - позволяют для перемещения использовать helper, а не сам элемент
 	
 #### watching attributes:
 - dnd-on-dragstart [function()]: срабатывающая в начале движения элемента
@@ -33,7 +34,7 @@ Angular-DND 0.1.7
 Позволяет определить droppable-элемент, который будет реагировать на draggable-элементы. Параметр 'false' отключает директиву.
 
 #### dnd-droppable-opts [object]:
-- ns[string]: Имя namespace. Что бы droppable-элементы реагировали на draggable-элементы они должны иметь общий namespace. По умолчанию namespace = 'common'
+- layer[string]: Имя layer. Что бы droppable-элементы реагировали на draggable-элементы они должны находитья на одном layer. По умолчанию layer = 'common'
 	
 #### watching attributes:
 - dnd-on-dragenter [function()]: срабатывающая при попадании draggable-элемента в пределы droppable-элемента
@@ -178,11 +179,13 @@ Angular-DND 0.1.7
 TODO:
 ---------
 
- * fixing bugs and optimize code
- * more options
- * new directive - sortable
- * supporting touch specific events (rotate, resize)
- * supporting dynamic options
- * supporting ng-animate
- * supporting HTML5
- - translate to english
+- **more options**
+	- ensure rapid expandability options
+	- draggable-opts - helper as 'clone' or etc.
+- **new directive - sortable**
+- **supporting touch specific events (rotate, resize)**
+- **supporting dynamic options**
+- **supporting ng-animate**
+- **supporting HTML5 dnd events**
+- **separate components**
+- **translate docs to english**
