@@ -52,10 +52,6 @@
             this.dropped = model;
         };
 
-        this.click = function(isclick, dropmodel){
-	        console.log('isclick ===', isclick, dropmodel);
-        };
-
         this.isDropped = function(model){
 	        return this.dropped === model;
         };
@@ -85,14 +81,9 @@
 
 <body ng-controller="MainCtrl as main">
 	<div>
-	    <div class = "menu">
+        <div class = "head" ng-include = "'./head.html'"></div>
 
-	        <a class = "button" href = "index.html">Basic example</a>
-	        <a class = "button" href = "lasso.html">Lasso example</a>
-
-	    </div>
-
-	    <div class = "title" ng-click = "click($event)"> Basic example <br><em style = "font-size: 50%;">Draggable, Droppable, Rotatable, Resizable, Fittext...</em></div>
+	    <div class = "title"> Basic example <br><em style = "font-size: 50%;">Draggable, Droppable, Rotatable, Resizable, Fittext...</em></div>
 
 	    top: <input ng-model = 'main.rect.top' type="text">
 	    left: <input ng-model = 'main.rect.left' type="text">

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="app" style = "height: 100%">
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Angular-DnD Basic Example</title>
+
+    <link rel="stylesheet" href="demo.css" />
+
+    <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.2.14/angular.js"></script>
+
+
+    <link rel="stylesheet" href="../css/stylesheet.css" />
+    <script type="text/javascript" src = "../js/angular-dnd.js"></script>
+
+
+        <script type="text/javascript">
+
+        var app = angular.module('app', ['dnd']);
+
+        app.controller('MainCtrl', function($scope){
+
+
+        });
+
+    </script>
+
+</head>
+
+
+
+<body ng-controller="MainCtrl as main">
+	<div>
+        <div class = "head" ng-include = "'./head.html'"></div>
+
+	    <div class = "title">
+            Sortable example <br>
+        </div>
+
+        <ul
+            dnd-sortable
+        >
+            <li>item1</li>
+            <li>item2</li>
+            <li>item3</li>
+            <li>item4</li>
+            <li>item5</li>
+            <li>item6</li>
+            <li>item7</li>
+            <li>item8</li>
+        </ul>
+
+	</div>
+</body>
+</html>

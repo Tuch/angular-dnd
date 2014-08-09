@@ -1940,7 +1940,7 @@
 		return {
 			require: ['?dndRect'],
 			scope: true,
-			link: function(scope, $el, attrs, ctrls){
+			link: function(scope, element, attrs, ctrls){
 				var rect = ctrls[0];
 				
 				var defaults = {
@@ -1953,16 +1953,16 @@
 				var dragCallback = $parse(attrs.dndOnRotate);
 				var dragendCallback = $parse(attrs.dndOnRotateend);
 				
-				var cssPosition = $el.dndCss('position');
+				var cssPosition = element.dndCss('position');
 
 				if(cssPosition != 'fixed' && cssPosition != 'absolute' && cssPosition != 'relative') {
 					cssPosition = 'relative';
-					$el.dndCss('position', cssPosition);
+					element.dndCss('position', cssPosition);
 				}
 				
 				var handle = angular.element('<div class = "angular-dnd-rotatable-handle"></div>');
 				
-				$el.append(handle);
+				element.append(handle);
 
 				function dragstart(api){
 					var local = api.local = {};
@@ -1976,11 +1976,11 @@
 
 					local.started = true;
 
-					var axis = api.getAxis(), crect = $el.dndClientRect();
+					var axis = api.getAxis(), crect = element.dndClientRect();
 
-					local.srect = $el.dndStyleRect();
+					local.srect = element.dndStyleRect();
 
-					local.currAngle = $el.dndGetAngle();
+					local.currAngle = element.dndGetAngle();
 					local.startPoint = Point(axis);
 
 					local.borders = api.getBoundingRect();
@@ -2013,7 +2013,7 @@
 					if(local.borders && (compute.left < local.borders.left-1 || compute.top < local.borders.top-1 || (compute.left+compute.width) > local.borders.right+1 || (compute.top+compute.height) > local.borders.bottom+1)) return;
 
 					if(rect) rect.update('transform', matrix.toStyle());
-					else $el.dndCss('transform',  matrix.toStyle());
+					else element.dndCss('transform',  matrix.toStyle());
 
 					dragCallback(scope);
 
@@ -2044,6 +2044,47 @@
 		};
 	}]);
 
+
+    /* SORTABLE */
+
+    module.directive('dndSortable', ['$parse', '$timeout', function($parse, $timeout){
+        return {
+            require: ['?dndRect'],
+            scope: true,
+            link: function(scope, element, attrs, ctrls){
+                var defaults = {};
+                var rect = ctrls[0];
+                var getterRotatable = $parse(attrs.dndRotatable);
+                var opts = extend({}, defaults, $parse(attrs.dndRotatableOpts)(scope) || {});
+
+console.log('sortable');
+
+                function dragstart(api){
+
+
+                }
+
+                function drag(api){
+
+
+                }
+
+                function dragend(api){
+
+
+                }
+
+                var bindings = {
+                    '$$sortable.dragstart': dragstart,
+                    '$$sortable.drag': drag,
+                    '$$sortable.dragend': dragend
+                };
+
+                element.dndBind( bindings );
+
+            }
+        };
+    }]);
 
 	/* LASSO CLASS: */
 
