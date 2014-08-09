@@ -136,3 +136,25 @@ button:hover {
 #section2 {
     padding:10px;
 }
+
+.sortable {
+    list-style: none;
+    padding:0;
+}
+.sortable-1 {
+    width: 200px;
+}
+
+.sortable > li {
+    background: #5F9EDF;
+    margin:5px;
+    padding:2px;
+    color:#fff;
+    cursor: pointer;
+}
+
+
+.container {
+    padding: 10px;
+    position: relative;
+}

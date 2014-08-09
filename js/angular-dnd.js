@@ -2045,7 +2045,7 @@
 	}]);
 
 
-    /* SORTABLE */
+    /* SORTABLE DIRECTIVE */
 
     module.directive('dndSortable', ['$parse', '$timeout', function($parse, $timeout){
         return {
@@ -2057,30 +2057,38 @@
                 var getterRotatable = $parse(attrs.dndRotatable);
                 var opts = extend({}, defaults, $parse(attrs.dndRotatableOpts)(scope) || {});
 
-console.log('sortable');
+
 
                 function dragstart(api){
-
+                    console.log('start', api.getEvent().target, api.getEvent().currentTarget);
 
                 }
 
                 function drag(api){
-
+                    //console.log('drag');
 
                 }
 
                 function dragend(api){
+                    console.log('end');
 
+                }
+
+                function dragover(api){
+                    console.log('over');
 
                 }
 
                 var bindings = {
                     '$$sortable.dragstart': dragstart,
                     '$$sortable.drag': drag,
-                    '$$sortable.dragend': dragend
+                    '$$sortable.dragend': dragend,
+                    '$$sortable.dragover': dragover
                 };
 
-                element.dndBind( bindings );
+                var items = element.find('li');
+
+                items.dndBind( bindings );
 
             }
         };
