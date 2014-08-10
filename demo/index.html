@@ -5,11 +5,8 @@
 <title>Angular-DnD Basic Example</title>
 
 <link rel="stylesheet" href="demo.css" />
-
-<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.2.14/angular.js"></script>
-
-
 <link rel="stylesheet" href="../css/stylesheet.css" />
+<script src="bower_components/angular/angular.js"></script>
 <script type="text/javascript" src = "../js/angular-dnd.js"></script>
 
 
@@ -25,7 +22,7 @@
         };
 
         this.drag = function(){
-	        //console.log('drag', arguments);
+	        console.log('drag', arguments);
         };
 
         this.dragend = function(){
@@ -34,8 +31,8 @@
 	        if(!arguments[0]) this.dropped = false;
         };
 
-        this.dragenter = function(dropmodel, dragmodel){
-	        console.log( dropmodel);
+        this.dragenter = function(dropmodel){
+	        console.log('dragenter', arguments);
             this.active = dropmodel;
         };
 
@@ -43,7 +40,8 @@
 	        console.log('dragover', arguments);
         };
 
-        this.dragleave = function(dropmodel, dragmodel){
+        this.dragleave = function(){
+            console.log('dragleave', arguments);
             this.active = undefined;
         };
 
@@ -67,9 +65,8 @@
 
         this.reset();
 
-        this.dragmodel = 'drag';
-
-        this.dropmodels = [ 'drop1', 'drop2', 'drop3' ];
+        this.dragmodel = 'dragmodel1';
+        this.dropmodels = [ 'dropmodel1', 'dropmodel2', 'dropmodel3' ];
 
     });
 
@@ -107,9 +104,9 @@
 
                  dnd-draggable = "true"
                  dnd-draggable-opts = "{layer: 'layer1', useAsPoint: true }"
-                 dnd-on-dragstart = "main.dragstart()"
-                 dnd-on-drag = "main.drag($dropmodel)"
-                 dnd-on-dragend = "main.dragend($dropmodel)"
+                 dnd-on-dragstart = "main.dragstart($dropmodel, $dragmodel)"
+                 dnd-on-drag = "main.drag($dropmodel, $dragmodel)"
+                 dnd-on-dragend = "main.dragend($dropmodel, $dragmodel)"
 
                  dnd-rotatable = "true"
                  dnd-on-rotatestart = "main.dragstart()"
@@ -153,10 +150,10 @@
 
                 dnd-droppable = "true"
                 dnd-droppable-opts = "{layer: 'layer1'}"
-                dnd-on-drop = "main.drop($dragmodel, dropmodel)"
-                dnd-on-dragenter = "main.dragenter(dropmodel, $dragmodel)"
-                dnd-on-dragleave = "main.dragleave(dropmodel, $dragmodel)"
-                dnd-on-dragover = "main.dragover($dragmodel)"
+                dnd-on-drop = "main.drop($dropmodel, $dragmodel)"
+                dnd-on-dragenter = "main.dragenter($dropmodel, $dragmodel)"
+                dnd-on-dragleave = "main.dragleave($dropmodel, $dragmodel)"
+                dnd-on-dragover = "main.dragover($dropmodel, $dragmodel)"
 
                 dnd-model = "dropmodel" >
 

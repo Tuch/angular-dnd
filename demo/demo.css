@@ -145,7 +145,7 @@ button:hover {
     width: 200px;
 }
 
-.sortable > li {
+.sortable li {
     background: #5F9EDF;
     margin:5px;
     padding:2px;

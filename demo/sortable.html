@@ -7,10 +7,8 @@
 
     <link rel="stylesheet" href="demo.css" />
 
-    <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.2.14/angular.js"></script>
-
-
     <link rel="stylesheet" href="../css/stylesheet.css" />
+    <script src="bower_components/angular/angular.js"></script>
     <script type="text/javascript" src = "../js/angular-dnd.js"></script>
 
 
@@ -19,8 +17,14 @@
         var app = angular.module('app', ['dnd']);
 
         app.controller('MainCtrl', function($scope){
+            this.sortables = [];
 
-
+            for(var i = 0; i < 10; i++){
+                this.sortables.push({
+                    index: i,
+                    name: 'item'+(i+1)
+                });
+            }
         });
 
     </script>
@@ -39,17 +43,8 @@
 
         <div class = "container">
 
-            <ul class = "sortable sortable-1"
-                dnd-sortable
-                    >
-                <li>item1</li>
-                <li>item2</li>
-                <li>item3</li>
-                <li>item4</li>
-                <li>item5</li>
-                <li>item6</li>
-                <li>item7</li>
-                <li>item8</li>
+            <ul class = "sortable sortable-1">
+                <li ng-repeat = "item in main.sortables" dnd-sortable = "item">{{item.name}}</li>
             </ul>
 
         </div>
