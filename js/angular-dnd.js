@@ -1036,12 +1036,13 @@
 
 					for(var key in regions) {
 						var dnd = $( regions[key] ).data('dnd')[this.dnd.layer()];
+                        var rect = dnd.$el.dndClientRect();
 
 						if(this.dnd === dnd) continue;
 
 						ret.push({
 							dnd: dnd,
-							rect: dnd.$el.dndClientRect()
+							rect: rect
 						});
 					}
 
@@ -1692,7 +1693,7 @@
 
 					api.dropmodel = model ? model.get() : model;
 
-					dragenterCallback(scope);
+					dragenterCallback(scope, {'$dragmodel':api.dragmodel, '$dropmodel': api.dropmodel});
 					scope.$apply();
 				}
 
@@ -1710,11 +1711,8 @@
 
 					if(!local.droppable) return;
 
-                    $timeout(function(){
-                        api.dropmodel = undefined;
-                    });
-
 					dragleaveCallback(scope, {'$dragmodel':api.dragmodel, '$dropmodel': api.dropmodel});
+                    api.dropmodel = undefined;
 					scope.$apply();
 				}
 
@@ -2036,11 +2034,11 @@
                 var ngRepeat = attrs.ngRepeat || '';
                 var match = ngRepeat.match(ngRepeatRegExp);
 
-                //if(!match) return;
+                if(!match) throw 'dnd-sortable requires ng-repeat as dependence';
 
                 return '' +
                     '<' + tag + ' ng-transclude ' +
-                    'dnd-draggable dnd-draggable-opts = "{helper:\'clone\', restrictTheMovement:false}" ' +
+                    'dnd-draggable dnd-draggable-opts = "{helper:\'clone\', restrictTheMovement:false, useAsPoint: true}" ' +
                     'dnd-droppable ' +
                     'dnd-on-dragover = "$$onDragOver($dropmodel, $dragmodel)"' +
                     'dnd-model = "'+match[1]+'"' +
@@ -2087,7 +2085,7 @@
 //                };
 
                 scope.$$onDragOver = function(dropmodel, dragmodel){
-                    console.log(dropmodel.name, dragmodel.name);
+                    console.log(dropmodel ? dropmodel.name : 'none', dragmodel ? dragmodel.name : 'none');
                 };
 
                 //element.dndBind( bindings );
