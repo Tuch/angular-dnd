@@ -1078,12 +1078,10 @@
 						(x-offset.right > region.rect.left ) && (x-offset.left < region.rect.left+region.rect.width ) && (y-offset.bottom > region.rect.top) && (y-offset.top < region.rect.top+region.rect.height);
 						
 						if( trigger ){
-
 							if(this.target !== region.dnd.el) {
 								this.target = region.dnd.el;
 								region.dnd.trigger('dragenter', this.api, this.dnd.el);
 							} else region.dnd.trigger('dragover', this.api, this.dnd.el);
-
 						} else if(this.target === region.dnd.el) {
 							$(this.target).data('dnd')[this.dnd.layer()].trigger('dragleave', this.api, this.dnd.el);
 							this.target = false;
@@ -1611,9 +1609,6 @@
                     // задаем модель данному элементу
                     api.dragmodel = model ? model.get() : null;
 
-                    // присваеваем в scope dropmodel (скорее всего эту строчку можно удалить, т.к. в начале движения элемента в api не может еще быть dropmodel )
-                    scope.$dropmodel = api.dropmodel;
-
                     if(opts.restrictTheMovement) {
                         var $bounder = container ? container.getElement() : angular.element(document.body);
 
@@ -1627,7 +1622,7 @@
 					api.offset( draggable.getCorrectedOffset( api.getAxis() ) );
 
                     // применяем пользовательский callback
-					dragstartCallback(scope);
+					dragstartCallback(scope, {'$dragmodel':api.dragmodel, '$dropmodel': api.dropmodel});
 
                     // запускаем dirty-checking цикл
 					scope.$apply();
@@ -1637,26 +1632,19 @@
 					if(!started) return;
 
                     draggable.updatePosition( api.getRelativeAxis() );
-
-					scope.$dropmodel = api.dropmodel;
-
-					dragCallback(scope);
-
+					dragCallback(scope, {'$dragmodel':api.dragmodel, '$dropmodel': api.dropmodel});
 					scope.$apply();
 				}
 
 				function dragend(api){
 					if(!started) return;
 
-					scope.$dropmodel = api.dropmodel;
-
                     draggable.destroy();
 
-					dragendCallback(scope);
+					dragendCallback(scope, {'$dragmodel':api.dragmodel, '$dropmodel': api.dropmodel});
 
 					$timeout(function(){
 						scope.$dragged = false;
-						scope.$dropmodel = undefined;
 					});
 				}
 				
@@ -1680,6 +1668,7 @@
 	module.directive('dndDroppable', ['$parse', '$timeout', function( $parse, $timeout ){
 		return {
 			require: '?dndModel',
+            scope: true,
 			link: function(scope, $el, attrs, model){
 
 				var defaults = {
@@ -1702,11 +1691,8 @@
 					if(!local.droppable) return;
 
 					api.dropmodel = model ? model.get() : model;
-					
-					scope.$dragmodel = api.dragmodel;
-					
+
 					dragenterCallback(scope);
-				
 					scope.$apply();
 				}
 
@@ -1715,10 +1701,7 @@
 
 					if(!local.droppable) return;
 
-					scope.$dragmodel = api.dragmodel;
-					
-					dragoverCallback(scope);
-
+					dragoverCallback(scope, {'$dragmodel':api.dragmodel, '$dropmodel': api.dropmodel});
 					scope.$apply();
 				}
 
@@ -1727,22 +1710,16 @@
 
 					if(!local.droppable) return;
 
-					api.dropmodel = undefined;
-					
-					scope.$dragmodel = api.dragmodel;
-					dragleaveCallback(scope);
-					
+                    $timeout(function(){
+                        api.dropmodel = undefined;
+                    });
+
+					dragleaveCallback(scope, {'$dragmodel':api.dragmodel, '$dropmodel': api.dropmodel});
 					scope.$apply();
 				}
 
 				function drop(api){
-					scope.$dragmodel = api.dragmodel;
-					
-					dropCallback(scope);
-										
-					$timeout(function(){
-						scope.$dragmodel = undefined;
-					});
+					dropCallback(scope, {'$dragmodel':api.dragmodel, '$dropmodel': api.dropmodel});
 				}
 
 
@@ -2047,48 +2024,74 @@
 
     /* SORTABLE DIRECTIVE */
 
-    module.directive('dndSortable', ['$parse', '$timeout', function($parse, $timeout){
+    module.directive('dndSortable', ['$parse', '$compile', function($parse, $compile){
+        var ngRepeatRegExp = /^\s*([\s\S]+?)\s+in\s+([\s\S]+?)(?:\s+track\s+by\s+([\s\S]+?))?\s*$/;
+
         return {
-            require: ['?dndRect'],
             scope: true,
-            link: function(scope, element, attrs, ctrls){
+            transclude: true,
+            template: function(element, attrs){
+                var tag = element[0].nodeName.toLowerCase();
+
+                var ngRepeat = attrs.ngRepeat || '';
+                var match = ngRepeat.match(ngRepeatRegExp);
+
+                //if(!match) return;
+
+                return '' +
+                    '<' + tag + ' ng-transclude ' +
+                    'dnd-draggable dnd-draggable-opts = "{helper:\'clone\', restrictTheMovement:false}" ' +
+                    'dnd-droppable ' +
+                    'dnd-on-dragover = "$$onDragOver($dropmodel, $dragmodel)"' +
+                    'dnd-model = "'+match[1]+'"' +
+                    '></' + tag + '>';
+
+            },
+            replace: true,
+            link: function(scope, element, attrs) {
                 var defaults = {};
-                var rect = ctrls[0];
-                var getterRotatable = $parse(attrs.dndRotatable);
+                var getterSortable = $parse(attrs.dndSortable);
                 var opts = extend({}, defaults, $parse(attrs.dndRotatableOpts)(scope) || {});
 
+//                var getterList = $parse(match[1]) || noop;
+//                var setterList = getterList.assign || noop;
 
+                //setterList($scope, false);
 
-                function dragstart(api){
-                    console.log('start', api.getEvent().target, api.getEvent().currentTarget);
+//                function dragstart(api){
+//                    console.log('start', api.getEvent().target, api.getEvent().currentTarget);
+//
+//                }
+//
+//                function drag(api){
+//                    //console.log('drag');
+//
+//                }
+//
+//                function dragend(api){
+//                    console.log('end');
+//
+//                }
+//
+//                function dragover(api){
+//                    console.clear();
+//                    console.log('over', api.getDropTarget());
+//
+//                }
+//
+//                var bindings = {
+//                    '$$sortable.dragstart': dragstart,
+//                    '$$sortable.drag': drag,
+//                    '$$sortable.dragend': dragend,
+//                    '$$sortable.dragover': dragover
+//                };
 
-                }
-
-                function drag(api){
-                    //console.log('drag');
-
-                }
-
-                function dragend(api){
-                    console.log('end');
-
-                }
-
-                function dragover(api){
-                    console.log('over');
-
-                }
-
-                var bindings = {
-                    '$$sortable.dragstart': dragstart,
-                    '$$sortable.drag': drag,
-                    '$$sortable.dragend': dragend,
-                    '$$sortable.dragover': dragover
+                scope.$$onDragOver = function(dropmodel, dragmodel){
+                    console.log(dropmodel.name, dragmodel.name);
                 };
 
-                var items = element.find('li');
+                //element.dndBind( bindings );
 
-                items.dndBind( bindings );
 
             }
         };
