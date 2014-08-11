@@ -956,6 +956,10 @@
 				this.useAsPoint = function(value){
 					asPoint = value === false ? false : true;	
 				};
+
+                this.updateCache = function(){
+                    manipulator.updateCache();
+                };
 			}
 
 			return Api;
@@ -1013,11 +1017,15 @@
 				},
 
 				onscroll: function(){
-					this.regions = this.prepare();
+                    this.dnd.trigger('drag', this.api);
+                    this.updateCache();
+				},
+
+                updateCache: function(){
+                    this.regions = this.prepare();
                     this.api.clearReferenceCache();
                     this.api.clearBounderCache();
-                    this.dnd.trigger('drag', this.api);
-				},
+                },
 
 				stop: function(){
 
@@ -1623,7 +1631,7 @@
 					api.offset( draggable.getCorrectedOffset( api.getAxis() ) );
 
                     // применяем пользовательский callback
-					dragstartCallback(scope, {'$dragmodel':api.dragmodel, '$dropmodel': api.dropmodel});
+					dragstartCallback(scope, {'$dragmodel':api.dragmodel, '$dropmodel': api.dropmodel, '$api': api});
 
                     // запускаем dirty-checking цикл
 					scope.$apply();
@@ -1633,7 +1641,7 @@
 					if(!started) return;
 
                     draggable.updatePosition( api.getRelativeAxis() );
-					dragCallback(scope, {'$dragmodel':api.dragmodel, '$dropmodel': api.dropmodel});
+					dragCallback(scope, {'$dragmodel':api.dragmodel, '$dropmodel': api.dropmodel, '$api': api});
 					scope.$apply();
 				}
 
@@ -1642,7 +1650,7 @@
 
                     draggable.destroy();
 
-					dragendCallback(scope, {'$dragmodel':api.dragmodel, '$dropmodel': api.dropmodel});
+					dragendCallback(scope, {'$dragmodel':api.dragmodel, '$dropmodel': api.dropmodel, '$api': api});
 
 					$timeout(function(){
 						scope.$dragged = false;
@@ -1693,7 +1701,7 @@
 
 					api.dropmodel = model ? model.get() : model;
 
-					dragenterCallback(scope, {'$dragmodel':api.dragmodel, '$dropmodel': api.dropmodel});
+					dragenterCallback(scope, {'$dragmodel':api.dragmodel, '$dropmodel': api.dropmodel, '$api': api});
 					scope.$apply();
 				}
 
@@ -1702,7 +1710,7 @@
 
 					if(!local.droppable) return;
 
-					dragoverCallback(scope, {'$dragmodel':api.dragmodel, '$dropmodel': api.dropmodel});
+					dragoverCallback(scope, {'$dragmodel':api.dragmodel, '$dropmodel': api.dropmodel, '$api': api});
 					scope.$apply();
 				}
 
@@ -1711,13 +1719,13 @@
 
 					if(!local.droppable) return;
 
-					dragleaveCallback(scope, {'$dragmodel':api.dragmodel, '$dropmodel': api.dropmodel});
+					dragleaveCallback(scope, {'$dragmodel':api.dragmodel, '$dropmodel': api.dropmodel, '$api': api});
                     api.dropmodel = undefined;
 					scope.$apply();
 				}
 
 				function drop(api){
-					dropCallback(scope, {'$dragmodel':api.dragmodel, '$dropmodel': api.dropmodel});
+					dropCallback(scope, {'$dragmodel':api.dragmodel, '$dropmodel': api.dropmodel, '$api': api});
 				}
 
 
@@ -2024,6 +2032,7 @@
 
     module.directive('dndSortable', ['$parse', '$compile', function($parse, $compile){
         var ngRepeatRegExp = /^\s*([\s\S]+?)\s+in\s+([\s\S]+?)(?:\s+track\s+by\s+([\s\S]+?))?\s*$/;
+        var placeholder;// = angular.element('<div class = "dnd-placeholder"></div>');
 
         return {
             scope: true,
@@ -2040,7 +2049,10 @@
                     '<' + tag + ' ng-transclude ' +
                     'dnd-draggable dnd-draggable-opts = "{helper:\'clone\', restrictTheMovement:false, useAsPoint: true}" ' +
                     'dnd-droppable ' +
-                    'dnd-on-dragover = "$$onDragOver($dropmodel, $dragmodel)"' +
+                    'dnd-on-dragstart = "$$onDragStart($api, $dropmodel, $dragmodel)"' +
+                    'dnd-on-dragend = "$$onDragEnd($api, $dropmodel, $dragmodel)"' +
+                    'dnd-on-dragenter = "$$onDragEnter($api, $dropmodel, $dragmodel)"' +
+                    'dnd-on-dragleave = "$$onDragLeave($api, $dropmodel, $dragmodel)"' +
                     'dnd-model = "'+match[1]+'"' +
                     '></' + tag + '>';
 
@@ -2056,41 +2068,27 @@
 
                 //setterList($scope, false);
 
-//                function dragstart(api){
-//                    console.log('start', api.getEvent().target, api.getEvent().currentTarget);
-//
-//                }
-//
-//                function drag(api){
-//                    //console.log('drag');
-//
-//                }
-//
-//                function dragend(api){
-//                    console.log('end');
-//
-//                }
-//
-//                function dragover(api){
-//                    console.clear();
-//                    console.log('over', api.getDropTarget());
-//
-//                }
-//
-//                var bindings = {
-//                    '$$sortable.dragstart': dragstart,
-//                    '$$sortable.drag': drag,
-//                    '$$sortable.dragend': dragend,
-//                    '$$sortable.dragover': dragover
-//                };
-
-                scope.$$onDragOver = function(dropmodel, dragmodel){
-                    console.log(dropmodel ? dropmodel.name : 'none', dragmodel ? dragmodel.name : 'none');
+                scope.$$onDragStart = function(api){
+                    var rect = element.dndClientRect();
+                    placeholder = element.clone();
+                    element.addClass('ng-hide');
+                    placeholder.addClass('angular-dnd-placeholder');
+                    api.updateCache();
                 };
 
-                //element.dndBind( bindings );
+                scope.$$onDragEnd = function(api){
+                    element.removeClass('ng-hide');
+                    placeholder.addClass('ng-hide');
+                    api.updateCache();
+                };
 
+                scope.$$onDragEnter = function(dropmodel, dragmodel){
+                    element.after(placeholder);
+                };
 
+                scope.$$onDragLeave = function(dropmodel, dragmodel){
+                    placeholder.remove();
+                };
             }
         };
     }]);

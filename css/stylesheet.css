@@ -86,3 +86,7 @@
 .angular-dnd-helper {
     opacity: .5;
 }
+
+.angular-dnd-placeholder {
+    opacity: .5;
+}

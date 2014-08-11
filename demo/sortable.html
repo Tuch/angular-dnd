@@ -44,7 +44,7 @@
         <div class = "container">
 
             <ul class = "sortable sortable-1">
-                <li ng-repeat = "item in main.sortables" dnd-sortable = "item">{{item.name}}</li>
+                <li ng-repeat = "item in main.sortables" dnd-sortable = "!item.noSortable">{{item.name}}</li>
             </ul>
 
         </div>
