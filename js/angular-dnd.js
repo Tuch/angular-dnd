@@ -1986,7 +1986,7 @@
 					var axis = api.getRelativeAxis();
 					var angle = Point(axis).deltaAngle(local.startPoint, local.center);
 					var degs = radToDeg(local.currAngle+angle);
-console.log(axis, local.startPoint);
+
 					degs = Math.round(degs/opts.step)*opts.step;
 					var rads = degToRad(degs);
 					var matrix = Matrix().rotate(rads);
