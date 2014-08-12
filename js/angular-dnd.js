@@ -871,6 +871,10 @@
                 },
                 setBounderElement: function(element){
                     this._manipulator.$bounder = element;
+                    this.clearCache();
+                },
+                setReferenceElement: function(element){
+                    this._manipulator.$reference = element;
                 },
                 getBorders: function(){
                     return this._manipulator.getBorders();
@@ -997,7 +1001,6 @@
 					this.target = false;
                     this.asPoint = false;
                     this.setAxisOffset(0, 0, 0, 0);
-                    this.clearCache();
 					this.api = new Api(this);
                     this.$scrollarea = this.dnd.$el.dndGetParentScrollArea();
                     this.$reference = this.dnd.$el.dndGetFirstNotStaticParent();
@@ -1011,17 +1014,15 @@
 				},
 
                 getCache: function(key){
-                    return this._cache[key];
+                    return this.cache[key];
                 },
 
                 setCache: function(key, value){
-                    return this._cache[key] = value;
+                    return this.cache[key] = value;
                 },
 
                 clearCache: function(){
-                    for(var key in this._cache){
-                        delete this._cache[key];
-                    }
+                    this.cache = {};
                 },
 
 				stop: function(){
@@ -1055,33 +1056,27 @@
 				},
 
 				begin: function (event){
-
 					this.addToTargets();
-
 					this.event = event;
-
 					this.started = false;
-
+                    this.clearCache();
 					angular.element(document.body).dndDisableSelection();
 				},
 
 				progress: function (event){
-
-                    var regions = this.dnd.getCache('regions');
-
-                    if (!regions) {
-                        regions = this.dnd.setCache('regions', this.dnd.prepareRegions());
-                    }
-
-                    regions = regions.get();
-
 					this.event = event;
 
 					if(!this.started) this.start();
 
+                    var regions = this.getCache('regions');
+
+                    if (!regions) {
+                        regions = this.setCache('regions', this.prepareRegions());
+                    }
+
 					this.dnd.trigger('drag', this.api);
 
-					var axis = this.api.getAxis(), x = axis.left, y = axis.top, offset = this.dnd.getAxisOffset(), asPoint = this.dnd.asPoint();
+					var axis = this.getAxis(), x = axis.left, y = axis.top, offset = this.getAxisOffset(), asPoint = this.asPoint;
 
 					for(var i = 0; i < regions.length; i++) {
 						var region = regions[i];
@@ -1963,7 +1958,7 @@
 
 					local.started = true;
 
-					var axis = api.getAxis(), crect = element.dndClientRect();
+					var axis = api.getRelativeAxis(), crect = element.dndClientRect();
 
 					local.srect = element.dndStyleRect();
 
@@ -1972,7 +1967,9 @@
 
 					local.borders = api.getBorders();
 
-					local.center = Point(crect.left + crect.width / 2, crect.top + crect.height / 2);
+					local.center = Point(local.srect).plus(Point(local.srect.width / 2, local.srect.height / 2));
+
+                    console.log(local.center.y);
 
 					scope.$rotated = true;
 
@@ -1986,11 +1983,10 @@
 
 					if(!local.started) return;
 
-					var axis = api.getAxis();
+					var axis = api.getRelativeAxis();
 					var angle = Point(axis).deltaAngle(local.startPoint, local.center);
 					var degs = radToDeg(local.currAngle+angle);
-
-
+console.log(axis, local.startPoint);
 					degs = Math.round(degs/opts.step)*opts.step;
 					var rads = degToRad(degs);
 					var matrix = Matrix().rotate(rads);
@@ -2158,7 +2154,7 @@
 
 				self.trigger('start', local.handler() );
 
-                api.$container = opts.$el;
+                api.setReferenceElement(opts.$el);
 
 				local.startAxis = api.getRelativeAxis();
 
@@ -2317,7 +2313,6 @@
 			link: function(scope, $el, attrs, ctrl){
 
 				var defaults = {
-					//clickReseting: true,
 					selectAdditionals: true
 				};
 
