@@ -835,132 +835,53 @@
 		var Api = (function(){
 
 			function Api(manipulator){
-				var offset = { top:0, right:0, bottom:0, left:0 }, asPoint = false;
-
-				this.offset = function(top,right,bottom,left){
-					if(!arguments.length) return offset;
-					if(typeof top === 'object') {
-						right = top.right;
-						bottom = top.bottom;
-						left = top.left;
-						top = top.top;
-					}
-
-					offset.top = top;
-					offset.right = right;
-					offset.bottom = bottom;
-					offset.left = left;
-				};
-
-                var reference = {};
-
-                this.setReference = function(element){
-                    reference.element = element;
-
-                    this.clearReferenceCache();
-                };
-
-                this.clearReferenceCache = function(){
-                    reference.rect = null
-                };
-
-                this.getReference = function(){
-                    return reference.element;
-                };
-
-				this.getReferenceRect = function(){
-                    if(!reference.rect) reference.rect = reference.element.dndClientRect();
-
-					return {
-						top: reference.rect.top + offset.top,
-						right: reference.rect.right + offset.right,
-						bottom: reference.rect.bottom + offset.bottom,
-						left: reference.rect.left + offset.left,
-                        width: reference.rect.right + offset.right - (reference.rect.left + offset.left),
-                        height: reference.rect.bottom + offset.bottom - (reference.rect.top + offset.top)
-					}
-				};
-
-                var bounder = {};
-
-                this.setBounder = function(element){
-                    bounder.element = element;
-
-                    this.clearBounderCache();
-                };
-
-                this.getBounderElement = function(){
-                    return bounder.element;
-                };
-
-                this.clearBounderCache = function(){
-                    bounder.rect = null
-                };
-
-                this.getBoundingRect = function(){
-                    if(!bounder.element) return;
-                    else if(!bounder.rect) bounder.rect = bounder.element.dndClientRect();
-
-                    return {
-                        top: bounder.rect.top + offset.top,
-                        right: bounder.rect.right + offset.right,
-                        bottom: bounder.rect.bottom + offset.bottom,
-                        left: bounder.rect.left + offset.left,
-                        width: bounder.rect.right + offset.right - (bounder.rect.left + offset.left),
-                        height: bounder.rect.bottom + offset.bottom - (bounder.rect.top + offset.top)
-                    }
-                };
-
-				this.getAxis = function(){
-                    var axis = manipulator.getClientAxis();
-                    var borders = this.getBoundingRect();
-
-                    if(borders) {
-                        axis = {
-                            top: getNumFromSegment(borders.top, axis.top, borders.bottom),
-                            left: getNumFromSegment(borders.left, axis.left, borders.right)
-                        }
-                    }
-
-                    return axis;
-				};
-
-                this.getRelativeAxis = function(){
-                    return Point( this.getAxis() ).minus( this.getReferenceRect() );
-                };
-
-				this.getDragTarget = function(){
-					return manipulator.dnd.el;
-				};
-
-				this.getDropTarget = function(){
-					return manipulator.target;
-				};
-
-				this.getEvent = function(){
-					return manipulator.event;
-				};
-
-				this.isTarget = function(){
-					return manipulator.isTarget();
-				};
-
-				this.unTarget = function(){
-					 manipulator.removeFromTargets();
-				};
-				
-				this.asPoint = function(){
-					return asPoint;	
-				};
-				
-				this.useAsPoint = function(value){
-					asPoint = value === false ? false : true;	
-				};
-
-                this.updateCache = function(){
-                    manipulator.updateCache();
-                };
+                this._manipulator = manipulator;
 			}
+
+            Api.prototype = {
+                setAxisOffset: function(top, right, bottom, left){
+                    this._manipulator.setAxisOffset(top, right, bottom, left);
+                },
+                getAxisOffset: function(){
+                    this._manipulator.getAxisOffset();
+                },
+                getAxis: function(){
+                    return this._manipulator.getRelativeAxis();
+                },
+                getRelativeAxis: function(){
+                    return this._manipulator.getRelativeAxis();
+                },
+                getDragTarget: function(){
+                    return this._manipulator.dnd.el;
+                },
+                getDropTarget: function(){
+                    return this._manipulator.target;
+                },
+                getEvent: function(){
+                    return this._manipulator.event;
+                },
+                isTarget: function(){
+                    return this._manipulator.isTarget();
+                },
+                unTarget: function(){
+                    this._manipulator.removeFromTargets();
+                },
+                useAsPoint: function(value){
+                    return this._manipulator.asPoint = value === false ? false : true;
+                },
+                setBounderElement: function(element){
+                    this._manipulator.$bounder = element;
+                },
+                getBorders: function(){
+                    return this._manipulator.getBorders();
+                },
+                getReferencePoint: function(){
+                    return this._manipulator.getReferencePoint();
+                },
+                clearCache: function(){
+                    this._manipulator.clearCache();
+                }
+            };
 
 			return Api;
 
@@ -975,6 +896,81 @@
 			}
 
 			Manipulator.prototype = {
+
+                setAxisOffset: function(top, right, bottom, left){
+                    this.axisOffset = {};
+
+                    if(typeof top === 'object') {
+                        right = top.right;
+                        bottom = top.bottom;
+                        left = top.left;
+                        top = top.top;
+                    }
+
+                    this.axisOffset.top = top;
+                    this.axisOffset.right = right;
+                    this.axisOffset.bottom = bottom;
+                    this.axisOffset.left = left;
+                },
+
+                getAxisOffset: function(){
+                    return this.axisOffset;
+                },
+
+                getBorders: function(){
+                    if(!this.$bounder) return;
+
+                    var borders  = this.getCache('borders');
+
+                    if(!borders) {
+                        var rect = this.$bounder.dndClientRect();
+                        var offset = this.getAxisOffset();
+
+                        borders = this.setCache('borders', {
+                            top: rect.top + offset.top,
+                            left: rect.left + offset.left,
+                            right: rect.right + offset.right,
+                            bottom: rect.bottom + offset.bottom
+                        });
+                    }
+
+                    return borders;
+                },
+
+                getReferencePoint: function(){
+                    var referencePoint  = this.getCache('referencePoint');
+
+                    if(!referencePoint) {
+                        var rect = this.$reference.dndClientRect();
+                        var offset = this.getAxisOffset();
+
+                        referencePoint = this.setCache('referencePoint', {
+                            top: rect.top + offset.top,
+                            left: rect.left + offset.left
+                        });
+                    }
+
+                    return referencePoint;
+                },
+
+                getAxis: function(){
+                    var axis = this.getClientAxis();
+                    var borders = this.getBorders();
+
+                    if(borders) {
+                        axis = {
+                            top: getNumFromSegment(borders.top, axis.top, borders.bottom),
+                            left: getNumFromSegment(borders.left, axis.left, borders.right)
+                        }
+                    }
+
+                    return axis;
+                },
+
+                getRelativeAxis: function(){
+                    return Point( this.getAxis() ).minus( this.getReferencePoint() );
+                },
+
 				addToTargets: function(){
 					targets.push(this);
 				},
@@ -998,37 +994,37 @@
 
 				start: function(){
 					this.started = true;
-
 					this.target = false;
-
+                    this.asPoint = false;
+                    this.setAxisOffset(0, 0, 0, 0);
+                    this.clearCache();
 					this.api = new Api(this);
-
-					this.regions = this.prepare();
-
                     this.$scrollarea = this.dnd.$el.dndGetParentScrollArea();
-
-                    this.$scrollarea.on('scroll', this.onscroll);
-
                     this.$reference = this.dnd.$el.dndGetFirstNotStaticParent();
-
-                    this.api.setReference(this.$reference);
-
+                    this.$scrollarea.on('scroll', this.onscroll);
 					this.dnd.trigger('dragstart', this.api);
 				},
 
 				onscroll: function(){
+                    this.clearCache();
                     this.dnd.trigger('drag', this.api);
-                    this.updateCache();
 				},
 
-                updateCache: function(){
-                    this.regions = this.prepare();
-                    this.api.clearReferenceCache();
-                    this.api.clearBounderCache();
+                getCache: function(key){
+                    return this._cache[key];
+                },
+
+                setCache: function(key, value){
+                    return this._cache[key] = value;
+                },
+
+                clearCache: function(){
+                    for(var key in this._cache){
+                        delete this._cache[key];
+                    }
                 },
 
 				stop: function(){
-
 					this.$scrollarea.off('scroll', this.onscroll);
 
 					if(this.target) $(this.target).data('dnd')[this.dnd.layer()].trigger('drop', this.api, this.dnd.el);
@@ -1037,7 +1033,7 @@
 				},
 
 
-				prepare: function(){
+				prepareRegions: function(){
 					var regions = this.dnd.regions.get();
 
 					var ret = [];
@@ -1071,16 +1067,24 @@
 
 				progress: function (event){
 
+                    var regions = this.dnd.getCache('regions');
+
+                    if (!regions) {
+                        regions = this.dnd.setCache('regions', this.dnd.prepareRegions());
+                    }
+
+                    regions = regions.get();
+
 					this.event = event;
 
 					if(!this.started) this.start();
 
 					this.dnd.trigger('drag', this.api);
 
-					var axis = this.api.getAxis(), x = axis.left, y = axis.top, offset = this.api.offset(), asPoint = this.api.asPoint();
+					var axis = this.api.getAxis(), x = axis.left, y = axis.top, offset = this.dnd.getAxisOffset(), asPoint = this.dnd.asPoint();
 
-					for(var i = 0; i < this.regions.length; i++) {
-						var region = this.regions[i];
+					for(var i = 0; i < regions.length; i++) {
+						var region = regions[i];
 						
 						var trigger = asPoint ? 
 						(x > region.rect.left ) && (x < region.rect.left+region.rect.width ) && (y > region.rect.top) && (y < region.rect.top+region.rect.height) : 
@@ -1621,14 +1625,14 @@
                     if(opts.restrictTheMovement) {
                         var $bounder = container ? container.getElement() : angular.element(document.body);
 
-                        api.setBounder( $bounder );
+                        api.setBounderElement( $bounder );
                     }
 
                     // ставим флаг, что процесс перемещения элемента начался
                     scope.$dragged = true;
 
                     // задаем смещение для коррекции подсчета позиции курсора при движении элемента
-					api.offset( draggable.getCorrectedOffset( api.getAxis() ) );
+					api.setAxisOffset(draggable.getCorrectedOffset(api.getAxis()));
 
                     // применяем пользовательский callback
 					dragstartCallback(scope, {'$dragmodel':api.dragmodel, '$dropmodel': api.dropmodel, '$api': api});
@@ -1798,7 +1802,7 @@
 		
 						var axis = api.getAxis(), crect = $el.dndClientRect(), srect = local.rect = $el.dndStyleRect();
 						
-						local.borders = api.getBoundingRect();
+						local.borders = api.getBorders();
 						local.startAxis = axis;
 
 						local.minScaleX = opts.minWidth / srect.width;
@@ -1966,7 +1970,7 @@
 					local.currAngle = element.dndGetAngle();
 					local.startPoint = Point(axis);
 
-					local.borders = api.getBoundingRect();
+					local.borders = api.getBorders();
 
 					local.center = Point(crect.left + crect.width / 2, crect.top + crect.height / 2);
 
@@ -2073,13 +2077,13 @@
                     placeholder = element.clone();
                     element.addClass('ng-hide');
                     placeholder.addClass('angular-dnd-placeholder');
-                    api.updateCache();
+                    api.clearCache();
                 };
 
                 scope.$$onDragEnd = function(api){
                     element.removeClass('ng-hide');
                     placeholder.addClass('ng-hide');
-                    api.updateCache();
+                    api.clearCache();
                 };
 
                 scope.$$onDragEnter = function(dropmodel, dragmodel){
