@@ -846,7 +846,7 @@
                     this._manipulator.getAxisOffset();
                 },
                 getAxis: function(){
-                    return this._manipulator.getRelativeAxis();
+                    return this._manipulator.getAxis();
                 },
                 getRelativeAxis: function(){
                     return this._manipulator.getRelativeAxis();
@@ -915,6 +915,8 @@
                     this.axisOffset.right = right;
                     this.axisOffset.bottom = bottom;
                     this.axisOffset.left = left;
+
+                    this.clearCache();
                 },
 
                 getAxisOffset: function(){
@@ -936,7 +938,9 @@
                             right: rect.right + offset.right,
                             bottom: rect.bottom + offset.bottom
                         });
+
                     }
+
 
                     return borders;
                 },
@@ -948,10 +952,7 @@
                         var rect = this.$reference.dndClientRect();
                         var offset = this.getAxisOffset();
 
-                        referencePoint = this.setCache('referencePoint', {
-                            top: rect.top + offset.top,
-                            left: rect.left + offset.left
-                        });
+                        referencePoint = this.setCache('referencePoint', Point(rect.left + offset.left, rect.top + offset.top));
                     }
 
                     return referencePoint;
@@ -961,18 +962,11 @@
                     var axis = this.getClientAxis();
                     var borders = this.getBorders();
 
-                    if(borders) {
-                        axis = {
-                            top: getNumFromSegment(borders.top, axis.top, borders.bottom),
-                            left: getNumFromSegment(borders.left, axis.left, borders.right)
-                        }
-                    }
-
-                    return axis;
+                    return borders ? Point(getNumFromSegment(borders.left, axis.x, borders.right), getNumFromSegment(borders.top, axis.y, borders.bottom)) : axis;
                 },
 
                 getRelativeAxis: function(){
-                    return Point( this.getAxis() ).minus( this.getReferencePoint() );
+                    return this.getAxis().minus( this.getReferencePoint() );
                 },
 
 				addToTargets: function(){
@@ -1127,10 +1121,7 @@
 			getClientAxis: function(event,s) {
 				event = event ? event : this.event;
 
-				return {
-					top: event.clientY,
-					left: event.clientX
-				};
+				return Point(event.clientX, event.clientY);
 			},
 
 			mousedown: function (event){
@@ -1176,10 +1167,7 @@
 				event = event ? event : this.event;
 				event = event.originalEvent ? event.originalEvent : event;
 
-				return {
-					top: event.changedTouches[0].clientY,
-					left: event.changedTouches[0].clientX
-				};
+				return Point(event.changedTouches[0].clientX, event.changedTouches[0].clientY)
 			},
 			
 			touchstart: function (event){
@@ -1451,8 +1439,8 @@
                     getCorrectedOffset: function(axis){
                         var offset = {}, crect = this.element.dndClientRect();
 
-                        offset.top = axis.top - crect.top;
-                        offset.left = axis.left - crect.left;
+                        offset.top = axis.y - crect.top;
+                        offset.left = axis.x - crect.left;
                         offset.bottom = offset.top - crect.height;
                         offset.right = offset.left - crect.width;
 
@@ -1547,7 +1535,7 @@
                         return this;
                     },
 
-                    getCorrectedOffset: function( axis ){
+                    getCorrectedOffset: function(){
                         var offset = {}, crect = wrapper.dndClientRect();
 
                         offset.top = crect.height;
@@ -1559,7 +1547,7 @@
                     },
 
                     updatePosition: function(axis){
-                        wrapper.dndCss( Point(axis).getAsCss() );
+                        wrapper.dndCss( axis.getAsCss() );
                     },
 
                     destroy: function(){
