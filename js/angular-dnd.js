@@ -1070,7 +1070,7 @@
 
 					this.dnd.trigger('drag', this.api);
 
-					var axis = this.getAxis(), x = axis.left, y = axis.top, offset = this.getAxisOffset(), asPoint = this.asPoint;
+					var axis = this.getAxis(), x = axis.x, y = axis.y, offset = this.getAxisOffset(), asPoint = this.asPoint;
 
 					for(var i = 0; i < regions.length; i++) {
 						var region = regions[i];
@@ -1078,7 +1078,7 @@
 						var trigger = asPoint ? 
 						(x > region.rect.left ) && (x < region.rect.left+region.rect.width ) && (y > region.rect.top) && (y < region.rect.top+region.rect.height) : 
 						(x-offset.right > region.rect.left ) && (x-offset.left < region.rect.left+region.rect.width ) && (y-offset.bottom > region.rect.top) && (y-offset.top < region.rect.top+region.rect.height);
-						
+
 						if( trigger ){
 							if(this.target !== region.dnd.el) {
 								this.target = region.dnd.el;
@@ -2054,7 +2054,7 @@
 //                var getterList = $parse(match[1]) || noop;
 //                var setterList = getterList.assign || noop;
 
-                //setterList($scope, false);
+//                setterList($scope, false);
 
                 scope.$$onDragStart = function(api){
                     var rect = element.dndClientRect();
