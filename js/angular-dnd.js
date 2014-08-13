@@ -2039,9 +2039,8 @@
                     'dnd-droppable ' +
                     'dnd-on-dragstart = "$$onDragStart($api, $dropmodel, $dragmodel)"' +
                     'dnd-on-dragend = "$$onDragEnd($api, $dropmodel, $dragmodel)"' +
-                    'dnd-on-dragenter = "$$onDragEnter($api, $dropmodel, $dragmodel)"' +
-                    'dnd-on-dragleave = "$$onDragLeave($api, $dropmodel, $dragmodel)"' +
-                    'dnd-model = "'+match[1]+'"' +
+                    'dnd-on-dragover = "$$onDragOver($api, $dropmodel, $dragmodel)"' +
+                    'dnd-model = "{item: '+match[1]+', list: '+match[2]+', index: $index}"' +
                     '></' + tag + '>';
 
             },
@@ -2051,32 +2050,58 @@
                 var getterSortable = $parse(attrs.dndSortable);
                 var opts = extend({}, defaults, $parse(attrs.dndRotatableOpts)(scope) || {});
 
-//                var getterList = $parse(match[1]) || noop;
+                var getter = $parse(attrs.dndModel) || noop;
 //                var setterList = getterList.assign || noop;
 
 //                setterList($scope, false);
+
+                var css = element.dndCss(['float', 'display']);
+                var floating = /left|right|inline/.test(css.float + css.display);
+
+                function isHalfway(dragTarget, axis){
+                    var rect = element.dndClientRect();
+                    var isWide = (element[0].offsetWidth > dragTarget.offsetWidth);
+                    var isLong = (element[0].offsetHeight > dragTarget.offsetHeight);
+
+                    return (floating ? (axis.x - rect.left) / rect.width : (axis.y - rect.top) / rect.height) > .5;
+                }
 
                 scope.$$onDragStart = function(api){
                     var rect = element.dndClientRect();
                     placeholder = element.clone();
                     element.addClass('ng-hide');
                     placeholder.addClass('angular-dnd-placeholder');
+                    api.$sortable = {};
                     api.clearCache();
                 };
 
                 scope.$$onDragEnd = function(api){
                     element.removeClass('ng-hide');
                     placeholder.addClass('ng-hide');
+
+
+                    var from = scope.$index;
+                    var to = api.$sortable.model.index;
+                    var list = api.$sortable.model.list;
+
+                    list.splice(to, 0, list.splice(from, 1)[0]);
+
+                    scope.$apply();
+
                     api.clearCache();
                 };
 
-                scope.$$onDragEnter = function(dropmodel, dragmodel){
-                    element.after(placeholder);
+                scope.$$onDragOver = function(api, dropmodel, dragmodel){
+                    var halfway = isHalfway(api.getDragTarget(), api.getAxis());
+
+                    halfway ? element[0].parentNode.insertBefore(placeholder[0], element[0].nextSibling) : element[0].parentNode.insertBefore(placeholder[0], element[0]);
+
+                    api.$sortable.model = getter(scope);
+                    api.$sortable.insertAfter = halfway;
+                    api.clearCache();
                 };
 
-                scope.$$onDragLeave = function(dropmodel, dragmodel){
-                    placeholder.remove();
-                };
+
             }
         };
     }]);
