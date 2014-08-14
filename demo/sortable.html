@@ -18,11 +18,19 @@
 
         app.controller('MainCtrl', function($scope){
             this.sortables = [];
+            this.sortables2 = [];
 
             for(var i = 0; i < 10; i++){
                 this.sortables.push({
                     index: i,
-                    name: 'item'+(i+1)
+                    name: 'item1-'+(i),
+                    sortable: true
+                });
+
+                this.sortables2.push({
+                    index: i,
+                    name: 'item2-'+(i),
+                    sortable: true
                 });
             }
         });
@@ -44,7 +52,13 @@
         <div class = "container">
 
             <ul class = "sortable sortable-1">
-                <li ng-repeat = "item in main.sortables" dnd-sortable = "!item.noSortable">{{item.name}}</li>
+                <li ng-repeat = "item in main.sortables" dnd-sortable = "item.sortable">{{item.name}}</li>
+            </ul>
+
+            <hr>
+
+            <ul class = "sortable sortable-2">
+                <li ng-repeat = "item in main.sortables2" dnd-sortable = "item.sortable">{{item.name}}</li>
             </ul>
 
         </div>

@@ -141,7 +141,7 @@ button:hover {
     list-style: none;
     padding:0;
 }
-.sortable-1 {
+.sortable-1,.sortable-2 {
     width: 200px;
 }
 

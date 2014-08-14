@@ -2071,6 +2071,7 @@
                     placeholder = element.clone();
                     element.addClass('ng-hide');
                     placeholder.addClass('angular-dnd-placeholder');
+                    element[0].parentNode.insertBefore(placeholder[0], element[0]);
                     api.$sortable = {};
                     api.clearCache();
                 };
@@ -2079,16 +2080,20 @@
                     element.removeClass('ng-hide');
                     placeholder.addClass('ng-hide');
 
+                    if(!api.$sortable.model) return;
 
                     var from = scope.$index;
                     var to = api.$sortable.model.index;
-                    var list = api.$sortable.model.list;
+                    var listFrom = getter(scope).list;
+                    var listTo = api.$sortable.model.list;
 
-                    list.splice(to, 0, list.splice(from, 1)[0]);
+                    if(to < from) to++;
+                    if(api.$sortable.insertBefore) to--;
 
-                    scope.$apply();
+                    listTo.splice(to, 0, listFrom.splice(from, 1)[0]);
 
                     api.clearCache();
+                    scope.$apply();
                 };
 
                 scope.$$onDragOver = function(api, dropmodel, dragmodel){
@@ -2097,7 +2102,8 @@
                     halfway ? element[0].parentNode.insertBefore(placeholder[0], element[0].nextSibling) : element[0].parentNode.insertBefore(placeholder[0], element[0]);
 
                     api.$sortable.model = getter(scope);
-                    api.$sortable.insertAfter = halfway;
+                    api.$sortable.insertBefore = !halfway;
+
                     api.clearCache();
                 };
 
