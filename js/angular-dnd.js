@@ -2066,6 +2066,15 @@
                     return (floating ? (axis.x - rect.left) / rect.width : (axis.y - rect.top) / rect.height) > .5;
                 }
 
+                function moveValue(fromIndex, fromList, toIndex, toList){
+                    toList = toList || fromList;
+                    toList.splice(toIndex, 0, fromList.splice(fromIndex, 1)[0]);
+                }
+
+                function getNewIndex(currIndex){
+
+                }
+
                 scope.$$onDragStart = function(api){
                     var rect = element.dndClientRect();
                     placeholder = element.clone();
@@ -2082,15 +2091,22 @@
 
                     if(!api.$sortable.model) return;
 
-                    var from = scope.$index;
-                    var to = api.$sortable.model.index;
-                    var listFrom = getter(scope).list;
-                    var listTo = api.$sortable.model.list;
+                    var fromIndex = scope.$index;
+                    var toIndex = api.$sortable.model.index;
+                    var fromList = getter(scope).list;
+                    var toList = api.$sortable.model.list;
 
-                    if(to < from) to++;
-                    if(api.$sortable.insertBefore) to--;
+                    if(toList === fromList) {
+                        if(toIndex < fromIndex) {
+                            if(!api.$sortable.insertBefore) toIndex++;
+                        } else {
+                            if(api.$sortable.insertBefore) toIndex--;
+                        }
+                    } else {
+                        if(!api.$sortable.insertBefore) toIndex++;
+                    }
 
-                    listTo.splice(to, 0, listFrom.splice(from, 1)[0]);
+                    moveValue(fromIndex, fromList, toIndex, toList);
 
                     api.clearCache();
                     scope.$apply();
