@@ -143,6 +143,9 @@ button:hover {
 }
 .sortable-1,.sortable-2 {
     width: 200px;
+
+    background: #eee;
+    padding: 30px;
 }
 
 .sortable li {

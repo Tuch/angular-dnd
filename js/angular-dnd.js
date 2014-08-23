@@ -2019,6 +2019,34 @@
     /* SORTABLE DIRECTIVE */
 
     module.directive('dndSortable', ['$parse', '$compile', function($parse, $compile){
+
+        Controller.$inject = [];
+        function Controller(){
+
+        }
+
+        return {
+            scope: true,
+            controller: Controller,
+            transclude: true,
+            template: function(element, attrs){
+                var tag = element[0].nodeName.toLowerCase();
+
+                return '' +
+                    '<' + tag + ' ng-transclude ' +
+                    'dnd-on-dragstart = "$$onDragStart($api, $dropmodel, $dragmodel)"' +
+                    '></' + tag + '>';
+            },
+            replace: true,
+            link: function(scope, element, attrs){
+                scope.$$onDragStart = function(api){
+
+                };
+            }
+        };
+    }]);
+
+    module.directive('dndSortableItem', ['$parse', '$compile', function($parse, $compile){
         var ngRepeatRegExp = /^\s*([\s\S]+?)\s+in\s+([\s\S]+?)(?:\s+track\s+by\s+([\s\S]+?))?\s*$/;
         var placeholder;// = angular.element('<div class = "dnd-placeholder"></div>');
 
@@ -2031,12 +2059,14 @@
                 var ngRepeat = attrs.ngRepeat || '';
                 var match = ngRepeat.match(ngRepeatRegExp);
 
-                if(!match) throw 'dnd-sortable requires ng-repeat as dependence';
+                if(!match) throw 'dnd-sortable-item requires ng-repeat as dependence';
+
+                var layer = '$$sortable';
 
                 return '' +
                     '<' + tag + ' ng-transclude ' +
-                    'dnd-draggable dnd-draggable-opts = "{helper:\'clone\', restrictTheMovement:false, useAsPoint: true}" ' +
-                    'dnd-droppable ' +
+                    'dnd-draggable dnd-draggable-opts = "{helper:\'clone\', restrictTheMovement:false, useAsPoint: true, layer: \''+layer+'\'}" ' +
+                    'dnd-droppable dnd-droppable-opts = "{layer: \''+layer+'\'}"' +
                     'dnd-on-dragstart = "$$onDragStart($api, $dropmodel, $dragmodel)"' +
                     'dnd-on-dragend = "$$onDragEnd($api, $dropmodel, $dragmodel)"' +
                     'dnd-on-dragover = "$$onDragOver($api, $dropmodel, $dragmodel)"' +
@@ -2046,9 +2076,18 @@
             },
             replace: true,
             link: function(scope, element, attrs) {
+//                var layer = '$$sortable';
+//                var parentData = angular.element(parentNode).data('$$sortable');
+//
+//                if(!parentDnd || !parentDnd[layer]) {
+//
+//
+//                }
+
+                var parentNode = element[0].parentNode;
                 var defaults = {};
-                var getterSortable = $parse(attrs.dndSortable);
-                var opts = extend({}, defaults, $parse(attrs.dndRotatableOpts)(scope) || {});
+                var getterSortable = $parse(attrs.dndSortableItem);
+                var opts = extend({}, defaults, $parse(attrs.dndSortableItemOpts)(scope) || {});
 
                 var getter = $parse(attrs.dndModel) || noop;
 //                var setterList = getterList.assign || noop;
@@ -2071,16 +2110,12 @@
                     toList.splice(toIndex, 0, fromList.splice(fromIndex, 1)[0]);
                 }
 
-                function getNewIndex(currIndex){
-
-                }
-
                 scope.$$onDragStart = function(api){
                     var rect = element.dndClientRect();
                     placeholder = element.clone();
                     element.addClass('ng-hide');
                     placeholder.addClass('angular-dnd-placeholder');
-                    element[0].parentNode.insertBefore(placeholder[0], element[0]);
+                    parentNode.insertBefore(placeholder[0], element[0]);
                     api.$sortable = {};
                     api.clearCache();
                 };
@@ -2102,9 +2137,7 @@
                         } else {
                             if(api.$sortable.insertBefore) toIndex--;
                         }
-                    } else {
-                        if(!api.$sortable.insertBefore) toIndex++;
-                    }
+                    } else if(!api.$sortable.insertBefore) toIndex++;
 
                     moveValue(fromIndex, fromList, toIndex, toList);
 
@@ -2115,7 +2148,7 @@
                 scope.$$onDragOver = function(api, dropmodel, dragmodel){
                     var halfway = isHalfway(api.getDragTarget(), api.getAxis());
 
-                    halfway ? element[0].parentNode.insertBefore(placeholder[0], element[0].nextSibling) : element[0].parentNode.insertBefore(placeholder[0], element[0]);
+                    halfway ? parentNode.insertBefore(placeholder[0], element[0].nextSibling) : parentNode.insertBefore(placeholder[0], element[0]);
 
                     api.$sortable.model = getter(scope);
                     api.$sortable.insertBefore = !halfway;

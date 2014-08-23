@@ -51,14 +51,14 @@
 
         <div class = "container">
 
-            <ul class = "sortable sortable-1">
-                <li ng-repeat = "item in main.sortables" dnd-sortable = "item.sortable">{{item.name}}</li>
+            <ul class = "sortable sortable-1" dnd-sortable = "true">
+                <li ng-repeat = "item in main.sortables" dnd-sortable-item>{{item.name}}</li>
             </ul>
 
             <hr>
 
-            <ul class = "sortable sortable-2">
-                <li ng-repeat = "item in main.sortables2" dnd-sortable = "item.sortable">{{item.name}}</li>
+            <ul class = "sortable sortable-2" dnd-sortable = "true">
+                <li ng-repeat = "item in main.sortables2" dnd-sortable-item>{{item.name}}</li>
             </ul>
 
         </div>
