@@ -1650,7 +1650,9 @@
 				}
 				
 				var bindings = {};
-				
+
+                opts.layer = opts.layer || defaults.layer;
+
 				bindings[opts.layer+'.dragstart'] = dragstart;
 				bindings[opts.layer+'.drag'] = drag;
 				bindings[opts.layer+'.dragend'] = dragend;
@@ -1722,6 +1724,8 @@
 
 
 				var bindings = {};
+
+                opts.layer = opts.layer || defaults.layer;
 
 				bindings[opts.layer+'.dragenter'] = dragenter;
 				bindings[opts.layer+'.dragover'] = dragover;
@@ -2064,13 +2068,13 @@
                 var css = element.dndCss(['float', 'display']);
                 var floating = /left|right|inline/.test(css.float + css.display);
 
-                if(!parentData || !parentData[layer]) {
+                if(!parentData || !parentData[opts.layer]) {
                     parentData = parentData || {};
                     parentData[opts.layer] = true;
 
                     var bindings = {};
 
-                    bindings[layer+'.dragover'] = function(api){
+                    bindings[opts.layer+'.dragover'] = function(api){
                         if(api.getEvent().target !== parentNode || getter(scope).list.length > 1) return;
                         api.$sortable.model = getter(scope);
                         api.$sortable.insertBefore = true;
