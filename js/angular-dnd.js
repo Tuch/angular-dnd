@@ -2057,6 +2057,12 @@
                 var parentElement = angular.element(parentNode);
                 var layer = 'common';
                 var parentData = parentElement.data('dnd-sortable');
+                var defaults = {};
+                var getterSortable = $parse(attrs.dndSortableItem);
+                var opts = extend({}, defaults, $parse(attrs.dndSortableItemOpts)(scope) || {});
+                var getter = $parse(attrs.dndModel) || noop;
+                var css = element.dndCss(['float', 'display']);
+                var floating = /left|right|inline/.test(css.float + css.display);
 
                 if(!parentData || !parentData[layer]) {
                     parentData = parentData || {};
@@ -2064,25 +2070,13 @@
 
                     parentElement.dndBind({
                         'dragover': function(api){
-                            console.log(api.getEvent().target, getter(scope).list.length);
-                            if(api.getEvent().target !== parentNode || getter(scope).list.length) return;
-
+                            if(api.getEvent().target !== parentNode || getter(scope).list.length > 1) return;
+                            api.$sortable.model = getter(scope);
+                            api.$sortable.insertBefore = true;
                             parentElement.append(placeholder[0]);
                         }
                     }).data('dnd-sortable', parentData);
                 }
-
-                var defaults = {};
-                var getterSortable = $parse(attrs.dndSortableItem);
-                var opts = extend({}, defaults, $parse(attrs.dndSortableItemOpts)(scope) || {});
-
-                var getter = $parse(attrs.dndModel) || noop;
-//                var setterList = getterList.assign || noop;
-
-//                setterList($scope, false);
-
-                var css = element.dndCss(['float', 'display']);
-                var floating = /left|right|inline/.test(css.float + css.display);
 
                 function isHalfway(dragTarget, axis){
                     var rect = element.dndClientRect();

@@ -190,5 +190,5 @@ TODO:
 - **supporting HTML5 dnd events**
 - **separate components**
 	- separate components to files
-	- separate directives and jQuere methods like draggable/droppable/resizable/rotatable and refactoring sortable after
+	- separate directives and jQuery methods like $.fn.draggable/$.fn.droppable/$.fn.resizable/$.fn.rotatable and refactoring sortable after (jQuery UI like o_O)
 - **translate docs to english**
