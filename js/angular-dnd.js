@@ -992,7 +992,7 @@
 
 				start: function(){
 					this.started = true;
-					this.target = false;
+					this.targets = [];
                     this.asPoint = false;
                     this.setAxisOffset(0, 0, 0, 0);
 					this.api = new Api(this);
@@ -1022,9 +1022,13 @@
 				stop: function(){
 					this.$scrollarea.off('scroll', this.onscroll);
 
-					if(this.target) $(this.target).data('dnd')[this.dnd.layer()].trigger('drop', this.api, this.dnd.el);
+					if(this.targets.length) {
+                        for(var i = 0, length = this.targets.length; i < length; i++){
+                            $(this.targets[i]).data('dnd')[this.dnd.layer()].trigger('drop', this.api, this.dnd.el);
+                        }
+                    }
 
-					this.dnd.trigger('dragend', this.api, this.target);
+					this.dnd.trigger('dragend', this.api, this.targets);
 				},
 
 
@@ -1079,14 +1083,15 @@
 						(x > region.rect.left ) && (x < region.rect.left+region.rect.width ) && (y > region.rect.top) && (y < region.rect.top+region.rect.height) : 
 						(x-offset.right > region.rect.left ) && (x-offset.left < region.rect.left+region.rect.width ) && (y-offset.bottom > region.rect.top) && (y-offset.top < region.rect.top+region.rect.height);
 
+                        var targetIndex = this.targets.indexOf(region.dnd.el);
 						if( trigger ){
-							if(this.target !== region.dnd.el) {
-								this.target = region.dnd.el;
+							if(targetIndex === -1) {
+								this.targets.push(region.dnd.el);
 								region.dnd.trigger('dragenter', this.api, this.dnd.el);
 							} else region.dnd.trigger('dragover', this.api, this.dnd.el);
-						} else if(this.target === region.dnd.el) {
-							$(this.target).data('dnd')[this.dnd.layer()].trigger('dragleave', this.api, this.dnd.el);
-							this.target = false;
+						} else if(targetIndex !== -1) {
+							$(this.targets[targetIndex]).data('dnd')[this.dnd.layer()].trigger('dragleave', this.api, this.dnd.el);
+                            this.targets.splice(targetIndex, 1);
 						}
 					}
 				},
@@ -2019,34 +2024,6 @@
     /* SORTABLE DIRECTIVE */
 
     module.directive('dndSortable', ['$parse', '$compile', function($parse, $compile){
-
-        Controller.$inject = [];
-        function Controller(){
-
-        }
-
-        return {
-            scope: true,
-            controller: Controller,
-            transclude: true,
-            template: function(element, attrs){
-                var tag = element[0].nodeName.toLowerCase();
-
-                return '' +
-                    '<' + tag + ' ng-transclude ' +
-                    'dnd-on-dragstart = "$$onDragStart($api, $dropmodel, $dragmodel)"' +
-                    '></' + tag + '>';
-            },
-            replace: true,
-            link: function(scope, element, attrs){
-                scope.$$onDragStart = function(api){
-
-                };
-            }
-        };
-    }]);
-
-    module.directive('dndSortableItem', ['$parse', '$compile', function($parse, $compile){
         var ngRepeatRegExp = /^\s*([\s\S]+?)\s+in\s+([\s\S]+?)(?:\s+track\s+by\s+([\s\S]+?))?\s*$/;
         var placeholder;// = angular.element('<div class = "dnd-placeholder"></div>');
 
@@ -2061,7 +2038,7 @@
 
                 if(!match) throw 'dnd-sortable-item requires ng-repeat as dependence';
 
-                var layer = '$$sortable';
+                var layer = 'common';
 
                 return '' +
                     '<' + tag + ' ng-transclude ' +
@@ -2076,15 +2053,25 @@
             },
             replace: true,
             link: function(scope, element, attrs) {
-//                var layer = '$$sortable';
-//                var parentData = angular.element(parentNode).data('$$sortable');
-//
-//                if(!parentDnd || !parentDnd[layer]) {
-//
-//
-//                }
-
                 var parentNode = element[0].parentNode;
+                var parentElement = angular.element(parentNode);
+                var layer = 'common';
+                var parentData = parentElement.data('dnd-sortable');
+
+                if(!parentData || !parentData[layer]) {
+                    parentData = parentData || {};
+                    parentData[layer] = true;
+
+                    parentElement.dndBind({
+                        'dragover': function(api){
+                            console.log(api.getEvent().target, getter(scope).list.length);
+                            if(api.getEvent().target !== parentNode || getter(scope).list.length) return;
+
+                            parentElement.append(placeholder[0]);
+                        }
+                    }).data('dnd-sortable', parentData);
+                }
+
                 var defaults = {};
                 var getterSortable = $parse(attrs.dndSortableItem);
                 var opts = extend({}, defaults, $parse(attrs.dndSortableItemOpts)(scope) || {});

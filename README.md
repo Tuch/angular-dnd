@@ -189,4 +189,6 @@ TODO:
 - **supporting ng-animate**
 - **supporting HTML5 dnd events**
 - **separate components**
+	- separate components to files
+	- separate directives and jQuere methods like draggable/droppable/resizable/rotatable and refactoring sortable after
 - **translate docs to english**
