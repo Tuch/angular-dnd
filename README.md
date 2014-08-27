@@ -182,7 +182,6 @@ TODO:
 
 - **more options**
 	- ensure rapid expandability options
-	- draggable-opts - helper as 'clone' or etc.
 - **new directive - sortable**
 - **supporting touch specific events (rotate, resize)**
 - **supporting dynamic options**
