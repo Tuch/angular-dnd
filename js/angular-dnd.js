@@ -2038,12 +2038,10 @@
 
                 if(!match) throw 'dnd-sortable-item requires ng-repeat as dependence';
 
-                var layer = 'common';
-
                 return '' +
                     '<' + tag + ' ng-transclude ' +
-                    'dnd-draggable dnd-draggable-opts = "{helper:\'clone\', restrictTheMovement:false, useAsPoint: true, layer: \''+layer+'\'}" ' +
-                    'dnd-droppable dnd-droppable-opts = "{layer: \''+layer+'\'}"' +
+                    'dnd-draggable dnd-draggable-opts = "{helper:\'clone\', restrictTheMovement:false, useAsPoint: true, layer: '+attrs.dndSortableOpts+'.layer}" ' +
+                    'dnd-droppable dnd-droppable-opts = "{layer: '+attrs.dndSortableOpts+'.layer}"' +
                     'dnd-on-dragstart = "$$onDragStart($api, $dropmodel, $dragmodel)"' +
                     'dnd-on-dragend = "$$onDragEnd($api, $dropmodel, $dragmodel)"' +
                     'dnd-on-dragover = "$$onDragOver($api, $dropmodel, $dragmodel)"' +
@@ -2053,29 +2051,33 @@
             },
             replace: true,
             link: function(scope, element, attrs) {
+                var defaults = {
+                    layer: 'common'
+                };
+
                 var parentNode = element[0].parentNode;
                 var parentElement = angular.element(parentNode);
-                var layer = 'common';
                 var parentData = parentElement.data('dnd-sortable');
-                var defaults = {};
-                var getterSortable = $parse(attrs.dndSortableItem);
-                var opts = extend({}, defaults, $parse(attrs.dndSortableItemOpts)(scope) || {});
+                var getterSortable = $parse(attrs.dndSortable);
+                var opts = extend({}, defaults, $parse(attrs.dndSortableOpts)(scope) || {});
                 var getter = $parse(attrs.dndModel) || noop;
                 var css = element.dndCss(['float', 'display']);
                 var floating = /left|right|inline/.test(css.float + css.display);
 
                 if(!parentData || !parentData[layer]) {
                     parentData = parentData || {};
-                    parentData[layer] = true;
+                    parentData[opts.layer] = true;
 
-                    parentElement.dndBind({
-                        'dragover': function(api){
-                            if(api.getEvent().target !== parentNode || getter(scope).list.length > 1) return;
-                            api.$sortable.model = getter(scope);
-                            api.$sortable.insertBefore = true;
-                            parentElement.append(placeholder[0]);
-                        }
-                    }).data('dnd-sortable', parentData);
+                    var bindings = {};
+
+                    bindings[layer+'.dragover'] = function(api){
+                        if(api.getEvent().target !== parentNode || getter(scope).list.length > 1) return;
+                        api.$sortable.model = getter(scope);
+                        api.$sortable.insertBefore = true;
+                        parentElement.append(placeholder[0]);
+                    }
+
+                    parentElement.dndBind(bindings).data('dnd-sortable', parentData);
                 }
 
                 function isHalfway(dragTarget, axis){
