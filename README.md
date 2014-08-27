@@ -182,7 +182,6 @@ TODO:
 
 - **more options**
 	- ensure rapid expandability options
-- **new directive - sortable**
 - **supporting touch specific events (rotate, resize)**
 - **supporting dynamic options**
 - **supporting ng-animate**
