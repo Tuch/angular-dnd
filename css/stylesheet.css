@@ -10,27 +10,27 @@
 	cursor: pointer;
 	height: 7px;
 	width: 100%;
-	top: -5px;
+	top: 0px;
 	left: 0;
 }
 .angular-dnd-resizable-handle-s {
 	cursor: pointer;
 	height: 7px;
 	width: 100%;
-	bottom: -5px;
+	bottom: 0px;
 	left: 0;
 }
 .angular-dnd-resizable-handle-e {
 	cursor: pointer;
 	width: 7px;
-	right: -5px;
+	right: 0px;
 	top: 0;
 	height: 100%;
 }
 .angular-dnd-resizable-handle-w {
 	cursor: pointer;
 	width: 7px;
-	left: -5px;
+	left: 0px;
 	top: 0;
 	height: 100%;
 }
@@ -38,31 +38,31 @@
 	cursor: pointer;
 	width: 12px;
 	height: 12px;
-	right: -5px;
-	bottom: -5px;
+	right: 0px;
+	bottom: 0px;
 }
 .angular-dnd-resizable-handle-sw {
 	cursor: pointer;
 	width: 12px;
 	height: 12px;
-	left: -5px;
-	bottom: -5px;
+	left: 0px;
+	bottom: 0px;
 }
 
 .angular-dnd-resizable-handle-nw {
 	cursor: pointer;
 	width: 12px;
 	height: 12px;
-	left: -5px;
-	top: -5px;
+	left: 0px;
+	top: 0px;
 }
 
 .angular-dnd-resizable-handle-ne {
 	cursor: pointer;
 	width: 12px;
 	height: 12px;
-	right: -5px;
-	top: -5px;
+	right: 0px;
+	top: 0px;
 }
 
 .angular-dnd-rotatable-handle {
@@ -81,4 +81,12 @@
     border: 1px solid rgba(108, 152, 197, 0.73);
     background: rgba(108, 152, 197, 0.27);
     box-sizing: border-box;
+}
+
+.angular-dnd-helper {
+    opacity: .5;
+}
+
+.angular-dnd-placeholder {
+    opacity: .5;
 }

@@ -5,11 +5,8 @@
 <title>Angular-DnD Basic Example</title>
 
 <link rel="stylesheet" href="demo.css" />
-
-<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.2.14/angular.js"></script>
-
-
 <link rel="stylesheet" href="../css/stylesheet.css" />
+<script src="bower_components/angular/angular.js"></script>
 <script type="text/javascript" src = "../js/angular-dnd.js"></script>
 
 
@@ -18,61 +15,59 @@
 
     var app = angular.module('app', ['dnd']);
 
-    app.controller('controller', function($scope){
+    app.controller('MainCtrl', function($scope){
 
-        $scope.dragstart = function(){
+        this.dragstart = function(){
 	        console.log('dragstart', arguments);
         };
 
-        $scope.drag = function(){
+        this.drag = function(){
 	        console.log('drag', arguments);
         };
 
-        $scope.dragend = function(){
+        this.dragend = function(){
 	        console.log('dragend', arguments);
 
-	        if(!arguments[0]) $scope.dropped = false;
+	        if(!arguments[0]) this.dropped = false;
         };
 
-        $scope.dragenter = function(dropmodel, dragmodel){
-	        console.log( dropmodel);
-	        $scope.active = dropmodel;
+        this.dragenter = function(dropmodel){
+	        console.log('dragenter', arguments);
+            this.active = dropmodel;
         };
 
-        $scope.dragover = function(){
+        this.dragover = function(){
 	        console.log('dragover', arguments);
         };
 
-        $scope.dragleave = function(dropmodel, dragmodel){
-	        $scope.active = undefined;
+        this.dragleave = function(){
+            console.log('dragleave', arguments);
+            this.active = undefined;
         };
 
-        $scope.drop = function(dragmodel, model){
+        this.drop = function(dragmodel, model){
 	        console.log('drop', arguments);
-	        $scope.dropped = model;
+            this.dropped = model;
         };
 
-        $scope.click = function(isclick, dropmodel){
-	        console.log('isclick ===', isclick, dropmodel);
-        };
-        
-        $scope.isDropped = function(model){
-	        return $scope.dropped === model;
-        };
-        
-        $scope.isActive = function(model){
-	        return $scope.active === model;
+        this.isDropped = function(model){
+	        return this.dropped === model;
         };
 
-        $scope.reset = function(){
-            $scope.rect = {top:'20px', left:'240px', width: '100px', height: '100px'};
+        this.isActive = function(model){
+	        return this.active === model;
+        };
+
+        this.reset = function(){
+            this.rect = {top:'20px', left:'240px', width: '100px', height: '100px', transform: 'matrix(1, 0, 0, 1, 0, 0)'};
+            this.rect2 = {top:'200px', left:'440px', width: '100px', height: '100px', transform: 'matrix(1, 0, 0, 1, 0, 0)'};
         }
-        
-        $scope.reset();
-        
-        $scope.dragmodel = 'drag'; 
 
-        $scope.dropmodels = [ 'drop1', 'drop2', 'drop3' ]
+        this.reset();
+
+        this.dragmodel = 'dragmodel1';
+        this.dropmodels = [ 'dropmodel1', 'dropmodel2', 'dropmodel3' ];
+
     });
 
 </script>
@@ -81,71 +76,90 @@
 
 
 
-<body ng-controller="controller" style = "position: relative; height:100%;">
-	<div style = "height: 100%; overflow: auto;">
-	    <div class = "menu">
+<body ng-controller="MainCtrl as main">
+	<div>
+        <div class = "head" ng-include = "'./head.html'"></div>
 
-	        <a class = "button" href = "index.html">Basic example</a>
-	        <a class = "button" href = "lasso.html">Lasso example</a>
+	    <div class = "title"> Basic example <br><em style = "font-size: 50%;">Draggable, Droppable, Rotatable, Resizable, Fittext...</em></div>
 
-	    </div>
+	    top: <input ng-model = 'main.rect.top' type="text">
+	    left: <input ng-model = 'main.rect.left' type="text">
+	    height: <input ng-model = 'main.rect.height' type="text">
+	    width: <input ng-model = 'main.rect.width' type="text">
+	    transform: <input ng-model = 'main.rect.transform' type="text">
 
-	    <div class = "title" ng-click = "click($event)"> Basic example <br><em style = "font-size: 50%;">Draggable, Droppable, Rotatable, Resizable, Fittext...</em></div>
+        <button ng-click = "main.reset()">Reset rect object</button>
 
-	    top: <input ng-model = 'rect.top' type="text">
-	    left: <input ng-model = 'rect.left' type="text">
-	    height: <input ng-model = 'rect.height' type="text">
-	    width: <input ng-model = 'rect.width' type="text">
-	    transform: <input ng-model = 'rect.transform' type="text">
-	    
-	    <button ng-click = "reset()">Reset</button>
+        <script type="text/ng-template" id="myDragHelper.html">
+            <div style = "background:#777">
+                <div> helper </div>
+                {{main.dragmodel}}
+            </div>
+        </script>
 
 		<div class = "dnd-container">
-		    <div class = "draggable" style = "position: absolute;"
-				ng-style = "{'line-height': rect.height}"
-				ng-click = "click(!$dragged && !$resized && !$rotated, $dropmodel)"
+            <div class = "draggable" style = "position: absolute;"
+                 ng-style = "{'line-height': main.rect.height}"
+                 ng-click = "click(!$dragged && !$resized && !$rotated, $dropmodel)"
 
-		    	dnd-draggable = "true"
-                dnd-draggable-opts = "{ns: 'area1', useAsPoint: true}"
-                dnd-on-dragstart = "dragstart()"
-                dnd-on-drag = "drag($dropmodel)"
-                dnd-on-dragend = "dragend($dropmodel)"
+                 dnd-draggable = "true"
+                 dnd-draggable-opts = "{layer: 'layer1', useAsPoint: true }"
+                 dnd-on-dragstart = "main.dragstart($dropmodel, $dragmodel)"
+                 dnd-on-drag = "main.drag($dropmodel, $dragmodel)"
+                 dnd-on-dragend = "main.dragend($dropmodel, $dragmodel)"
 
-                dnd-rotatable = "true"
-                dnd-on-rotatestart = "dragstart()"
-                dnd-on-rotate = "drag()"
-                dnd-on-rotateend = "dragend()"
+                 dnd-rotatable = "true"
+                 dnd-on-rotatestart = "main.dragstart()"
+                 dnd-on-rotate = "main.drag()"
+                 dnd-on-rotateend = "main.dragend()"
 
-                dnd-resizable = "true"
-                dnd-on-resizestart = "dragstart()"
-                dnd-on-resize = "drag()"
-                dnd-on-resizeend = "dragend()"
+                 dnd-resizable = "true"
+                 dnd-on-resizestart = "main.dragstart()"
+                 dnd-on-resize = "main.drag()"
+                 dnd-on-resizeend = "main.dragend()"
 
-		        dnd-rect = "rect"
-                dnd-fittext = "{width:rect.width, height:rect.height}"
-                dnd-model = "dragmodel">
+                 dnd-rect = "main.rect"
+                 dnd-fittext = "{width:main.rect.width, height:main.rect.height}"
+                 dnd-model = "main.dragmodel">
 
                 Drag me
 
             </div>
+            <div class = "draggable" style = "position: absolute;"
+                 ng-style = "{'line-height': main.rect.height}"
+                 ng-click = "click(!$dragged && !$resized && !$rotated, $dropmodel)"
+
+                 dnd-draggable = "true"
+                 dnd-draggable-opts = "{layer: 'layer1', helper : 'myDragHelper.html'}"
+                 dnd-on-dragstart = "main.dragstart()"
+                 dnd-on-drag = "main.drag($dropmodel)"
+                 dnd-on-dragend = "main.dragend($dropmodel)"
+
+                 dnd-rect = "main.rect2"
+                 dnd-fittext = "{width:main.rect2.width, height:main.rect2.height}"
+                 dnd-model = "main.dragmodel">
+
+                Drag me with helper
+
+            </div>
 
 		    <div 
-		    	ng-repeat = "dropmodel in dropmodels"
+		    	ng-repeat = "dropmodel in main.dropmodels"
 				class = "dropzone"
-				ng-class = "{dropped: isDropped(dropmodel), active: isActive(dropmodel)}"
+				ng-class = "{dropped: main.isDropped(dropmodel), active: main.isActive(dropmodel)}"
 
                 dnd-droppable = "true"
-                dnd-droppable-opts = "{ns: 'area1'}"
-                dnd-on-drop = "drop($dragmodel, dropmodel)"
-                dnd-on-dragenter = "dragenter(dropmodel, $dragmodel)"
-                dnd-on-dragleave = "dragleave(dropmodel, $dragmodel)"
-                dnd-on-dragover = "dragover($dragmodel)"
+                dnd-droppable-opts = "{layer: 'layer1'}"
+                dnd-on-drop = "main.drop($dropmodel, $dragmodel)"
+                dnd-on-dragenter = "main.dragenter($dropmodel, $dragmodel)"
+                dnd-on-dragleave = "main.dragleave($dropmodel, $dragmodel)"
+                dnd-on-dragover = "main.dragover($dropmodel, $dragmodel)"
 
                 dnd-model = "dropmodel" >
 
 		    </div>
 
-		    <br><br>
+            <br><br> <br><br> <br><br> <br><br> <br><br> <br><br> <br><br> <br><br> <br><br> <br><br> <br><br> <br><br> <br><br> <br><br> <br><br> <br><br> <br><br> <br><br> <br><br> <br><br>
 
 		</div>
 

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="app" style = "height: 100%">
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Angular-DnD Basic Example</title>
+
+    <link rel="stylesheet" href="demo.css" />
+
+    <link rel="stylesheet" href="../css/stylesheet.css" />
+    <script src="bower_components/angular/angular.js"></script>
+    <script type="text/javascript" src = "../js/angular-dnd.js"></script>
+
+
+        <script type="text/javascript">
+
+        var app = angular.module('app', ['dnd']);
+
+        app.controller('MainCtrl', function($scope){
+            this.sortables = [];
+            this.sortables2 = [];
+
+            for(var i = 0; i < 5; i++){
+                this.sortables[i] = {
+                    index: i,
+                    name: 'item1-'+(i),
+                    sortable: true
+                };
+
+                this.sortables2[i] = {
+                    index: i,
+                    name: 'item2-'+(i),
+                    sortable: true
+                };
+            }
+        });
+
+    </script>
+
+</head>
+
+
+
+<body ng-controller="MainCtrl as main">
+	<div>
+        <div class = "head" ng-include = "'./head.html'"></div>
+
+	    <div class = "title">
+            Sortable example <br>
+        </div>
+
+        <div class = "container">
+
+            <ul class = "sortable sortable-1" >
+                <li ng-repeat = "item in main.sortables" dnd-sortable dnd-sortable-opts = "{layer:'common'}">{{item.name}}</li>
+            </ul>
+
+            <hr>
+
+            <ul class = "sortable sortable-2" >
+                <li ng-repeat = "item in main.sortables2" dnd-sortable >{{item.name}}</li>
+            </ul>
+
+        </div>
+
+	</div>
+</body>
+</html>
