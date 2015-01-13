@@ -2042,15 +2042,17 @@
 
                 if(!match) throw 'dnd-sortable-item requires ng-repeat as dependence';
 
+	            var opts = $parse(attrs.dndSortableOpts)() || {};
+
                 return '' +
-                    '<' + tag + ' ng-transclude ' +
-                    'dnd-draggable dnd-draggable-opts = "{helper:\'clone\', restrictTheMovement:false, useAsPoint: true, layer: '+attrs.dndSortableOpts+'.layer}" ' +
-                    'dnd-droppable dnd-droppable-opts = "{layer: '+attrs.dndSortableOpts+'.layer}"' +
-                    'dnd-on-dragstart = "$$onDragStart($api, $dropmodel, $dragmodel)"' +
-                    'dnd-on-dragend = "$$onDragEnd($api, $dropmodel, $dragmodel)"' +
-                    'dnd-on-dragover = "$$onDragOver($api, $dropmodel, $dragmodel)"' +
-                    'dnd-model = "{item: '+match[1]+', list: '+match[2]+', index: $index}"' +
-                    '></' + tag + '>';
+	                '<' + tag + ' ng-transclude ' +
+	                'dnd-draggable dnd-draggable-opts = "{helper:\'clone\', restrictTheMovement:false, useAsPoint: true, layer: ' + (opts.layer || '\'common\'') + '}" ' +
+	                'dnd-droppable dnd-droppable-opts = "{layer: ' + (opts.layer || '\'common\'') + '}"' +
+	                'dnd-on-dragstart = "$$onDragStart($api, $dropmodel, $dragmodel)"' +
+	                'dnd-on-dragend = "$$onDragEnd($api, $dropmodel, $dragmodel)"' +
+	                'dnd-on-dragover = "$$onDragOver($api, $dropmodel, $dragmodel)"' +
+	                'dnd-model = "{item: '+match[1]+', list: '+match[2]+', index: $index}"' +
+	                '></' + tag + '>';
 
             },
             replace: true,
