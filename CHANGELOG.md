@@ -1,6 +1,14 @@
 # [Changes]
 
-## Master
+## v0.1.8
+
+* **Draggable
+  * **API BREAKING CHANGE!** restrictTheMovement переименован в restrictMovement
+* **
+
+* **Sortable
+  * **API BREAKING CHANGE!** restrictTheMovement переименован в restrictMovement
+* **
 
 ## v0.1.7
 * **Draggable helper

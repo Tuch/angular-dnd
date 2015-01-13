@@ -1,6 +1,6 @@
 
 /**
- * @license AngularJS-DND v0.1.7
+ * @license AngularJS-DND v0.1.8
  * (c) 2014-2015 Alexander Afonin (toafonin@gmail.com, http://github.com/Tuch)
  * License: MIT
  */
@@ -16,7 +16,7 @@
 	 */
 
 	angular.dnd = {};
-	angular.dnd.version = '0.1.7';
+	angular.dnd.version = '0.1.8';
 
 	/* ENVIRONMENT VARIABLES */
 
@@ -1574,7 +1574,7 @@
 					layer: 'common',
 					useAsPoint: false,
                     helper: null,
-                    restrictTheMovement: true
+                    restrictMovement: true
 				};
 
 				var getterDraggable = $parse(attrs.dndDraggable);
@@ -1610,7 +1610,7 @@
                     // задаем модель данному элементу
                     api.dragmodel = model ? model.get() : null;
 
-                    if(opts.restrictTheMovement) {
+                    if(opts.restrictMovement) {
                         var $bounder = container ? container.getElement() : angular.element(document.body);
 
                         api.setBounderElement( $bounder );
@@ -2042,12 +2042,15 @@
 
                 if(!match) throw 'dnd-sortable-item requires ng-repeat as dependence';
 
-	            var opts = $parse(attrs.dndSortableOpts)() || {};
+	            var opts = angular.extend({
+		            layer: "'common'",
+		            restrictMovement: false
+	            }, $parse(attrs.dndSortableOpts)());
 
                 return '' +
 	                '<' + tag + ' ng-transclude ' +
-	                'dnd-draggable dnd-draggable-opts = "{helper:\'clone\', restrictTheMovement:false, useAsPoint: true, layer: ' + (opts.layer || '\'common\'') + '}" ' +
-	                'dnd-droppable dnd-droppable-opts = "{layer: ' + (opts.layer || '\'common\'') + '}"' +
+	                'dnd-draggable dnd-draggable-opts = "{helper:\'clone\', restrictMovement: ' + opts.restrictMovement + ', useAsPoint: true, layer: ' + opts.layer + '}" ' +
+	                'dnd-droppable dnd-droppable-opts = "{layer: ' + opts.layer + '}"' +
 	                'dnd-on-dragstart = "$$onDragStart($api, $dropmodel, $dragmodel)"' +
 	                'dnd-on-dragend = "$$onDragEnd($api, $dropmodel, $dragmodel)"' +
 	                'dnd-on-dragover = "$$onDragOver($api, $dropmodel, $dragmodel)"' +
