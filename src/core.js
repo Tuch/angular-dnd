@@ -827,17 +827,11 @@ var module = angular.module('dnd', []);
 		}
 
         Api.prototype = {
-            setAxisOffset: function(top, right, bottom, left) {
-                this._manipulator.setAxisOffset(top, right, bottom, left);
+            getBorderedAxis: function() {
+                return this._manipulator.getBorderedAxis.apply(this._manipulator, arguments);
             },
-            getAxisOffset: function() {
-                this._manipulator.getAxisOffset();
-            },
-            getAxis: function() {
-                return this._manipulator.getAxis();
-            },
-            getRelativeAxis: function() {
-                return this._manipulator.getRelativeAxis();
+            getRelBorderedAxis: function() {
+                return this._manipulator.getRelBorderedAxis.apply(this._manipulator, arguments);
             },
             getDragTarget: function() {
                 return this._manipulator.dnd.el;
@@ -849,7 +843,7 @@ var module = angular.module('dnd', []);
                 return this._manipulator.event;
             },
             isTarget: function() {
-                return this._manipulator.isTarget();
+                return this._manipulator.isTarget.apply(this._manipulator, arguments);
             },
             unTarget: function() {
                 this._manipulator.removeFromTargets();
@@ -865,13 +859,13 @@ var module = angular.module('dnd', []);
                 this._manipulator.$reference = element;
             },
             getBorders: function() {
-                return this._manipulator.getBorders();
+                return this._manipulator.getBorders.apply(this._manipulator, arguments);
             },
             getReferencePoint: function() {
-                return this._manipulator.getReferencePoint();
+                return this._manipulator.getReferencePoint.apply(this._manipulator, arguments);
             },
             clearCache: function() {
-                this._manipulator.clearCache();
+                this._manipulator.clearCache.apply(this._manipulator, arguments);
             }
         };
 
@@ -889,48 +883,28 @@ var module = angular.module('dnd', []);
 
 		Manipulator.prototype = {
 
-            setAxisOffset: function(top, right, bottom, left) {
-                this.axisOffset = {};
-
-                if(typeof top === 'object') {
-                    right = top.right;
-                    bottom = top.bottom;
-                    left = top.left;
-                    top = top.top;
-                }
-
-                this.axisOffset.top = top;
-                this.axisOffset.right = right;
-                this.axisOffset.bottom = bottom;
-                this.axisOffset.left = left;
-
-                this.clearCache();
-            },
-
-            getAxisOffset: function() {
-                return this.axisOffset;
-            },
-
-            getBorders: function() {
+            getBorders: function(offset) {
                 if(!this.$bounder) return;
 
                 var borders  = this.getCache('borders');
 
                 if(!borders) {
                     var rect = this.$bounder.dndClientRect();
-                    var offset = this.asPoint ? {top:0, left:0, right: 0, bottom: 0} : this.getAxisOffset();
 
                     borders = this.setCache('borders', {
-                        top: rect.top + offset.top,
-                        left: rect.left + offset.left,
-                        right: rect.right + offset.right,
-                        bottom: rect.bottom + offset.bottom
+                        top: rect.top,
+                        left: rect.left,
+                        right: rect.right,
+                        bottom: rect.bottom
                     });
-
                 }
 
-
-                return borders;
+                return {
+	                top: borders.top + (offset ? offset.top : 0),
+	                left: borders.left + (offset ? offset.left : 0),
+	                right: borders.right + (offset ? offset.right : 0),
+	                bottom: borders.bottom + (offset ? offset.bottom : 0)
+                };
             },
 
             getReferencePoint: function() {
@@ -938,23 +912,27 @@ var module = angular.module('dnd', []);
 
                 if(!referencePoint) {
                     var rect = this.$reference.dndClientRect();
-                    var offset = this.getAxisOffset();
 
-                    referencePoint = this.setCache('referencePoint', Point(rect.left + offset.left, rect.top + offset.top));
+                    referencePoint = this.setCache('referencePoint', Point(rect.left, rect.top));
                 }
 
                 return referencePoint;
             },
 
-            getAxis: function(asPoint) {
-                var axis = this.getClientAxis();
-                var borders = this.getBorders(asPoint);
+            getBorderedAxis: function(borderOffset, axisOffset) {
+                var axis = this.getClientAxis(axisOffset);
+	            var borders = this.getBorders(borderOffset);
 
-                return borders ? Point(getNumFromSegment(borders.left, axis.x, borders.right), getNumFromSegment(borders.top, axis.y, borders.bottom)) : axis;
+                var result = borders ? Point(
+	                getNumFromSegment(borders.left, axis.x, borders.right),
+	                getNumFromSegment(borders.top, axis.y, borders.bottom)
+                ) : axis;
+
+	            return result;
             },
 
-            getRelativeAxis: function() {
-                return this.getAxis().minus( this.getReferencePoint() );
+            getRelBorderedAxis: function(borderOffset, axisOffset) {
+                return this.getBorderedAxis(borderOffset, axisOffset).minus( this.getReferencePoint() );
             },
 
 			addToTargets: function() {
@@ -982,7 +960,6 @@ var module = angular.module('dnd', []);
 				this.started = true;
 				this.targets = [];
                 this.asPoint = false;
-                this.setAxisOffset(0, 0, 0, 0);
 				this.api = new Api(this);
                 this.$scrollarea = this.dnd.$el.dndGetParentScrollArea();
                 this.$reference = this.dnd.$el.dndGetFirstNotStaticParent();
@@ -1063,14 +1040,14 @@ var module = angular.module('dnd', []);
 
 				this.dnd.trigger('drag', this.api);
 
-				var axis = this.getAxis(), x = axis.x, y = axis.y, offset = this.getAxisOffset(), asPoint = this.asPoint;
+				var axis = this.getBorderedAxis(), x = axis.x, y = axis.y, asPoint = this.asPoint;
 
 				for(var i = 0; i < regions.length; i++) {
 					var region = regions[i];
 
 					var trigger = asPoint ?
 					(x > region.rect.left ) && (x < region.rect.left+region.rect.width ) && (y > region.rect.top) && (y < region.rect.top+region.rect.height) :
-					(x-offset.right > region.rect.left ) && (x-offset.left < region.rect.left+region.rect.width ) && (y-offset.bottom > region.rect.top) && (y-offset.top < region.rect.top+region.rect.height);
+					(x > region.rect.left ) && (x < region.rect.left+region.rect.width ) && (y > region.rect.top) && (y < region.rect.top+region.rect.height);
 
                     var targetIndex = this.targets.indexOf(region.dnd.el);
 					if( trigger ) {
@@ -1138,15 +1115,11 @@ var module = angular.module('dnd', []);
 
 	Mouse.prototype = {
 
-		getClientAxis: function(event,s) {
-			event = event ? event : this.event;
-
-			return Point(event.clientX, event.clientY);
+		getClientAxis: function(offset) {
+			return Point(this.event.clientX + (offset ? offset.x : 0), this.event.clientY + (offset ? offset.y : 0));
 		},
 
 		mousedown: function (event) {
-			//event.preventDefault();
-
 			this.manipulator.begin(event);
 
 			$document.on('mousemove', this.mousemove );
@@ -1183,11 +1156,10 @@ var module = angular.module('dnd', []);
 
 	Touch.prototype = {
 
-		getClientAxis: function(event) {
-			event = event ? event : this.event;
-			event = event.originalEvent ? event.originalEvent : event;
+		getClientAxis: function(offset) {
+			event = this.event.originalEvent || this.event;
 
-			return Point(event.changedTouches[0].clientX, event.changedTouches[0].clientY)
+			return Point(event.changedTouches[0].clientX + (offset ? offset.x : 0), event.changedTouches[0].clientY + (offset ? offset.y : 0));
 		},
 
 		touchstart: function (event) {

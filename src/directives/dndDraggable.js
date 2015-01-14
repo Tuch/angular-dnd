@@ -18,15 +18,15 @@ function($timeout, $parse, $http, $compile, $q, $templateCache, EventEmitter) {
 		}
 
 		ElementTarget.prototype = {
-			getCorrectedOffset: function(axis){
-				var offset = {}, crect = this.element.dndClientRect();
+			setBorderOffset: function(axis){
+				var crect = this.element.dndClientRect();
 
-				offset.top = axis.y - crect.top;
-				offset.left = axis.x - crect.left;
-				offset.bottom = offset.top - crect.height;
-				offset.right = offset.left - crect.width;
-
-				return offset;
+				this.borderOffset = {
+					top: axis.y - crect.top,
+					left: axis.x - crect.left,
+					bottom: axis.y - crect.top - crect.height,
+					right: axis.x - crect.left - crect.width
+				};
 			},
 
 			init: function(){
@@ -117,15 +117,15 @@ function($timeout, $parse, $http, $compile, $q, $templateCache, EventEmitter) {
 				return this;
 			},
 
-			getCorrectedOffset: function(){
-				var offset = {}, crect = wrapper.dndClientRect();
+			setBorderOffset: function(){
+				var crect = wrapper.dndClientRect();
 
-				offset.top = crect.height;
-				offset.left = crect.width;
-				offset.bottom = 0;
-				offset.right = 0;
-
-				return offset;
+				this.borderOffset = {
+					top: 0,
+					left: 0,
+					bottom: -crect.height,
+					right: -crect.width
+				};
 			},
 
 			updatePosition: function(axis){
@@ -196,8 +196,8 @@ function($timeout, $parse, $http, $compile, $q, $templateCache, EventEmitter) {
 				// ставим флаг, что процесс перемещения элемента начался
 				scope.$dragged = true;
 
-				// задаем смещение для коррекции подсчета позиции курсора при движении элемента
-				api.setAxisOffset(draggable.getCorrectedOffset(api.getAxis()));
+				// задаем смещение границ контэйнера
+				draggable.setBorderOffset(api.getBorderedAxis());
 
 				// применяем пользовательский callback
 				dragstartCallback(scope, {'$dragmodel':api.dragmodel, '$dropmodel': api.dropmodel, '$api': api});
@@ -209,7 +209,7 @@ function($timeout, $parse, $http, $compile, $q, $templateCache, EventEmitter) {
 			function drag(api){
 				if(!started) return;
 
-				draggable.updatePosition( api.getRelativeAxis() );
+				draggable.updatePosition( api.getRelBorderedAxis(draggable.borderOffset) );
 				dragCallback(scope, {'$dragmodel':api.dragmodel, '$dropmodel': api.dropmodel, '$api': api});
 
 				scope.$apply();

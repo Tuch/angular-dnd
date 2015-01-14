@@ -113,7 +113,7 @@ module.directive('dndSortable', ['$parse', '$compile', function($parse, $compile
 			};
 
 			scope.$$onDragOver = function(api, dropmodel, dragmodel) {
-				var halfway = isHalfway(api.getDragTarget(), api.getAxis());
+				var halfway = isHalfway(api.getDragTarget(), api.getBorderedAxis());
 
 				halfway ? parentNode.insertBefore(placeholder[0], element[0].nextSibling) : parentNode.insertBefore(placeholder[0], element[0]);
 

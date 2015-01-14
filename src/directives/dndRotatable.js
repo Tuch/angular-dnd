@@ -38,7 +38,7 @@ module.directive('dndRotatable', ['$parse', '$timeout', function($parse, $timeou
 
 				local.started = true;
 
-				var axis = api.getRelativeAxis(), crect = element.dndClientRect();
+				var axis = api.getRelBorderedAxis(), crect = element.dndClientRect();
 
 				local.srect = element.dndStyleRect();
 
@@ -63,7 +63,7 @@ module.directive('dndRotatable', ['$parse', '$timeout', function($parse, $timeou
 
 				if(!local.started) return;
 
-				var axis = api.getRelativeAxis();
+				var axis = api.getRelBorderedAxis();
 				var angle = Point(axis).deltaAngle(local.startPoint, local.center);
 				var degs = radToDeg(local.currAngle+angle);
 

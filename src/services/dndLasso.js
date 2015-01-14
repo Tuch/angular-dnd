@@ -59,7 +59,7 @@ module.factory('DndLasso', [function () {
 
 			api.setReferenceElement(opts.$el);
 
-			local.startAxis = api.getRelativeAxis();
+			local.startAxis = api.getRelBorderedAxis();
 
 			$div.removeAttr('class style').removeClass('ng-hide').addClass(opts.className);
 
@@ -75,7 +75,7 @@ module.factory('DndLasso', [function () {
 				return;
 			}
 
-			var change = api.getRelativeAxis().minus(local.startAxis);
+			var change = api.getRelBorderedAxis().minus(local.startAxis);
 
 			var rect = {
 				top: local.startAxis.y,
