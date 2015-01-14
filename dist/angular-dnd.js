@@ -17,13 +17,14 @@
 
  */
 
-angular.dnd = {};
-angular.dnd.version = '0.1.8';
-
 /* ENVIRONMENT VARIABLES */
 
-var $ = angular.element, $window = $(window), $document = $(document), body = 'body', TRANSFORM, TRANSFORMORIGIN,
-	debug = true,
+var version = '0.1.9',
+	$ = angular.element, $window = $(window), $document = $(document), body = 'body', TRANSFORM, TRANSFORMORIGIN,
+	debug = {
+		mode: false,
+		helpers: {}
+	},
 	forEach = angular.forEach,
 	extend = angular.extend;
 
@@ -181,19 +182,6 @@ function avgPerf(fn1, timeout, context, callback) {
 
 	}
 }
-
-angular.dnd = {
-	noop: noop,
-	doTrue: doTrue,
-	doFalse: doFalse,
-	proxy: proxy,
-	radToDeg: radToDeg,
-	degToRad: degToRad,
-	getNumFromSegment: getNumFromSegment,
-	findEvents: findEvents,
-	throttle: throttle,
-	debounce: debounce,
-};
 
 /* EXTEND NUMBER PROTOTYPE BY round */
 
@@ -932,7 +920,7 @@ var module = angular.module('dnd', []);
 
                 if(!borders) {
                     var rect = this.$bounder.dndClientRect();
-                    var offset = this.getAxisOffset();
+                    var offset = this.asPoint ? {top:0, left:0, right: 0, bottom: 0} : this.getAxisOffset();
 
                     borders = this.setCache('borders', {
                         top: rect.top + offset.top,
@@ -960,9 +948,9 @@ var module = angular.module('dnd', []);
                 return referencePoint;
             },
 
-            getAxis: function() {
+            getAxis: function(asPoint) {
                 var axis = this.getClientAxis();
-                var borders = this.getBorders();
+                var borders = this.getBorders(asPoint);
 
                 return borders ? Point(getNumFromSegment(borders.left, axis.x, borders.right), getNumFromSegment(borders.top, axis.y, borders.bottom)) : axis;
             },
@@ -1072,7 +1060,7 @@ var module = angular.module('dnd', []);
 
                 if (!regions) {
                     regions = this.setCache('regions', this.prepareRegions());
-	                debug && this.showRegioins();
+	                debug.mode && this.showRegioins();
                 }
 
 				this.dnd.trigger('drag', this.api);
@@ -1091,7 +1079,9 @@ var module = angular.module('dnd', []);
 						if(targetIndex === -1) {
 							this.targets.push(region.dnd.el);
 							region.dnd.trigger('dragenter', this.api, this.dnd.el);
-						} else region.dnd.trigger('dragover', this.api, this.dnd.el);
+						} else {
+							region.dnd.trigger('dragover', this.api, this.dnd.el);
+						}
 					} else if(targetIndex !== -1) {
 						$(this.targets[targetIndex]).data('dnd')[this.dnd.layer()].trigger('dragleave', this.api, this.dnd.el);
                         this.targets.splice(targetIndex, 1);
@@ -1108,7 +1098,7 @@ var module = angular.module('dnd', []);
 
 				this.removeFromTargets();
 
-				debug && this.hideRegions();
+				debug.mode && this.hideRegions();
 			},
 
 			showRegioins: function () {
@@ -1116,34 +1106,17 @@ var module = angular.module('dnd', []);
 
 				var regions = this.getCache('regions'),
 					bodyElement = angular.element(document.body),
-					bodyClientRect = bodyElement.dndClientRect(),
-					element;
+					bodyClientRect = bodyElement.dndClientRect();;
 
 				for (var i = 0, length = regions.length; i < length; i++) {
 					var region = regions[i];
 
-					element = angular.element(document.createElement('div'));
-					element.dndCss({
-						position: 'absolute',
-						left: region.rect.left - bodyClientRect.left,
-						top:  region.rect.top - bodyClientRect.top,
-						height: region.rect.height,
-						width: region.rect.width,
-						background: 'rgba(249, 255, 0, 0.1)',
-						'pointer-events': 'none',
-						'z-index': 100000,
-						'box-sizing': 'border-box',
-						'border': '2px dotted #000'
-					});
-
-					element.addClass('dnd-debug-regions');
-
-					bodyElement.append(element);
+					debug.helpers.renderRect(region.rect.left - bodyClientRect.left, region.rect.top - bodyClientRect.top, region.rect.width, region.rect.height);
 				}
 			},
 
 			hideRegions: function () {
-				var nodes = document.querySelectorAll('.dnd-debug-regions');
+				var nodes = document.querySelectorAll('.dnd-debug-rect');
 
 				for (var i = 0, length = nodes.length; i < length; i++) {
 					nodes[i].remove();
@@ -1430,6 +1403,63 @@ var module = angular.module('dnd', []);
 	}
 
 })();
+
+/* DEBUG HELPERS */
+
+debug.helpers.renderPoint = function (point) {
+	var element = angular.element(document.createElement('div'));
+
+	element.dndCss({
+		position: 'absolute',
+		left: point.x,
+		top:  point.y,
+		height: 3,
+		width: 3,
+		background: 'rgba(0, 0, 0, 0.5)',
+		'pointer-events': 'none',
+		'z-index': 100000
+	});
+
+	element.addClass('dnd-debug-point');
+
+	angular.element(document.body).append(element);
+}
+
+debug.helpers.renderRect = function (left, top, width, height) {
+	var element = angular.element(document.createElement('div'));
+
+	element.dndCss({
+		position: 'absolute',
+		left: left,
+		top:  top,
+		height: height,
+		width: width,
+		background: 'rgba(249, 255, 0, 0.1)',
+		'pointer-events': 'none',
+		'z-index': 100000,
+		'box-sizing': 'border-box',
+		'border': '2px dotted #000'
+	});
+
+	element.addClass('dnd-debug-rect');
+
+	angular.element(document.body).append(element);
+}
+
+angular.dnd = {
+	version: version,
+	noop: noop,
+	doTrue: doTrue,
+	doFalse: doFalse,
+	proxy: proxy,
+	radToDeg: radToDeg,
+	degToRad: degToRad,
+	getNumFromSegment: getNumFromSegment,
+	findEvents: findEvents,
+	throttle: throttle,
+	debounce: debounce,
+	debug: debug
+};
 ;
 
 module.directive('dndDraggable', ['$timeout', '$parse', '$http', '$compile', '$q', '$templateCache', 'EventEmitter',
@@ -2113,8 +2143,6 @@ module.directive('dndSortable', ['$parse', '$compile', function($parse, $compile
 				placeholder.addClass('angular-dnd-placeholder');
 				parentNode.insertBefore(placeholder[0], element[0]);
 				api.$sortable = {};
-
-console.log('start')
 				api.clearCache();
 			};
 
@@ -2140,12 +2168,11 @@ console.log('start')
 				moveValue(fromIndex, fromList, toIndex, toList);
 
 				api.clearCache();
-console.log('end')
+
 				scope.$apply();
 			};
 
 			scope.$$onDragOver = function(api, dropmodel, dragmodel) {
-console.log('over');
 				var halfway = isHalfway(api.getDragTarget(), api.getAxis());
 
 				halfway ? parentNode.insertBefore(placeholder[0], element[0].nextSibling) : parentNode.insertBefore(placeholder[0], element[0]);

@@ -163,5 +163,9 @@ button:hover {
 }
 
 #sortable-exmaple2 .sortable {
-	padding: 5px;
+	padding: 0;
+}
+
+#sortable-exmaple2 .sortable li {
+	 margin: 0;
 }

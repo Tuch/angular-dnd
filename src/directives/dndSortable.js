@@ -83,8 +83,6 @@ module.directive('dndSortable', ['$parse', '$compile', function($parse, $compile
 				placeholder.addClass('angular-dnd-placeholder');
 				parentNode.insertBefore(placeholder[0], element[0]);
 				api.$sortable = {};
-
-console.log('start')
 				api.clearCache();
 			};
 
@@ -110,12 +108,11 @@ console.log('start')
 				moveValue(fromIndex, fromList, toIndex, toList);
 
 				api.clearCache();
-console.log('end')
+
 				scope.$apply();
 			};
 
 			scope.$$onDragOver = function(api, dropmodel, dragmodel) {
-console.log('over');
 				var halfway = isHalfway(api.getDragTarget(), api.getAxis());
 
 				halfway ? parentNode.insertBefore(placeholder[0], element[0].nextSibling) : parentNode.insertBefore(placeholder[0], element[0]);
