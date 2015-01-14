@@ -161,3 +161,7 @@ button:hover {
     padding: 10px;
     position: relative;
 }
+
+#sortable-exmaple2 .sortable {
+	padding: 5px;
+}

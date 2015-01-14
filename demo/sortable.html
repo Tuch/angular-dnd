@@ -9,14 +9,14 @@
 
     <link rel="stylesheet" href="../css/stylesheet.css" />
     <script src="bower_components/angular/angular.js"></script>
-    <script type="text/javascript" src = "../js/angular-dnd.js"></script>
+    <script type="text/javascript" src = "../dist/angular-dnd.js"></script>
 
 
         <script type="text/javascript">
 
         var app = angular.module('app', ['dnd']);
 
-        app.controller('MainCtrl', function($scope){
+        app.controller('Ctrl1', function($scope){
             this.sortables = [];
             this.sortables2 = [];
 
@@ -35,13 +35,23 @@
             }
         });
 
+        app.controller('Ctrl2', function ($scope) {
+            this.fields = [
+                {name: 'bob'},
+                {name: 'lucy'},
+                {name: 'john'},
+                {name: 'luke'},
+                {name: 'han'}
+            ];
+        });
+
     </script>
 
 </head>
 
 
 
-<body ng-controller="MainCtrl as main">
+<body ng-controller="Ctrl1 as main">
 	<div>
         <div class = "head" ng-include = "'./head.html'"></div>
 
@@ -49,16 +59,26 @@
             Sortable example <br>
         </div>
 
-        <div class = "container">
+        <h4>Пример 1</h4>
+        <div class = "container" ng-controller = "Ctrl1 as ctrl">
 
             <ul class = "sortable sortable-1" dnd-container>
-                <li ng-repeat = "item in main.sortables" dnd-sortable dnd-sortable-opts = "{layer:'common', restrictMovement: false}">{{item.name}}</li>
+                <li ng-repeat = "item in ctrl.sortables" dnd-sortable>{{item.name}}</li>
             </ul>
 
             <hr>
 
             <ul class = "sortable sortable-2" >
-                <li ng-repeat = "item in main.sortables2" dnd-sortable >{{item.name}}</li>
+                <li ng-repeat = "item in ctrl.sortables2" dnd-sortable >{{item.name}}</li>
+            </ul>
+
+        </div>
+
+        <h4>Пример 2</h4>
+        <div class = "container" ng-controller = "Ctrl2 as ctrl" id = "sortable-exmaple2">
+
+            <ul class = "sortable sortable-1" dnd-container>
+                <li ng-repeat = "field in ctrl.fields" dnd-sortable dnd-sortable-opts = "{restrictMovement: true}">{{ field.name }}</li>
             </ul>
 
         </div>
