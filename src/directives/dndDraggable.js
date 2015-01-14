@@ -167,13 +167,13 @@ function($timeout, $parse, $http, $compile, $q, $templateCache, EventEmitter) {
 
 				// определяем включен ли draggable элемент
 				var enabled = getterDraggable(scope);
-				enabled = enabled === undefined ? true : enabled;
+				enabled = enabled === undefined || enabled;
 
 				// если draggable элемент выключен - отмечаем элемент как "не цель курсора"
 				if( !enabled ) api.unTarget();
 
-				// если элемент не является целью курсора - никак не реагируем на событие
-				if( !api.isTarget() ) return;
+				// если элемент не является целью курсора (возможно есть другие draggable элементы внутри другого) - никак не реагируем на событие
+				if( !api.isTarget() || api.getEvent().target.getAttribute('dnd-none-draggable') !== null) return;
 
 				draggable.init();
 

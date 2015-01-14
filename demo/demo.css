@@ -167,5 +167,9 @@ button:hover {
 }
 
 #sortable-exmaple2 .sortable li {
-	 margin: 0;
+	margin: 0;
+}
+
+#sortable-exmaple2 .sortable input {
+	width: auto;
 }

@@ -78,7 +78,7 @@
         <div class = "container" ng-controller = "Ctrl2 as ctrl" id = "sortable-exmaple2">
 
             <ul class = "sortable sortable-1" dnd-container>
-                <li ng-repeat = "field in ctrl.fields" dnd-sortable dnd-sortable-opts = "{restrictMovement: true}">{{ field.name }}</li>
+                <li ng-repeat = "field in ctrl.fields" dnd-sortable dnd-sortable-opts = "{restrictMovement: true}"><input ng-model = "field.name" type = "text" dnd-none-draggable></li>
             </ul>
 
         </div>
