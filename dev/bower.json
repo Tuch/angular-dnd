@@ -1,0 +1,12 @@
+{
+    "name": "angular-dnd-module",
+    "version": "0.1.8",
+    "authors": [
+        "Afonin A.V. <toafonin@gmail.com>"
+    ],
+    "description": "Drag and Drop module for Super heroic AngularJS. No jQueryUI. Touch supporting",
+    "main": "./js/angular-dnd.js",
+    "dependencies": {
+        "angular": "~1.2.13"
+    }
+}
