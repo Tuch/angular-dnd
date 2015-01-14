@@ -2047,7 +2047,8 @@ module.directive('dndSortable', ['$parse', '$compile', function($parse, $compile
 				parentElement.dndBind(bindings).data('dnd-sortable', parentData);
 			}
 
-			function isHalfway(dragTarget, axis){
+			function isHalfway(dragTarget, axis) {
+				debugger
 				var rect = element.dndClientRect();
 				var isWide = (element[0].offsetWidth > dragTarget.offsetWidth);
 				var isLong = (element[0].offsetHeight > dragTarget.offsetHeight);
