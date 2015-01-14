@@ -211,6 +211,7 @@ function($timeout, $parse, $http, $compile, $q, $templateCache, EventEmitter) {
 
 				draggable.updatePosition( api.getRelativeAxis() );
 				dragCallback(scope, {'$dragmodel':api.dragmodel, '$dropmodel': api.dropmodel, '$api': api});
+
 				scope.$apply();
 			}
 

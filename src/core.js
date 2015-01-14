@@ -21,11 +21,11 @@ angular.dnd.version = '0.1.8';
 /* ENVIRONMENT VARIABLES */
 
 var $ = angular.element, $window = $(window), $document = $(document), body = 'body', TRANSFORM, TRANSFORMORIGIN,
-
+	debug = true,
 	forEach = angular.forEach,
 	extend = angular.extend;
 
-(function(){
+(function() {
 	var agent = navigator.userAgent;
 
 	if( /webkit\//i.test(agent) ) {
@@ -51,14 +51,14 @@ var $ = angular.element, $window = $(window), $document = $(document), body = 'b
 
 /* SOME HELPERS */
 
-function noop(){}
+function noop() {}
 
-function doFalse(){return false}
+function doFalse() {return false}
 
-function doTrue(){return true}
+function doTrue() {return true}
 
-function proxy(context, fn){
-	return function(){
+function proxy(context, fn) {
+	return function() {
 		fn.apply(context, arguments);
 	};
 }
@@ -71,7 +71,7 @@ function radToDeg(r) {
 	return (r * (180 / Math.PI));
 }
 
-function getNumFromSegment(min, curr, max){
+function getNumFromSegment(min, curr, max) {
 	return curr<min ? min : curr > max ? max : curr;
 }
 
@@ -128,19 +128,19 @@ function throttle(fn, timeout, context) {
 		args = arguments;
 		context = context || this;
 		fn.apply(context, args);
-		timer = setTimeout(function(){ timer = null; }, timeout);
+		timer = setTimeout(function() { timer = null; }, timeout);
 	};
 }
 
 
 /* parsing like: ' a = fn1(), b = fn2()' into {a: 'fn1()', b: 'fn2()'} */
 
-function parseStringAsVars(str){
+function parseStringAsVars(str) {
 	if(!str) return undefined;
 
 	var a = str.replace(/\s/g,'').split(','), ret = {};
 
-	for( var i = 0; i < a.length; i++ ){
+	for( var i = 0; i < a.length; i++ ) {
 		a[i] = a[i].split('=');
 		ret[a[i][0]] = a[i][1];
 	}
@@ -148,17 +148,17 @@ function parseStringAsVars(str){
 	return ret;
 };
 
-function avgPerf(fn1, timeout, context, callback){
+function avgPerf(fn1, timeout, context, callback) {
 	context = context || this;
 	timeout = timeout || 1000;
-	callback = callback || function(val){ console.log(val) }
+	callback = callback || function(val) { console.log(val) }
 
 	var time = [];
 
-	var fn2 = debounce(function(){
+	var fn2 = debounce(function() {
 		var sum = 0;
 
-		for(var i=0; i < time.length; i++){
+		for(var i=0; i < time.length; i++) {
 			sum += time[i];
 		}
 
@@ -168,7 +168,7 @@ function avgPerf(fn1, timeout, context, callback){
 
 	}, timeout)
 
-	return function(){
+	return function() {
 		var start = Date.now();
 
 		fn1.apply(context, arguments);
@@ -196,7 +196,7 @@ angular.dnd = {
 /* EXTEND NUMBER PROTOTYPE BY round */
 
 if(Number.prototype.round != undefined) console.warning('Number.prototype.round is defined');
-Number.prototype.round = function(n){
+Number.prototype.round = function(n) {
 	if(isNaN(n)) n=0;
 	var m = Math.pow(10,n);
 	return Math.round(this*m)/m;
@@ -253,7 +253,7 @@ var Point = (function() {
 
 			return ret;
 		},
-		deltaAngle: function(other, aboutPoint, isdegree){
+		deltaAngle: function(other, aboutPoint, isdegree) {
 			aboutPoint = aboutPoint == undefined ? {x:0,y:0} : aboutPoint;
 
 			var ret = this.angle(aboutPoint) - other.angle(aboutPoint);
@@ -264,18 +264,18 @@ var Point = (function() {
 
 			return ret;
 		},
-		transform: function(matrix){
+		transform: function(matrix) {
 			return matrix.transformPoint(this);
 		},
-		deltaTransform: function(matrix){
+		deltaTransform: function(matrix) {
 			return matrix.deltaTransformPoint(this);
 		},
-		rotate: function(rads, aboutPoint){
+		rotate: function(rads, aboutPoint) {
 			var matrix = (new Matrix()).rotate(rads, aboutPoint);
 
 			return this.transform(matrix);
 		},
-        getAsCss: function(){
+        getAsCss: function() {
             return {
                 top: this.y,
                 left: this.x
@@ -283,7 +283,7 @@ var Point = (function() {
         }
 	};
 
-	return function(x,y){
+	return function(x,y) {
 		return new Point(x,y)
 	};
 })();
@@ -366,13 +366,13 @@ var Matrix = (function() {
 				this.b * point.x + this.d * point.y
 			);
 		},
-		toStyle: function(){
+		toStyle: function() {
 			return 'matrix('+this.a.round(3)+', '+this.b.round(3)+', '+this.c.round(3)+', '+this.d.round(3)+', '+this.tx.round(3)+', '+this.ty.round(3)+')';
 		},
 
 	};
 
-	var fn = function(a, b, c, d, tx, ty){
+	var fn = function(a, b, c, d, tx, ty) {
 		return new Matrix(a, b, c, d, tx, ty);
 	};
 
@@ -385,8 +385,8 @@ var Matrix = (function() {
 
 /* RECT OBJECT */
 
-var Rect = (function(){
-	function Rect(tl, tr, bl, br){
+var Rect = (function() {
+	function Rect(tl, tr, bl, br) {
 		this.tl = tl;
 		this.tr = tr;
 		this.bl = bl;
@@ -394,7 +394,7 @@ var Rect = (function(){
 	}
 
 	Rect.prototype = {
-		applyMatrix: function(matrix, aboutPoint){
+		applyMatrix: function(matrix, aboutPoint) {
 //                if(aboutPoint === 'center') {
 //                    aboutPoint = Point(crect.left + crect.width / 2, crect.top + crect.height / 2)
 //                }
@@ -415,17 +415,17 @@ var Rect = (function(){
 
 			return new Rect(tl,tr,bl,br);
 		},
-		width: function(){
+		width: function() {
 			var dx = this.tl.x - this.tr.x;
 			var dy = this.tl.y - this.tr.y;
 			return Math.sqrt(dx*dx+dy*dy);
 		},
-		height: function(){
+		height: function() {
 			var dx = this.tl.x - this.bl.x;
 			var dy = this.tl.y - this.bl.y;
 			return Math.sqrt(dx*dx+dy*dy);
 		},
-		client: function(){
+		client: function() {
 			var top = Math.min(this.tl.y, this.tr.y, this.bl.y, this.br.y);
 			var left = Math.min(this.tl.x, this.tr.x, this.bl.x, this.br.x);
 			var height = Math.max(this.tl.y, this.tr.y, this.bl.y, this.br.y)-top;
@@ -433,7 +433,7 @@ var Rect = (function(){
 
 			return {top:top.round(1),left:left.round(1),height:height.round(1),width:width.round(1),bottom:(top+height).round(1),right:(left+width).round(1)};
 		},
-		getAngle: function(degs){
+		getAngle: function(degs) {
 			var y = this.tl.y-this.tr.y;
 			var x = this.tl.x-this.tr.x;
 
@@ -441,7 +441,7 @@ var Rect = (function(){
 		}
 	};
 
-	var fn = function(left, top, width, height){
+	var fn = function(left, top, width, height) {
 		var args = arguments;
 
 		if(typeof args[0] == 'object') {
@@ -454,7 +454,7 @@ var Rect = (function(){
 		return new Rect( Point(left,top), Point(left+width,top), Point(left,top+height), Point(left+width,top+height) );
 	};
 
-	fn.fromPoints = function(tl,tr,bl,br){
+	fn.fromPoints = function(tl,tr,bl,br) {
 		return new Rect( tl,tr,bl,br );
 	};
 
@@ -473,7 +473,7 @@ extend($.prototype, {
 		this.off('dragstart selectstart', doFalse ).dndCss({ '-moz-user-select':'auto', '-khtml-user-select':'auto', '-webkit-user-select':'auto' });
 	},
 
-	dndClientRect: function(){
+	dndClientRect: function() {
         if(!this[0]) return;
 
 		var DOMRect = this[0] === window ? {top:0,bottom:0,left:0,right:0,width:0,height:0} : this[0].getBoundingClientRect();
@@ -488,7 +488,7 @@ extend($.prototype, {
 		};
 	},
 
-	dndStyleRect: function(){
+	dndStyleRect: function() {
 		var styles = this.dndCss(['width','height','top','left']);
 
 		var width = parseFloat(styles.width);
@@ -500,7 +500,7 @@ extend($.prototype, {
 		return {top: top, right: left+width, bottom: top+height, left: left, width: width, height: height};
 	},
 
-	dndGetParentScrollArea: function(){
+	dndGetParentScrollArea: function() {
 		var ret, parents = this.dndParents(), scrollX, clientX, scrollY, clientY, paddingX, paddingY, paddings, htmlEl = document.documentElement;
 
 		forEach(parents, function(element) {
@@ -526,7 +526,7 @@ extend($.prototype, {
 		return $(ret);
 	},
 
-    dndGetFirstNotStaticParent: function(){
+    dndGetFirstNotStaticParent: function() {
         var ret, position, parents = this.dndParents();
 
         forEach(parents, function(element) {
@@ -544,17 +544,17 @@ extend($.prototype, {
         return $(ret);
     },
 
-	dndParents: function(){
+	dndParents: function() {
 		var parent = this[0].parentElement, ret = [];
 
-		while(parent){
+		while(parent) {
 			ret.push(parent);
 			parent = parent.parentElement;
 		}
 
 		return $(ret);
 	},
-	dndGetAngle: function (degs){
+	dndGetAngle: function (degs) {
 
 		var matrix = this.dndCss(TRANSFORM);
 
@@ -574,11 +574,11 @@ extend($.prototype, {
 
 	},
 
-	dndCss: (function(){
+	dndCss: (function() {
 		var SPECIAL_CHARS_REGEXP = /([\:\-\_\.]+(.))/g;
 		var MOZ_HACK_REGEXP = /^moz([A-Z])/;
 
-		function toCamelCase(string){
+		function toCamelCase(string) {
 			return string.replace(SPECIAL_CHARS_REGEXP, function(_, separator, letter, offset) {
 				return offset ? letter.toUpperCase() : letter;
 			}).replace(MOZ_HACK_REGEXP, 'Moz$1');
@@ -586,16 +586,16 @@ extend($.prototype, {
 
 		var hooks = {};
 
-		(function(){
+		(function() {
 			var arr = {
 				width: ['paddingLeft','paddingRight','borderLeftWidth', 'borderRightWidth'],
 				height: ['paddingTop','paddingBottom','borderTopWidth', 'borderBottomWidth']
 			};
 
-			forEach(arr, function(styles, prop){
+			forEach(arr, function(styles, prop) {
 
 				hooks[prop] = {
-					get: function(element){
+					get: function(element) {
 						var computed = window.getComputedStyle(element);
 						var ret =  computed[prop];
 
@@ -603,7 +603,7 @@ extend($.prototype, {
 
 						ret = parseFloat(ret);
 
-						for(var i = 0; i < styles.length; i++){
+						for(var i = 0; i < styles.length; i++) {
 							ret -= parseFloat(computed[ styles[i] ]);
 						}
 
@@ -628,7 +628,7 @@ extend($.prototype, {
 			"zoom": true
 		};
 
-		var setCss = function($element, obj){
+		var setCss = function($element, obj) {
 			var styles = {};
 
 			for(var key in obj) {
@@ -642,7 +642,7 @@ extend($.prototype, {
 			return $element;
 		};
 
-		var getCss = function($element, arg){
+		var getCss = function($element, arg) {
 			var ret = {};
 
 			if(!$element[0]) return undefined;
@@ -655,7 +655,7 @@ extend($.prototype, {
 				else return hooks[arg] && 'get' in hooks[arg] ? hooks[arg].get($element[0]) : computed.getPropertyValue( arg );
 			}
 
-			for(var i=0; i < arg.length; i++){
+			for(var i=0; i < arg.length; i++) {
 				if(style[arg[i]]) ret[arg[i]] = style[ arg[i] ];
 				else ret[arg[i]] = hooks[arg[i]] && 'get' in hooks[arg[i]] ? hooks[arg[i]].get($element[0]) : computed.getPropertyValue( arg[i] );
 			}
@@ -663,7 +663,7 @@ extend($.prototype, {
 			return ret;
 		};
 
-		function css(){
+		function css() {
 			var a = arguments;
 
 			if( (a.length == 1) && ((a[0] instanceof Array) || (typeof a[0] == 'string')) ) return getCss(this, a[0]);
@@ -691,42 +691,42 @@ var module = angular.module('dnd', []);
 
 /* ANGULAR.ELEMENT DND PLUGIN - CORE OF ANGULAR-DND */
 
-(function(){
+(function() {
 
-	var Regions = (function(){
+	var Regions = (function() {
 		var list = {};
 
-		function Regions(layer){
+		function Regions(layer) {
 			if(!list[layer]) list[layer] = [];
 
-			this.layer = function(){
+			this.layer = function() {
 				return layer;
 			}
 		}
 
 		Regions.prototype = {
-			get: function(){
+			get: function() {
 				return list[this.layer()];
 			},
 
-			remove: function(el){
+			remove: function(el) {
 				var index = this.get().indexOf(el);
 
 				if(index > -1) this.get().splice(index,1)
 			},
 
-			has: function(el){
+			has: function(el) {
 				return this.get().indexOf(el) > -1;
 			},
 
-			add: function(el){
+			add: function(el) {
 				if(this.has(el)) return;
 
 				this.get().push(el);
 
 				var self = this;
 
-				$(el).on('$destroy', function(){ self.remove(el); });
+				$(el).on('$destroy', function() { self.remove(el); });
 			},
 
 		}
@@ -734,14 +734,14 @@ var module = angular.module('dnd', []);
 		return Regions;
 	})();
 
-	var Dnd = (function(){
+	var Dnd = (function() {
 
 		var events = [ 'dragstart', 'drag', 'dragend', 'dragenter', 'dragover', 'dragleave', 'drop' ];
 		var draggables = [ 'dragstart', 'drag', 'dragend' ];
 		var droppables = [ 'dragenter', 'dragover', 'dragleave', 'drop' ];
 		var handled = false;
 
-		draggables.has = droppables.has = function(event){
+		draggables.has = droppables.has = function(event) {
 			return this.indexOf(event) > -1;
 		};
 
@@ -751,17 +751,17 @@ var module = angular.module('dnd', []);
 		else if('msPointerEnabled' in window.navigator) touchevents = {start: 'MSPointerDown', move: 'MSPointerMove', end: 'MSPointerUp', cancel: 'MSPointerCancel'};
 		else touchevents = {start: 'touchstart', move: 'touchmove', end: 'touchend', cancel: 'touchcancel'};
 
-		function Dnd(el, layer){
+		function Dnd(el, layer) {
 			this.el = el;
 			this.$el = $(el);
 			this.listeners = { 'dragstart':[], 'drag':[], 'dragend':[], 'dragenter':[], 'dragover':[], 'dragleave':[], 'drop':[] };
 			this.regions = new Regions(layer);
-			this.layer = function(){ return layer };
+			this.layer = function() { return layer };
 			this.propagation = true;
 		}
 
 		Dnd.prototype = {
-			_isEmptyListeners: function(event){
+			_isEmptyListeners: function(event) {
 				if(event instanceof Array) {
 
 					for(var i=0; i < event.length; i++ ) {
@@ -773,7 +773,7 @@ var module = angular.module('dnd', []);
 				return true;
 			},
 
-			addListener: function(event, handler){
+			addListener: function(event, handler) {
 				if(events.indexOf(event) == -1) {
 					console.log('jquery.dnd: invalid event name - ', event);
 					return;
@@ -787,7 +787,7 @@ var module = angular.module('dnd', []);
 				}
 			},
 
-			removeListener: function(event, handler){
+			removeListener: function(event, handler) {
 
 				var args = arguments;
 
@@ -807,13 +807,13 @@ var module = angular.module('dnd', []);
 
 			},
 
-			trigger: function(event, api, el){
+			trigger: function(event, api, el) {
 				for(var i=0; i < this.listeners[event].length; i++) {
 					this.listeners[event][i].call(this.$el, api,  el);
 				}
 			},
 
-			destroy: function(){
+			destroy: function() {
 
 				if( this.mouse ) {
 					this.mouse.destroy();
@@ -832,57 +832,57 @@ var module = angular.module('dnd', []);
 		return Dnd;
 	})();
 
-	var Api = (function(){
+	var Api = (function() {
 
-		function Api(manipulator){
+		function Api(manipulator) {
             this._manipulator = manipulator;
 		}
 
         Api.prototype = {
-            setAxisOffset: function(top, right, bottom, left){
+            setAxisOffset: function(top, right, bottom, left) {
                 this._manipulator.setAxisOffset(top, right, bottom, left);
             },
-            getAxisOffset: function(){
+            getAxisOffset: function() {
                 this._manipulator.getAxisOffset();
             },
-            getAxis: function(){
+            getAxis: function() {
                 return this._manipulator.getAxis();
             },
-            getRelativeAxis: function(){
+            getRelativeAxis: function() {
                 return this._manipulator.getRelativeAxis();
             },
-            getDragTarget: function(){
+            getDragTarget: function() {
                 return this._manipulator.dnd.el;
             },
-            getDropTarget: function(){
+            getDropTarget: function() {
                 return this._manipulator.target;
             },
-            getEvent: function(){
+            getEvent: function() {
                 return this._manipulator.event;
             },
-            isTarget: function(){
+            isTarget: function() {
                 return this._manipulator.isTarget();
             },
-            unTarget: function(){
+            unTarget: function() {
                 this._manipulator.removeFromTargets();
             },
-            useAsPoint: function(value){
+            useAsPoint: function(value) {
                 return this._manipulator.asPoint = value === false ? false : true;
             },
-            setBounderElement: function(element){
+            setBounderElement: function(element) {
                 this._manipulator.$bounder = element;
                 this.clearCache();
             },
-            setReferenceElement: function(element){
+            setReferenceElement: function(element) {
                 this._manipulator.$reference = element;
             },
-            getBorders: function(){
+            getBorders: function() {
                 return this._manipulator.getBorders();
             },
-            getReferencePoint: function(){
+            getReferencePoint: function() {
                 return this._manipulator.getReferencePoint();
             },
-            clearCache: function(){
+            clearCache: function() {
                 this._manipulator.clearCache();
             }
         };
@@ -891,17 +891,17 @@ var module = angular.module('dnd', []);
 
 	})();
 
-	var Manipulator = (function(){
+	var Manipulator = (function() {
 		var targets = [];
 
-		function Manipulator(dnd){
+		function Manipulator(dnd) {
 			this.dnd = dnd;
 			this.onscroll = proxy(this, this.onscroll);
 		}
 
 		Manipulator.prototype = {
 
-            setAxisOffset: function(top, right, bottom, left){
+            setAxisOffset: function(top, right, bottom, left) {
                 this.axisOffset = {};
 
                 if(typeof top === 'object') {
@@ -919,11 +919,11 @@ var module = angular.module('dnd', []);
                 this.clearCache();
             },
 
-            getAxisOffset: function(){
+            getAxisOffset: function() {
                 return this.axisOffset;
             },
 
-            getBorders: function(){
+            getBorders: function() {
                 if(!this.$bounder) return;
 
                 var borders  = this.getCache('borders');
@@ -945,7 +945,7 @@ var module = angular.module('dnd', []);
                 return borders;
             },
 
-            getReferencePoint: function(){
+            getReferencePoint: function() {
                 var referencePoint  = this.getCache('referencePoint');
 
                 if(!referencePoint) {
@@ -958,22 +958,22 @@ var module = angular.module('dnd', []);
                 return referencePoint;
             },
 
-            getAxis: function(){
+            getAxis: function() {
                 var axis = this.getClientAxis();
                 var borders = this.getBorders();
 
                 return borders ? Point(getNumFromSegment(borders.left, axis.x, borders.right), getNumFromSegment(borders.top, axis.y, borders.bottom)) : axis;
             },
 
-            getRelativeAxis: function(){
+            getRelativeAxis: function() {
                 return this.getAxis().minus( this.getReferencePoint() );
             },
 
-			addToTargets: function(){
+			addToTargets: function() {
 				targets.push(this);
 			},
 
-			removeFromTargets: function(){
+			removeFromTargets: function() {
 				var index;
 
 				while(index !== -1) {
@@ -982,15 +982,15 @@ var module = angular.module('dnd', []);
 				}
 			},
 
-			getTarget: function(){
+			getTarget: function() {
 				return targets[0];
 			},
 
-			isTarget: function(){
+			isTarget: function() {
 				return this.getTarget() === this;
 			},
 
-			start: function(){
+			start: function() {
 				this.started = true;
 				this.targets = [];
                 this.asPoint = false;
@@ -1002,28 +1002,28 @@ var module = angular.module('dnd', []);
 				this.dnd.trigger('dragstart', this.api);
 			},
 
-			onscroll: function(){
+			onscroll: function() {
                 this.clearCache();
                 this.dnd.trigger('drag', this.api);
 			},
 
-            getCache: function(key){
+            getCache: function(key) {
                 return this.cache[key];
             },
 
-            setCache: function(key, value){
+            setCache: function(key, value) {
                 return this.cache[key] = value;
             },
 
-            clearCache: function(){
+            clearCache: function() {
                 this.cache = {};
             },
 
-			stop: function(){
+			stop: function() {
 				this.$scrollarea.off('scroll', this.onscroll);
 
 				if(this.targets.length) {
-                    for(var i = 0, length = this.targets.length; i < length; i++){
+                    for(var i = 0, length = this.targets.length; i < length; i++) {
                         $(this.targets[i]).data('dnd')[this.dnd.layer()].trigger('drop', this.api, this.dnd.el);
                     }
                 }
@@ -1032,7 +1032,7 @@ var module = angular.module('dnd', []);
 			},
 
 
-			prepareRegions: function(){
+			prepareRegions: function() {
 				var regions = this.dnd.regions.get();
 
 				var ret = [];
@@ -1053,7 +1053,7 @@ var module = angular.module('dnd', []);
 
 			},
 
-			begin: function (event){
+			begin: function (event) {
 				this.addToTargets();
 				this.event = event;
 				this.started = false;
@@ -1061,7 +1061,7 @@ var module = angular.module('dnd', []);
 				angular.element(document.body).dndDisableSelection();
 			},
 
-			progress: function (event){
+			progress: function (event) {
 				this.event = event;
 
 				if(!this.started) this.start();
@@ -1070,6 +1070,7 @@ var module = angular.module('dnd', []);
 
                 if (!regions) {
                     regions = this.setCache('regions', this.prepareRegions());
+	                debug && this.showRegioins();
                 }
 
 				this.dnd.trigger('drag', this.api);
@@ -1084,7 +1085,7 @@ var module = angular.module('dnd', []);
 					(x-offset.right > region.rect.left ) && (x-offset.left < region.rect.left+region.rect.width ) && (y-offset.bottom > region.rect.top) && (y-offset.top < region.rect.top+region.rect.height);
 
                     var targetIndex = this.targets.indexOf(region.dnd.el);
-					if( trigger ){
+					if( trigger ) {
 						if(targetIndex === -1) {
 							this.targets.push(region.dnd.el);
 							region.dnd.trigger('dragenter', this.api, this.dnd.el);
@@ -1096,7 +1097,7 @@ var module = angular.module('dnd', []);
 				}
 			},
 
-			end: function (event){
+			end: function (event) {
 				this.event = event;
 
 				if(this.started) this.stop();
@@ -1104,13 +1105,54 @@ var module = angular.module('dnd', []);
 				angular.element(document.body).dndEnableSelection();
 
 				this.removeFromTargets();
+
+				debug && this.hideRegions();
 			},
+
+			showRegioins: function () {
+				this.hideRegions();
+
+				var regions = this.getCache('regions'),
+					bodyElement = angular.element(document.body),
+					bodyClientRect = bodyElement.dndClientRect(),
+					element;
+
+				for (var i = 0, length = regions.length; i < length; i++) {
+					var region = regions[i];
+
+					element = angular.element(document.createElement('div'));
+					element.dndCss({
+						position: 'absolute',
+						left: region.rect.left - bodyClientRect.left,
+						top:  region.rect.top - bodyClientRect.top,
+						height: region.rect.height,
+						width: region.rect.width,
+						background: 'rgba(249, 255, 0, 0.1)',
+						'pointer-events': 'none',
+						'z-index': 100000,
+						'box-sizing': 'border-box',
+						'border': '2px dotted #000'
+					});
+
+					element.addClass('dnd-debug-regions');
+
+					bodyElement.append(element);
+				}
+			},
+
+			hideRegions: function () {
+				var nodes = document.querySelectorAll('.dnd-debug-regions');
+
+				for (var i = 0, length = nodes.length; i < length; i++) {
+					nodes[i].remove();
+				}
+			}
 		};
 
 		return Manipulator;
 	})();
 
-	function Mouse(dnd){
+	function Mouse(dnd) {
 		this.dnd = dnd;
 		this.manipulator = new Manipulator(dnd);
 		this.mousedown = proxy(this, this.mousedown);
@@ -1129,7 +1171,7 @@ var module = angular.module('dnd', []);
 			return Point(event.clientX, event.clientY);
 		},
 
-		mousedown: function (event){
+		mousedown: function (event) {
 			//event.preventDefault();
 
 			this.manipulator.begin(event);
@@ -1138,24 +1180,24 @@ var module = angular.module('dnd', []);
 			$document.on('mouseup', this.mouseup );
 		},
 
-		mousemove: function(event){
+		mousemove: function(event) {
 			this.manipulator.progress(event);
 		},
 
-		mouseup: function(event){
+		mouseup: function(event) {
 			this.manipulator.end(event);
 
 			$document.off('mousemove', this.mousemove );
 			$document.off('mouseup', this.mouseup );
 		},
 
-		destroy: function(){
+		destroy: function() {
 			this.dnd.$el.off('mousedown', this.mousedown);
 		},
 	};
 
 
-	function Touch(dnd, te){
+	function Touch(dnd, te) {
 		this.te = te;
 		this.manipulator = new Manipulator(dnd);
 		this.touchstart = proxy(this, this.touchstart);
@@ -1175,7 +1217,7 @@ var module = angular.module('dnd', []);
 			return Point(event.changedTouches[0].clientX, event.changedTouches[0].clientY)
 		},
 
-		touchstart: function (event){
+		touchstart: function (event) {
 			this.manipulator.begin(event);
 
 			$document.on(this.te.move, this.touchmove );
@@ -1183,13 +1225,13 @@ var module = angular.module('dnd', []);
 
 		},
 
-		touchmove: function(event){
+		touchmove: function(event) {
 			event.preventDefault();
 
 			this.manipulator.progress(event);
 		},
 
-		touchend: function(event){
+		touchend: function(event) {
 
 			this.manipulator.end(event);
 
@@ -1197,7 +1239,7 @@ var module = angular.module('dnd', []);
 			$document.off(this.te.end + ' ' + this.te.cancel, this.touchend );
 		},
 
-		destroy: function(){
+		destroy: function() {
 			this.dnd.$el.off(this.te.start, this.touchstart);
 		}
 	};
@@ -1262,11 +1304,11 @@ var module = angular.module('dnd', []);
 
 		if(!opts.length) return this;
 
-		forEach(this, function(element){
+		forEach(this, function(element) {
 			var data = $(element).data();
 
 			if(!data.dnd) data.dnd = {};
-			for(var i=0; i < opts.length; i++){
+			for(var i=0; i < opts.length; i++) {
 				event = opts[i].event
 				handler = opts[i].handler;
 
@@ -1305,7 +1347,7 @@ var module = angular.module('dnd', []);
 	 * @returns {object} angular.element object.
 	 */
 
-	$.prototype.dndUnbind =  function(){
+	$.prototype.dndUnbind =  function() {
 
 		var args = arguments, events = [], default_layer = 'common';
 
@@ -1317,7 +1359,7 @@ var module = angular.module('dnd', []);
 
 			if(typeof args[1] == 'function') {
 
-				for(var i = 0; i < args[0].length; i++){
+				for(var i = 0; i < args[0].length; i++) {
 					events.push({
 						event: args[0][i],
 						handler: args[1]
@@ -1325,7 +1367,7 @@ var module = angular.module('dnd', []);
 				}
 
 			} else {
-				for(var i = 0; i < args[0].length; i++){
+				for(var i = 0; i < args[0].length; i++) {
 					events.push({
 						event: args[0][i]
 					});
@@ -1334,7 +1376,7 @@ var module = angular.module('dnd', []);
 
 		} else if( typeof args[0] == 'object') {
 
-			for(var key in args[0]){
+			for(var key in args[0]) {
 				if(args[0].hasOwnProperty(key)) {
 
 					events.push({
@@ -1347,14 +1389,14 @@ var module = angular.module('dnd', []);
 
 		} else if(args.length !== 0) return this;
 
-		forEach(this, function(element){
+		forEach(this, function(element) {
 			var data = $(element).data();
 
 			if(!data.dnd) return;
 
 			if (args.length === 0) {
 
-				for(var key in data.dnd){
+				for(var key in data.dnd) {
 					data.dnd[key].removeListener();
 				}
 

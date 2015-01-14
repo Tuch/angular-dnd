@@ -1,11 +1,11 @@
-module.directive('dndSortable', ['$parse', '$compile', function($parse, $compile){
+module.directive('dndSortable', ['$parse', '$compile', function($parse, $compile) {
 	var ngRepeatRegExp = /^\s*([\s\S]+?)\s+in\s+([\s\S]+?)(?:\s+track\s+by\s+([\s\S]+?))?\s*$/;
 	var placeholder;// = angular.element('<div class = "dnd-placeholder"></div>');
 
 	return {
 		scope: true,
 		transclude: true,
-		template: function(element, attrs){
+		template: function(element, attrs) {
 			var tag = element[0].nodeName.toLowerCase();
 
 			var ngRepeat = attrs.ngRepeat || '';
@@ -50,7 +50,7 @@ module.directive('dndSortable', ['$parse', '$compile', function($parse, $compile
 
 				var bindings = {};
 
-				bindings[opts.layer+'.dragover'] = function(api){
+				bindings[opts.layer+'.dragover'] = function(api) {
 					if(api.getEvent().target !== parentNode || getter(scope).list.length > 1) return;
 					api.$sortable.model = getter(scope);
 					api.$sortable.insertBefore = true;
@@ -60,31 +60,35 @@ module.directive('dndSortable', ['$parse', '$compile', function($parse, $compile
 				parentElement.dndBind(bindings).data('dnd-sortable', parentData);
 			}
 
-			function isHalfway(dragTarget, axis) {
-				debugger
+			function isHalfway(dragTarget, axis, dropmodel) {
 				var rect = element.dndClientRect();
 				var isWide = (element[0].offsetWidth > dragTarget.offsetWidth);
 				var isLong = (element[0].offsetHeight > dragTarget.offsetHeight);
 
+				//console.log(axis.y)//, axis.y - rect.top, rect.height, element)
+
 				return (floating ? (axis.x - rect.left) / rect.width : (axis.y - rect.top) / rect.height) > .5;
 			}
 
-			function moveValue(fromIndex, fromList, toIndex, toList){
+			function moveValue(fromIndex, fromList, toIndex, toList) {
 				toList = toList || fromList;
 				toList.splice(toIndex, 0, fromList.splice(fromIndex, 1)[0]);
 			}
 
-			scope.$$onDragStart = function(api){
+			scope.$$onDragStart = function(api) {
 				var rect = element.dndClientRect();
+
 				placeholder = element.clone();
 				element.addClass('ng-hide');
 				placeholder.addClass('angular-dnd-placeholder');
 				parentNode.insertBefore(placeholder[0], element[0]);
 				api.$sortable = {};
+
+console.log('start')
 				api.clearCache();
 			};
 
-			scope.$$onDragEnd = function(api){
+			scope.$$onDragEnd = function(api) {
 				element.removeClass('ng-hide');
 				placeholder.addClass('ng-hide');
 
@@ -106,10 +110,12 @@ module.directive('dndSortable', ['$parse', '$compile', function($parse, $compile
 				moveValue(fromIndex, fromList, toIndex, toList);
 
 				api.clearCache();
+console.log('end')
 				scope.$apply();
 			};
 
-			scope.$$onDragOver = function(api, dropmodel, dragmodel){
+			scope.$$onDragOver = function(api, dropmodel, dragmodel) {
+console.log('over');
 				var halfway = isHalfway(api.getDragTarget(), api.getAxis());
 
 				halfway ? parentNode.insertBefore(placeholder[0], element[0].nextSibling) : parentNode.insertBefore(placeholder[0], element[0]);
