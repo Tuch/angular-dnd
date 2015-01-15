@@ -173,7 +173,7 @@ function($timeout, $parse, $http, $compile, $q, $templateCache, EventEmitter) {
 				if( !enabled ) api.unTarget();
 
 				// если элемент не является целью курсора (возможно есть другие draggable элементы внутри другого) - никак не реагируем на событие
-				if( !api.isTarget() || api.getEvent().target.getAttribute('dnd-none-draggable') !== null) return;
+				if( !api.isTarget()) return;
 
 				draggable.init();
 

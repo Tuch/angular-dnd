@@ -1021,11 +1021,17 @@ var module = angular.module('dnd', []);
 			},
 
 			begin: function (event) {
+				if (event.target.getAttribute('dnd-pointer-none') !== null) {
+					return false;
+				}
+
 				this.addToTargets();
 				this.event = event;
 				this.started = false;
                 this.clearCache();
 				angular.element(document.body).dndDisableSelection();
+
+				return true;
 			},
 
 			progress: function (event) {
@@ -1122,7 +1128,9 @@ var module = angular.module('dnd', []);
 		},
 
 		mousedown: function (event) {
-			this.manipulator.begin(event);
+			if (!this.manipulator.begin(event)) {
+				return;
+			};
 
 			$document.on('mousemove', this.mousemove );
 			$document.on('mouseup', this.mouseup );
@@ -1165,7 +1173,9 @@ var module = angular.module('dnd', []);
 		},
 
 		touchstart: function (event) {
-			this.manipulator.begin(event);
+			if (!this.manipulator.begin(event)) {
+				return;
+			};
 
 			$document.on(this.te.move, this.touchmove );
 			$document.on(this.te.end + ' ' + this.te.cancel, this.touchend );
@@ -1609,7 +1619,7 @@ function($timeout, $parse, $http, $compile, $q, $templateCache, EventEmitter) {
 				if( !enabled ) api.unTarget();
 
 				// если элемент не является целью курсора (возможно есть другие draggable элементы внутри другого) - никак не реагируем на событие
-				if( !api.isTarget() || api.getEvent().target.getAttribute('dnd-none-draggable') !== null) return;
+				if( !api.isTarget()) return;
 
 				draggable.init();
 
