@@ -14,3 +14,6 @@
     path = 0.1.7
     url = https://github.com/Tuch/angular-dnd
     branch = 0.1.7
+[submodule "dev"]
+	path = dev
+	url = https://github.com/Tuch/angular-dnd.git
