@@ -17,3 +17,6 @@
 [submodule "dev"]
 	path = dev
 	url = https://github.com/Tuch/angular-dnd.git
+[submodule "0.1.9"]
+	path = 0.1.9
+	url = https://github.com/Tuch/angular-dnd.git
