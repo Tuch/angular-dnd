@@ -161,3 +161,15 @@ button:hover {
     padding: 10px;
     position: relative;
 }
+
+#sortable-exmaple2 .sortable {
+	padding: 0;
+}
+
+#sortable-exmaple2 .sortable li {
+	margin: 0;
+}
+
+#sortable-exmaple2 .sortable input {
+	width: auto;
+}

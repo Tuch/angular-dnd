@@ -1,9 +1,12 @@
 {
 	"name": "angular-dnd-module",
-	"version": "0.1.7",
+	"version": "0.1.9",
 	"author": "Alexander Afonin",
 	"devDependencies": {
-		"grunt-contrib-uglify": "~0.4.0"
+		"grunt-contrib-concat": "*",
+		"grunt-wrap": "*",
+		"grunt-contrib-uglify": "~0.4.0",
+		"grunt-contrib-watch": "*"
 	},
 	"scripts": {
 		"preinstall": "npm cache clear"

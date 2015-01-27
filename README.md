@@ -1,4 +1,4 @@
-Angular-DND 0.1.7
+Angular-DND 0.1.9
 =========
 
 Особенности:
@@ -16,7 +16,7 @@ Angular-DND 0.1.7
 - layer[string]: Имя layer. Что бы droppable-элементы реагировали на draggable-элементы они должны находиться на одном layer. По умолчанию layer = 'common'
 - useAsPoint[boolean]: Droppable область будет взаимодействовать с элементом, только если курсор манипулятора окажется в пределах droppable элемента
 - helper[string]: 'clone' или templateUrl - позволяют для перемещения использовать helper, а не сам элемент
-- restrictTheMovement[boolean]: игнорирование контейнера (читайте ниже dnd-contaier)
+- restrictMovement[boolean]: игнорирование контейнера (читайте ниже dnd-contaier)
 	
 #### watching attributes:
 - dnd-on-dragstart [function()]: срабатывающая в начале движения элемента
@@ -27,6 +27,8 @@ Angular-DND 0.1.7
 - $dragged [boolean] - флаг, который позволяют узнать было ли движение элемента в течении последнего цикла событий (последние ~5мс). Удобно использовать например в ng-click (см. пример).
 - $dropmodel [string] - модель droppable элемента, заданная в директиве dnd-model
 
+### dnd-pointer-none
+Атрибут работает по аналогии с pointer-events: none - игнорирование событий, но по отношению к dnd- директивам (см.пример 2 sortable директивы - поле для ввода текста)
 
 
 

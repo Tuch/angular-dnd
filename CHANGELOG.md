@@ -1,6 +1,16 @@
 # [Changes]
 
-## Master
+## v0.1.9
+
+* **Draggable
+  * **API BREAKING CHANGE!** restrictTheMovement переименован в restrictMovement
+* **
+
+* **Sortable
+  * **API BREAKING CHANGE!** restrictTheMovement переименован в restrictMovement
+* **
+
+ * Implement IE 10+ supporting
 
 ## v0.1.7
 * **Draggable helper
