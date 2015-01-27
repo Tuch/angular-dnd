@@ -26,7 +26,7 @@ module.directive('dndRotatable', ['$parse', '$timeout', function($parse, $timeou
 
 			element.append(handle);
 
-			function dragstart(api){
+			function dragstart(api) {
 				var local = api.local = {};
 
 				local.rotatable = getterRotatable(scope);
@@ -43,13 +43,12 @@ module.directive('dndRotatable', ['$parse', '$timeout', function($parse, $timeou
 				local.srect = element.dndStyleRect();
 
 				local.currAngle = element.dndGetAngle();
+
 				local.startPoint = Point(axis);
 
 				local.borders = api.getBorders();
 
 				local.center = Point(local.srect).plus(Point(local.srect.width / 2, local.srect.height / 2));
-
-				console.log(local.center.y);
 
 				scope.$rotated = true;
 

@@ -2,7 +2,7 @@
 
 
 /**
-* @license AngularJS-DND v0.1.8
+* @license AngularJS-DND v0.1.9
 * (c) 2014-2015 Alexander Afonin (toafonin@gmail.com, http://github.com/Tuch)
 * License: MIT
 */
@@ -27,6 +27,15 @@ var version = '0.1.9',
 	},
 	forEach = angular.forEach,
 	extend = angular.extend;
+
+(function () {
+	window.console = window.console || {
+		log: noop,
+		info: noop,
+		warn: noop,
+		error: noop
+	}
+})();
 
 (function() {
 	var agent = navigator.userAgent;
@@ -183,13 +192,10 @@ function avgPerf(fn1, timeout, context, callback) {
 	}
 }
 
-/* EXTEND NUMBER PROTOTYPE BY round */
-
-if(Number.prototype.round != undefined) console.warning('Number.prototype.round is defined');
-Number.prototype.round = function(n) {
+function roundNumber(number, n) {
 	if(isNaN(n)) n=0;
 	var m = Math.pow(10,n);
-	return Math.round(this*m)/m;
+	return Math.round(number * m) / m;
 };
 
 
@@ -357,7 +363,7 @@ var Matrix = (function() {
 			);
 		},
 		toStyle: function() {
-			return 'matrix('+this.a.round(3)+', '+this.b.round(3)+', '+this.c.round(3)+', '+this.d.round(3)+', '+this.tx.round(3)+', '+this.ty.round(3)+')';
+			return 'matrix('+roundNumber(this.a, 3)+', '+roundNumber(this.b,3)+', '+roundNumber(this.c,3)+', '+roundNumber(this.d,3)+', '+roundNumber(this.tx,3)+', '+roundNumber(this.ty,3)+')';
 		},
 
 	};
@@ -421,7 +427,7 @@ var Rect = (function() {
 			var height = Math.max(this.tl.y, this.tr.y, this.bl.y, this.br.y)-top;
 			var width = Math.max(this.tl.x, this.tr.x, this.bl.x, this.br.x)-left;
 
-			return {top:top.round(1),left:left.round(1),height:height.round(1),width:width.round(1),bottom:(top+height).round(1),right:(left+width).round(1)};
+			return {top:roundNumber(top,1),left:roundNumber(left,1),height:roundNumber(height,1),width:roundNumber(width,1),bottom:roundNumber(top+height, 1),right:roundNumber(left+width, 1)};
 		},
 		getAngle: function(degs) {
 			var y = this.tl.y-this.tr.y;
@@ -456,11 +462,25 @@ var Rect = (function() {
 extend($.prototype, {
 
 	dndDisableSelection: function() {
-		this.on('dragstart selectstart', doFalse ).dndCss({ '-moz-user-select':'none', '-khtml-user-select':'none', '-webkit-user-select':'none' })
+		this.on('dragstart selectstart', doFalse ).dndCss({
+			'-moz-user-select': 'none',
+			'-khtml-user-select': 'none',
+			'-webkit-user-select': 'none',
+			'-o-user-select': 'none',
+			'-ms-user-select': 'none',
+			'user-select': 'none'
+		});
 	},
 
 	dndEnableSelection: function() {
-		this.off('dragstart selectstart', doFalse ).dndCss({ '-moz-user-select':'auto', '-khtml-user-select':'auto', '-webkit-user-select':'auto' });
+		this.off('dragstart selectstart', doFalse ).dndCss({
+			'-moz-user-select': 'auto',
+			'-khtml-user-select': 'auto',
+			'-webkit-user-select': 'auto',
+			'-o-user-select': 'auto',
+			'-ms-user-select': 'auto',
+			'user-select': 'auto'
+		});
 	},
 
 	dndClientRect: function() {
@@ -747,7 +767,7 @@ var module = angular.module('dnd', []);
 			this.listeners = { 'dragstart':[], 'drag':[], 'dragend':[], 'dragenter':[], 'dragover':[], 'dragleave':[], 'drop':[] };
 			this.regions = new Regions(layer);
 			this.layer = function() { return layer };
-			this.propagation = true;
+			this.setCurrentManipulator(null);
 		}
 
 		Dnd.prototype = {
@@ -765,8 +785,8 @@ var module = angular.module('dnd', []);
 
 			addListener: function(event, handler) {
 				if(events.indexOf(event) == -1) {
-					console.log('jquery.dnd: invalid event name - ', event);
-					return;
+					console.error('jquery.dnd: invalid event name - ', event);
+					return this;
 				}
 				this.listeners[event].push( handler);
 
@@ -775,10 +795,11 @@ var module = angular.module('dnd', []);
 					if('onmousedown' in window) this.mouse = new Mouse(this);
 					if( ('ontouchstart' in window) || ('onmsgesturechange' in window) ) this.touch = new Touch(this, touchevents);
 				}
+
+				return this;
 			},
 
 			removeListener: function(event, handler) {
-
 				var args = arguments;
 
 				if(args.length === 0) for( var key in this.listeners ) this.listeners[key].length = 0;
@@ -795,12 +816,15 @@ var module = angular.module('dnd', []);
 				if( this._isEmptyListeners(droppables) ) this.regions.remove(this.el);
 				else if( this._isEmptyListeners(draggables)) this.destroy();
 
+				return this;
 			},
 
 			trigger: function(event, api, el) {
 				for(var i=0; i < this.listeners[event].length; i++) {
 					this.listeners[event][i].call(this.$el, api,  el);
 				}
+
+				return this;
 			},
 
 			destroy: function() {
@@ -814,8 +838,19 @@ var module = angular.module('dnd', []);
 					this.touch.destroy();
 					delete this.touch;
 				}
+
+				return this;
 			},
 
+			setCurrentManipulator: function (manipulator) {
+				this._manipulator = manipulator;
+
+				return this;
+			},
+
+			getCurrentManipulator: function () {
+				return this._manipulator;
+			}
 		};
 
 
@@ -1021,9 +1056,11 @@ var module = angular.module('dnd', []);
 			},
 
 			begin: function (event) {
-				if (event.target.getAttribute('dnd-pointer-none') !== null) {
+				if (this.dnd.getCurrentManipulator() || event.target.getAttribute('dnd-pointer-none') !== null) {
 					return false;
 				}
+
+				this.dnd.setCurrentManipulator(this);
 
 				this.addToTargets();
 				this.event = event;
@@ -1082,6 +1119,8 @@ var module = angular.module('dnd', []);
 				this.removeFromTargets();
 
 				debug.mode && this.hideRegions();
+
+				this.dnd.setCurrentManipulator(null);
 			},
 
 			showRegioins: function () {
@@ -1137,14 +1176,18 @@ var module = angular.module('dnd', []);
 		},
 
 		mousemove: function(event) {
+			console.log('mousemove');
 			this.manipulator.progress(event);
 		},
 
 		mouseup: function(event) {
+			console.log('mouseup');
 			this.manipulator.end(event);
 
 			$document.off('mousemove', this.mousemove );
 			$document.off('mouseup', this.mouseup );
+
+			this.dnd.setCurrentManipulator(null);
 		},
 
 		destroy: function() {
@@ -1154,6 +1197,7 @@ var module = angular.module('dnd', []);
 
 
 	function Touch(dnd, te) {
+		this.dnd = dnd;
 		this.te = te;
 		this.manipulator = new Manipulator(dnd);
 		this.touchstart = proxy(this, this.touchstart);
@@ -1167,33 +1211,38 @@ var module = angular.module('dnd', []);
 	Touch.prototype = {
 
 		getClientAxis: function(offset) {
-			event = this.event.originalEvent || this.event;
+			var event = this.event.originalEvent || this.event;
 
-			return Point(event.changedTouches[0].clientX + (offset ? offset.x : 0), event.changedTouches[0].clientY + (offset ? offset.y : 0));
+			return event.changedTouches ?
+				Point(event.changedTouches[0].clientX + (offset ? offset.x : 0), event.changedTouches[0].clientY + (offset ? offset.y : 0)) :
+				Point(this.event.clientX + (offset ? offset.x : 0), this.event.clientY + (offset ? offset.y : 0));
 		},
 
 		touchstart: function (event) {
-			if (!this.manipulator.begin(event)) {
+			console.log('touchstart');
+			if (!this.manipulator.begin(event)){
 				return;
 			};
 
 			$document.on(this.te.move, this.touchmove );
 			$document.on(this.te.end + ' ' + this.te.cancel, this.touchend );
-
 		},
 
 		touchmove: function(event) {
+			console.log('touchmove');
 			event.preventDefault();
 
 			this.manipulator.progress(event);
 		},
 
 		touchend: function(event) {
+			console.log('touchend');
 
 			this.manipulator.end(event);
 
 			$document.off(this.te.move, this.touchmove );
 			$document.off(this.te.end + ' ' + this.te.cancel, this.touchend );
+			this.dnd.setCurrentManipulator(null);
 		},
 
 		destroy: function() {
@@ -1787,7 +1836,7 @@ module.directive('dndRotatable', ['$parse', '$timeout', function($parse, $timeou
 
 			element.append(handle);
 
-			function dragstart(api){
+			function dragstart(api) {
 				var local = api.local = {};
 
 				local.rotatable = getterRotatable(scope);
@@ -1804,13 +1853,12 @@ module.directive('dndRotatable', ['$parse', '$timeout', function($parse, $timeou
 				local.srect = element.dndStyleRect();
 
 				local.currAngle = element.dndGetAngle();
+
 				local.startPoint = Point(axis);
 
 				local.borders = api.getBorders();
 
 				local.center = Point(local.srect).plus(Point(local.srect.width / 2, local.srect.height / 2));
-
-				console.log(local.center.y);
 
 				scope.$rotated = true;
 
