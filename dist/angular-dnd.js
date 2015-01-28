@@ -1176,12 +1176,10 @@ var module = angular.module('dnd', []);
 		},
 
 		mousemove: function(event) {
-			console.log('mousemove');
 			this.manipulator.progress(event);
 		},
 
 		mouseup: function(event) {
-			console.log('mouseup');
 			this.manipulator.end(event);
 
 			$document.off('mousemove', this.mousemove );
@@ -1219,7 +1217,6 @@ var module = angular.module('dnd', []);
 		},
 
 		touchstart: function (event) {
-			console.log('touchstart');
 			if (!this.manipulator.begin(event)){
 				return;
 			};
@@ -1229,15 +1226,12 @@ var module = angular.module('dnd', []);
 		},
 
 		touchmove: function(event) {
-			console.log('touchmove');
 			event.preventDefault();
 
 			this.manipulator.progress(event);
 		},
 
 		touchend: function(event) {
-			console.log('touchend');
-
 			this.manipulator.end(event);
 
 			$document.off(this.te.move, this.touchmove );
