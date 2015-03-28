@@ -18,12 +18,12 @@ module.directive('dndDroppable', ['$parse', '$timeout', function( $parse, $timeo
 			function dragenter(api){
 				var local = api.droplocal = {};
 
-				local.droppable = getterDroppable(scope);
+                api.dropmodel = model ? model.get() : model;
+
+				local.droppable = getterDroppable(scope, {'$dragmodel': api.dragmodel, '$dropmodel': api.dropmodel, '$api': api});
 				local.droppable = local.droppable === undefined ? true : local.droppable;
 
 				if(!local.droppable) return;
-
-				api.dropmodel = model ? model.get() : model;
 
 				dragenterCallback(scope, {'$dragmodel':api.dragmodel, '$dropmodel': api.dropmodel, '$api': api});
 				scope.$apply();
