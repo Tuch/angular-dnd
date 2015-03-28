@@ -1685,7 +1685,7 @@ function($timeout, $parse, $http, $compile, $q, $templateCache, EventEmitter) {
 				// ставим флаг, что процесс перемещения элемента начался
 				scope.$dragged = true;
 
-				// задаем смещение границ контэйнера
+				// задаем смещение границ контейнера
 				draggable.setBorderOffset(api.getBorderedAxis());
 
 				// применяем пользовательский callback
