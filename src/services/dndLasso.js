@@ -1,151 +1,151 @@
 module.factory('DndLasso', [function () {
 
-	var $div = $('<div></div>').dndCss({position: 'absolute'});
+    var $div = $('<div></div>').dndCss({position: 'absolute'});
 
-	var defaults = {
-		className: 'angular-dnd-lasso',
-		offsetX: 0,
-		offsetY: 0
-	};
+    var defaults = {
+        className: 'angular-dnd-lasso',
+        offsetX: 0,
+        offsetY: 0
+    };
 
-	function Handler(local){
+    function Handler(local){
 
-		this.getRect = function(){
-			return this.isActive ? local.rect : undefined;
-		}
+        this.getRect = function(){
+            return this.isActive ? local.rect : undefined;
+        }
 
-		this.getClientRect = function(){
-			return this.isActive ? $div.dndClientRect() : undefined;
-		}
+        this.getClientRect = function(){
+            return this.isActive ? $div.dndClientRect() : undefined;
+        }
 
-		this.isActive = function(){
-			return local.active;
-		}
-	}
+        this.isActive = function(){
+            return local.active;
+        }
+    }
 
-	function Local(api){
-		var isTarget = api.isTarget(), handler = new Handler(this);
+    function Local(api){
+        var isTarget = api.isTarget(), handler = new Handler(this);
 
-		this.isTarget = function(){
-			return isTarget;
-		}
+        this.isTarget = function(){
+            return isTarget;
+        }
 
-		this.handler = function(){
-			return handler;
-		}
+        this.handler = function(){
+            return handler;
+        }
 
-		this.getEvent = function(){
-			return api.getEvent();
-		}
-	}
+        this.getEvent = function(){
+            return api.getEvent();
+        }
+    }
 
-	function Lasso(opts){
+    function Lasso(opts){
 
-		var self = this;
+        var self = this;
 
-		opts = extend( {}, defaults, opts );
+        opts = extend( {}, defaults, opts );
 
-		function dragstart(api) {
-			var local = api.local = new Local(api);
+        function dragstart(api) {
+            var local = api.local = new Local(api);
 
-			if( !local.isTarget() ) {
-				self.trigger('start', local.handler() );
-				return;
-			}
+            if( !local.isTarget() ) {
+                self.trigger('start', local.handler() );
+                return;
+            }
 
-			local.active = true;
+            local.active = true;
 
-			self.trigger('start', local.handler() );
+            self.trigger('start', local.handler() );
 
-			api.setReferenceElement(opts.$el);
+            api.setReferenceElement(opts.$el);
 
-			local.startAxis = api.getRelBorderedAxis();
+            local.startAxis = api.getRelBorderedAxis();
 
-			$div.removeAttr('class style').removeClass('ng-hide').addClass(opts.className);
+            $div.removeAttr('class style').removeClass('ng-hide').addClass(opts.className);
 
-			opts.$el.append( $div );
+            opts.$el.append( $div );
 
-		};
+        };
 
-		function drag(api) {
-			var local = api.local;
+        function drag(api) {
+            var local = api.local;
 
-			if( !local.active )  {
-				self.trigger('drag', local.handler());
-				return;
-			}
+            if( !local.active )  {
+                self.trigger('drag', local.handler());
+                return;
+            }
 
-			var change = api.getRelBorderedAxis().minus(local.startAxis);
+            var change = api.getRelBorderedAxis().minus(local.startAxis);
 
-			var rect = {
-				top: local.startAxis.y,
-				left: local.startAxis.x,
-				width: change.x,
-				height: change.y
-			};
+            var rect = {
+                top: local.startAxis.y,
+                left: local.startAxis.x,
+                width: change.x,
+                height: change.y
+            };
 
-			if(rect.width < 0) {
-				rect.width = - rect.width;
-				rect.left = rect.left - rect.width;
-			}
+            if(rect.width < 0) {
+                rect.width = - rect.width;
+                rect.left = rect.left - rect.width;
+            }
 
-			if(rect.height < 0) {
-				rect.height = - rect.height;
-				rect.top = rect.top - rect.height;
-			}
+            if(rect.height < 0) {
+                rect.height = - rect.height;
+                rect.top = rect.top - rect.height;
+            }
 
-			local.rect = rect;
+            local.rect = rect;
 
-			rect.top += opts.offsetY;
-			rect.left += opts.offsetX;
+            rect.top += opts.offsetY;
+            rect.left += opts.offsetX;
 
-			$div.dndCss(rect);
+            $div.dndCss(rect);
 
-			self.trigger('drag', local.handler() );
-		};
+            self.trigger('drag', local.handler() );
+        };
 
-		function dragend(api) {
-			var local = api.local;
+        function dragend(api) {
+            var local = api.local;
 
-			if( !local.active ) {
-				self.trigger('end', local.handler());
-				return;
-			}
+            if( !local.active ) {
+                self.trigger('end', local.handler());
+                return;
+            }
 
-			$div.addClass('ng-hide');
+            $div.addClass('ng-hide');
 
-			$(document.body).append( $div );
+            $(document.body).append( $div );
 
-			self.trigger('end', local.handler() );
-		};
+            self.trigger('end', local.handler() );
+        };
 
-		var bindings = {
-			'$$lasso.dragstart': dragstart,
-			'$$lasso.drag': drag,
-			'$$lasso.dragend': dragend
-		};
+        var bindings = {
+            '$$lasso.dragstart': dragstart,
+            '$$lasso.drag': drag,
+            '$$lasso.dragend': dragend
+        };
 
-		opts.$el.dndBind(bindings);
+        opts.$el.dndBind(bindings);
 
-		this.destroy = function(){
-			opts.$el.dndUnbind();
-		};
+        this.destroy = function(){
+            opts.$el.dndUnbind();
+        };
 
-		var events = {};
+        var events = {};
 
-		this.on = function(name, fn) {
-			events[name] = events[name] || [];
-			events[name].push(fn);
-		};
+        this.on = function(name, fn) {
+            events[name] = events[name] || [];
+            events[name].push(fn);
+        };
 
-		this.trigger = function(name, args) {
-			events[name] = events[name] || [];
-			args = args || typeof args === 'string' ? [args] : [];
-			events[name].forEach(function(fn) {
-				fn.apply(this, args);
-			});
-		}
-	}
+        this.trigger = function(name, args) {
+            events[name] = events[name] || [];
+            args = args || typeof args === 'string' ? [args] : [];
+            events[name].forEach(function(fn) {
+                fn.apply(this, args);
+            });
+        }
+    }
 
-	return Lasso;
+    return Lasso;
 }])

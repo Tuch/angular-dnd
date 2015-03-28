@@ -1,5 +1,12 @@
 # [Changes]
 
+## v0.1.10
+* **Draggable
+  * **API BREAKING CHANGE!** handle - новая опция
+* **Examples
+  * Add new dnd-draggable example
+* **
+
 ## v0.1.9
 
 * **Draggable

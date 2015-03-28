@@ -21,10 +21,13 @@ html, body  {
     background-color: #eee;
     width:100px;
     height:100px;
-    cursor: pointer;
     text-align: center;
     text-transform: uppercase;
     vertical-align: middle;
+}
+
+.handle {
+    cursor: pointer;
 }
 
 .dropzone {
@@ -47,9 +50,9 @@ html, body  {
 }
 
 .dnd-container {
-	padding: 10px;
-	background: #ffffdd;
-	position: relative;
+    padding: 10px;
+    background: #ffffdd;
+    position: relative;
 }
 
 input {
@@ -163,13 +166,13 @@ button:hover {
 }
 
 #sortable-exmaple2 .sortable {
-	padding: 0;
+    padding: 0;
 }
 
 #sortable-exmaple2 .sortable li {
-	margin: 0;
+    margin: 0;
 }
 
 #sortable-exmaple2 .sortable input {
-	width: auto;
+    width: auto;
 }
