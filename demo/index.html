@@ -18,26 +18,26 @@
     app.controller('MainCtrl', function($scope){
 
         this.dragstart = function(){
-	        console.log('dragstart', arguments);
+            console.log('dragstart', arguments);
         };
 
         this.drag = function(){
-	        console.log('drag', arguments);
+            console.log('drag', arguments);
         };
 
         this.dragend = function(){
-	        console.log('dragend', arguments);
+            console.log('dragend', arguments);
 
-	        if(!arguments[0]) this.dropped = false;
+            if(!arguments[0]) this.dropped = false;
         };
 
         this.dragenter = function(dropmodel){
-	        console.log('dragenter', arguments);
+            console.log('dragenter', arguments);
             this.active = dropmodel;
         };
 
         this.dragover = function(){
-	        console.log('dragover', arguments);
+            console.log('dragover', arguments);
         };
 
         this.dragleave = function(){
@@ -46,21 +46,22 @@
         };
 
         this.drop = function(dragmodel, model){
-	        console.log('drop', arguments);
+            console.log('drop', arguments);
             this.dropped = model;
         };
 
         this.isDropped = function(model){
-	        return this.dropped === model;
+            return this.dropped === model;
         };
 
         this.isActive = function(model){
-	        return this.active === model;
+            return this.active === model;
         };
 
         this.reset = function(){
             this.rect = {top:'20px', left:'240px', width: '100px', height: '100px', transform: 'matrix(1, 0, 0, 1, 0, 0)'};
             this.rect2 = {top:'200px', left:'440px', width: '100px', height: '100px', transform: 'matrix(1, 0, 0, 1, 0, 0)'};
+            this.rect3 = {top:'0', left:'440px', width: '100px', height: '100px', transform: 'matrix(1, 0, 0, 1, 0, 0)'};
         }
 
         this.reset();
@@ -77,16 +78,16 @@
 
 
 <body ng-controller="MainCtrl as main">
-	<div>
+    <div>
         <div class = "head" ng-include = "'./head.html'"></div>
 
-	    <div class = "title"> Basic example <br><em style = "font-size: 50%;">Draggable, Droppable, Rotatable, Resizable, Fittext...</em></div>
+        <div class = "title"> Basic example <br><em style = "font-size: 50%;">Draggable, Droppable, Rotatable, Resizable, Fittext...</em></div>
 
-	    top: <input ng-model = 'main.rect.top' type="text">
-	    left: <input ng-model = 'main.rect.left' type="text">
-	    height: <input ng-model = 'main.rect.height' type="text">
-	    width: <input ng-model = 'main.rect.width' type="text">
-	    transform: <input ng-model = 'main.rect.transform' type="text">
+        top: <input ng-model = 'main.rect.top' type="text">
+        left: <input ng-model = 'main.rect.left' type="text">
+        height: <input ng-model = 'main.rect.height' type="text">
+        width: <input ng-model = 'main.rect.width' type="text">
+        transform: <input ng-model = 'main.rect.transform' type="text">
 
         <button ng-click = "main.reset()">Reset rect object</button>
 
@@ -97,8 +98,8 @@
             </div>
         </script>
 
-		<div class = "dnd-container">
-            <div class = "draggable" style = "position: absolute;"
+        <div class = "dnd-container">
+            <div class = "draggable handle" style = "position: absolute;"
                  ng-style = "{'line-height': main.rect.height}"
                  ng-click = "click(!$dragged && !$resized && !$rotated, $dropmodel)"
 
@@ -125,8 +126,8 @@
                 Drag me
 
             </div>
-            <div class = "draggable" style = "position: absolute;"
-                 ng-style = "{'line-height': main.rect.height}"
+            <div class = "draggable handle" style = "position: absolute;"
+                 ng-style = "{'line-height': main.rect2.height}"
                  ng-click = "click(!$dragged && !$resized && !$rotated, $dropmodel)"
 
                  dnd-draggable = "true"
@@ -143,10 +144,34 @@
 
             </div>
 
-		    <div 
-		    	ng-repeat = "dropmodel in main.dropmodels"
-				class = "dropzone"
-				ng-class = "{dropped: main.isDropped(dropmodel), active: main.isActive(dropmodel)}"
+            <div class = "draggable" style = "position: absolute;"
+                 ng-click = "click(!$dragged && !$resized && !$rotated, $dropmodel)"
+
+                 dnd-draggable = "true"
+                 dnd-draggable-opts = "{layer: 'layer1', handle: '.handle'}"
+                 dnd-on-dragstart = "main.dragstart()"
+                 dnd-on-drag = "main.drag($dropmodel)"
+                 dnd-on-dragend = "main.dragend($dropmodel)"
+
+                 dnd-rect = "main.rect3"
+                 dnd-model = "main.dragmodel">
+
+                <div
+                    ng-style = "{'line-height': main.rect3.height}"
+                    dnd-fittext = "{width:main.rect3.width, height:main.rect3.height}">
+
+                    Drage me with handle
+                </div>
+                <div class = "handle" dnd-draggable-handle style = "position:absolute; top:0; left:0;width:20px;height:20px; background:#ccc; color:#fff">
+                    O
+                </div>
+
+            </div>
+
+            <div
+                ng-repeat = "dropmodel in main.dropmodels"
+                class = "dropzone"
+                ng-class = "{dropped: main.isDropped(dropmodel), active: main.isActive(dropmodel)}"
 
                 dnd-droppable = "true"
                 dnd-droppable-opts = "{layer: 'layer1'}"
@@ -157,12 +182,12 @@
 
                 dnd-model = "dropmodel" >
 
-		    </div>
+            </div>
 
             <br><br> <br><br> <br><br> <br><br> <br><br> <br><br> <br><br> <br><br> <br><br> <br><br> <br><br> <br><br> <br><br> <br><br> <br><br> <br><br> <br><br> <br><br> <br><br> <br><br>
 
-		</div>
+        </div>
 
-	</div>
+    </div>
 </body>
 </html>
