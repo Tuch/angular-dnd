@@ -146,13 +146,12 @@ function ($timeout, $parse, $http, $compile, $q, $templateCache, EventEmitter) {
     function link (scope, element, attrs, ctrls) {
         var rect = ctrls[0],
             model = ctrls[1],
-            container = ctrls[2];
+            containment = ctrls[2];
 
         var defaults = {
             layer: 'common',
             useAsPoint: false,
             helper: null,
-            restrictMovement: true,
             handle: ''
         };
 
@@ -194,11 +193,7 @@ function ($timeout, $parse, $http, $compile, $q, $templateCache, EventEmitter) {
             // задаем модель данному элементу
             api.dragmodel = model ? model.get() : null;
 
-            if (opts.restrictMovement) {
-                var $bounder = container ? container.getElement() : angular.element(document.body);
-
-                api.setBounderElement( $bounder );
-            }
+            api.setBounderElement( containment ? containment.get() : angular.element(document.body) );
 
             // ставим флаг, что процесс перемещения элемента начался
             scope.$dragged = true;
@@ -253,7 +248,7 @@ function ($timeout, $parse, $http, $compile, $q, $templateCache, EventEmitter) {
     }
 
     return {
-        require: ['?dndRect', '?dndModel', '?^dndContainer'],
+        require: ['?dndRect', '?dndModel', '?dndContainment'],
         scope: true,
         link: link
     };

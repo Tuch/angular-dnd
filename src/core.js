@@ -18,9 +18,9 @@
 /* ENVIRONMENT VARIABLES */
 
 var version = '0.1.10',
-    $ = angular.element, $window = $(window), $document = $(document), body = 'body', TRANSFORM, TRANSFORMORIGIN,
+    $ = angular.element, $window = $(window), $document = $(document), body = 'body', TRANSFORM, TRANSFORMORIGIN, MATCHES_SELECTOR,
     debug = {
-        mode: false,
+        mode: true,
         helpers: {}
     },
     forEach = angular.forEach,
@@ -41,18 +41,23 @@ var version = '0.1.10',
     if ( /webkit\//i.test(agent) ) {
         TRANSFORM = '-webkit-transform';
         TRANSFORMORIGIN = '-webkit-transform-origin';
+        MATCHES_SELECTOR = 'webkitMatchesSelector';
     } else if (/gecko\//i.test(agent)) {
         TRANSFORM = '-moz-transform';
         TRANSFORMORIGIN = '-moz-transform-origin';
+        MATCHES_SELECTOR = 'mozMatchesSelector';
     } else if (/trident\//i.test(agent)) {
         TRANSFORM = '-ms-transform';
         TRANSFORMORIGIN = 'ms-transform-origin';
+        MATCHES_SELECTOR = 'msMatchesSelector';
     } else if (/presto\//i.test(agent)) {
         TRANSFORM = '-o-transform';
         TRANSFORMORIGIN = '-o-transform-origin';
+        MATCHES_SELECTOR = 'oMatchesSelector';
     } else {
         TRANSFORM = 'transform';
         TRANSFORMORIGIN = 'transform-origin';
+        MATCHES_SELECTOR = 'matches';
     }
 
 })();
@@ -615,11 +620,12 @@ extend($.prototype, {
         return $(ret);
     },
 
-    dndParents: function() {
+    dndParents: function(selector) {
+        selector = selector || '*';
         var parent = this[0].parentElement, ret = [];
 
         while(parent) {
-            ret.push(parent);
+            parent[MATCHES_SELECTOR](selector) && ret.push(parent);
             parent = parent.parentElement;
         }
 

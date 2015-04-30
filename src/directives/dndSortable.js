@@ -17,12 +17,11 @@ module.directive('dndSortable', ['$parse', '$compile', function($parse, $compile
 
             var opts = angular.extend({
                 layer: "'common'",
-                restrictMovement: false
             }, $parse(attrs.dndSortableOpts)());
 
             return '' +
             '<' + tag + ' ng-transclude ' +
-            'dnd-draggable dnd-draggable-opts = "{helper:\'clone\', restrictMovement: ' + opts.restrictMovement + ', useAsPoint: true, layer: ' + opts.layer + '}" ' +
+            'dnd-draggable dnd-draggable-opts = "{helper:\'clone\', useAsPoint: true, layer: ' + opts.layer + '}" ' +
             'dnd-droppable dnd-droppable-opts = "{layer: ' + opts.layer + '}"' +
             'dnd-on-dragstart = "$$onDragStart($api, $dropmodel, $dragmodel)"' +
             'dnd-on-dragend = "$$onDragEnd($api, $dropmodel, $dragmodel)"' +

@@ -49,13 +49,13 @@ module.directive('dndFittext', ['$timeout', '$window', function( $timeout, $wind
                 opts = opts === undefined ? {} : opts;
                 var font = $el.dndCss(
                     ['font-size','font-family','font-weight','text-transform','border-top','border-right','border-bottom','border-left','padding-top','padding-right','padding-bottom','padding-left']
-                ), text = opts.text == undefined ? $el.text() : opts.text;
+                ), text = opts.text == undefined ? $el.text() || $el.val() : opts.text;
 
                 var sizes = [];
                 if(opts.width === undefined) sizes.push('width');
                 if(opts.height === undefined) sizes.push('height');
 
-                if(sizes) sizes = $el.dndCss(sizes);
+                if(sizes.length) sizes = $el.dndCss(sizes);
 
                 for(var key in sizes){
                     var val = sizes[key];

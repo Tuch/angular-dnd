@@ -18,7 +18,7 @@ module.exports = function (grunt) {
                     'src/directives/dndLassoArea.js',
                     'src/directives/dndFittext.js',
                     'src/directives/dndKeyModel.js',
-                    'src/directives/dndContainer.js',
+                    'src/directives/dndContainment.js',
                     'src/services/dndKey.js',
                     'src/services/dndLasso.js',
                     'src/services/EventEmitter.js'
