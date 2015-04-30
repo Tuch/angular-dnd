@@ -2747,7 +2747,6 @@ module.directive('dndLassoArea', ['DndLasso', '$parse', '$timeout', 'dndKey', fu
         /* отрицательный приоритет необходим для того, что бы post link function dnd-lasso-area запускался раньше post link function ng-click */
         priority: -1,
         link: function(scope, $el, attrs, ctrl){
-
             var defaults = {
                 selectAdditionals: true
             };
@@ -3080,7 +3079,6 @@ module.factory('dndKey', ['$rootScope', function ($rootScope) {
 ;
 
 module.factory('DndLasso', [function () {
-
     var $div = $('<div></div>').dndCss({position: 'absolute'});
 
     var defaults = {
@@ -3139,6 +3137,7 @@ module.factory('DndLasso', [function () {
             self.trigger('start', local.handler() );
 
             api.setReferenceElement(opts.$el);
+            api.setBounderElement(opts.$el);
 
             local.startAxis = api.getRelBorderedAxis();
 

@@ -1,5 +1,4 @@
 module.factory('DndLasso', [function () {
-
     var $div = $('<div></div>').dndCss({position: 'absolute'});
 
     var defaults = {
@@ -58,6 +57,7 @@ module.factory('DndLasso', [function () {
             self.trigger('start', local.handler() );
 
             api.setReferenceElement(opts.$el);
+            api.setBounderElement(opts.$el);
 
             local.startAxis = api.getRelBorderedAxis();
 
