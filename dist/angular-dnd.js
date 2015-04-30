@@ -570,7 +570,7 @@ extend($.prototype, {
     },
 
     dndGetParentScrollArea: function() {
-        var ret = [], parents = this.dndParents(), scrollX, clientX, scrollY, clientY, paddingX, paddingY, paddings, htmlEl = document.documentElement;
+        var ret, parents = this.dndParents(), scrollX, clientX, scrollY, clientY, paddingX, paddingY, paddings, htmlEl = document.documentElement;
 
         forEach(parents, function(element) {
 
@@ -585,11 +585,14 @@ extend($.prototype, {
             paddingX = parseFloat(paddings['padding-left']) + parseFloat(paddings['padding-right']);
 
             if ( scrollX - paddingX !== clientX || scrollY - paddingY !== clientY ) {
-                ret.push(element);
+                ret = element;
+                return false;
             }
         });
 
-        ret.push(window);
+        if (htmlEl && ret === htmlEl) {
+            ret = window;
+        }
 
         return $(ret);
     },
@@ -625,47 +628,38 @@ extend($.prototype, {
         return $(ret);
     },
     dndGetAngle: function (degs) {
+
         var matrix = this.dndCss(TRANSFORM);
 
         if (matrix === 'none' || matrix === '') {
             return 0;
         }
 
-        var values = matrix.split('(')[1].split(')')[0].split(','),
-            a = values[0], b = values[1], rads = Math.atan2(b, a);
+        var values = matrix.split('(')[1].split(')')[0].split(',');
+
+        var a = values[0];
+
+        var b = values[1];
+
+        var rads = Math.atan2(b, a);
 
         rads = rads < 0 ? rads +=Math.PI*2 : rads;
 
         return degs ? Math.round(rads * 180/Math.PI) : rads;
-    },
 
-    dndCloneByStyles: function () {
-        var ret = [];
-
-        for (var i = 0, length = this.length; i < length; i++) {
-            var node = this[i].cloneNode();
-
-            angular.element(node).append(angular.element(this[0].childNodes).dndCloneByStyles());
-
-            if (this[i].nodeType === 1) {
-                node.style.cssText = document.defaultView.getComputedStyle(this[0], "").cssText;
-            }
-
-            ret.push(node);
-        }
-
-        return angular.element(ret);
     },
 
     dndCss: (function() {
-        var SPECIAL_CHARS_REGEXP = /([\:\-\_\.]+(.))/g,
-            MOZ_HACK_REGEXP = /^moz([A-Z])/, hooks = {};
+        var SPECIAL_CHARS_REGEXP = /([\:\-\_\.]+(.))/g;
+        var MOZ_HACK_REGEXP = /^moz([A-Z])/;
 
         function toCamelCase(string) {
             return string.replace(SPECIAL_CHARS_REGEXP, function(_, separator, letter, offset) {
                 return offset ? letter.toUpperCase() : letter;
             }).replace(MOZ_HACK_REGEXP, 'Moz$1');
         }
+
+        var hooks = {};
 
         (function() {
             var arr = {
@@ -784,6 +778,7 @@ extend($.prototype, {
 /* INIT ANGULAR MODULE */
 
 var module = angular.module('dnd', []);
+
 
 /* ANGULAR.ELEMENT DND PLUGIN - CORE OF ANGULAR-DND */
 
@@ -941,6 +936,7 @@ var module = angular.module('dnd', []);
             },
 
             destroy: function() {
+
                 if ( this.mouse ) {
                     this.mouse.destroy();
                     delete this.mouse;
@@ -976,9 +972,6 @@ var module = angular.module('dnd', []);
         }
 
         Api.prototype = {
-            getAxis: function() {
-                return this._manipulator.getClientAxis.apply(this._manipulator, arguments);
-            },
             getBorderedAxis: function() {
                 return this._manipulator.getBorderedAxis.apply(this._manipulator, arguments);
             },
@@ -1003,12 +996,12 @@ var module = angular.module('dnd', []);
             useAsPoint: function(value) {
                 return this._manipulator.asPoint = value === false ? false : true;
             },
-            setBounderElement: function(node) {
-                this._manipulator.$bounder = angular.element(node);
+            setBounderElement: function(element) {
+                this._manipulator.$bounder = element;
                 this.clearCache();
             },
-            setReferenceElement: function(node) {
-                this._manipulator.$reference = angular.element(node);
+            setReferenceElement: function(element) {
+                this._manipulator.$reference = element;
             },
             getBorders: function() {
                 return this._manipulator.getBorders.apply(this._manipulator, arguments);
@@ -1117,9 +1110,9 @@ var module = angular.module('dnd', []);
                 this.targets = [];
                 this.asPoint = false;
                 this.api = new Api(this);
-                this.$scrollareas = this.dnd.$el.dndGetParentScrollArea();
+                this.$scrollarea = this.dnd.$el.dndGetParentScrollArea();
                 this.$reference = this.dnd.$el.dndGetFirstNotStaticParent();
-                this.$scrollareas.on('scroll', this.onscroll);
+                this.$scrollarea.on('scroll', this.onscroll);
                 this.dnd.trigger('dragstart', this.api);
             },
 
@@ -1141,7 +1134,7 @@ var module = angular.module('dnd', []);
             },
 
             stop: function() {
-                this.$scrollareas.off ('scroll', this.onscroll);
+                this.$scrollarea.off ('scroll', this.onscroll);
 
                 if (this.targets.length) {
                     for(var i = 0, length = this.targets.length; i < length; i++) {
@@ -1669,14 +1662,11 @@ function ($timeout, $parse, $http, $compile, $q, $templateCache, EventEmitter) {
                 };
             },
 
-            init: function (api) {
-                this.api = api;
+            init: function () {
                 delete this.start;
             },
 
-            updatePosition: function () {
-                var axis = this.api.getRelBorderedAxis(this.borderOffset);
-
+            updatePosition: function ( axis ) {
                 if (!this.start) {
                     this.start = new Point(this.element.dndStyleRect()).minus(axis);
                 }
@@ -1686,65 +1676,65 @@ function ($timeout, $parse, $http, $compile, $q, $templateCache, EventEmitter) {
                 this.rect ? this.rect.update( position.getAsCss() ) : this.element.dndCss( position.getAsCss() );
             },
 
-            destroy: function () {},
+            destroy: function () {
+
+            },
+
         };
 
         return ElementTarget;
     })();
 
     var HelperTarget = (function () {
-        var wrapper = $('<div class = "angular-dnd-draggable-helper"></div>').dndCss({position: 'absolute'});
 
-        function HelperTarget(mainNode, templateUrl, scope) {
-            this.mainElement = angular.element(mainNode);
+        var wrapper = $('<div class = "angular-dnd-helper"></div>').dndCss({position: 'absolute'});
+
+        function HelperTarget(mainElement, templateUrl, scope) {
+            var self = this;
+
+            this.mainElement = mainElement;
             this.scope = scope;
+            this._inited = false;
             this.templateUrl = templateUrl;
 
+            function createTemplateByUrl(templateUrl) {
+                templateUrl = angular.isFunction (templateUrl) ? templateUrl() : templateUrl;
+
+                return $http.get(templateUrl, {cache: $templateCache}).then(function (result) {
+                    self.template = result.data;
+                });
+            }
+
             if (templateUrl !== 'clone')  {
-                this.createTemplateByUrl(templateUrl);
-            } else {
-                this.ready = true;
+                createTemplateByUrl(templateUrl);
             }
         }
 
         HelperTarget.prototype = {
 
-            init: function (api) {
+            init: function () {
                 delete this.start;
                 delete this.element;
-                this.api = api;
-                this.ready = false;
 
-                this.templateUrl === 'clone' ? this.createElementByClone() : this.createElementByTemplate();
-
-                this.wrap().appendTo($(document.body));
+                if (this.templateUrl === 'clone') {
+                    this.createElementByClone().wrap().appendTo( this.mainElement.parent());
+                } else {
+                    this.compile(this.scope).wrap().appendTo( this.mainElement.parent());
+                }
 
                 this.scope.$apply();
 
-                api.setReferenceElement(document.body);
-
                 return this;
-            },
-
-            createTemplateByUrl: function (templateUrl) {
-                templateUrl = angular.isFunction (templateUrl) ? templateUrl() : templateUrl;
-
-                return $http.get(templateUrl, {cache: $templateCache}).then(function (result) {
-                    this.template = result.data;
-                    this._offset = Point();
-                    this.ready = true;
-                }.bind(this));
             },
 
             createElementByClone: function () {
-                this.element = this.mainElement.dndCloneByStyles().dndCss('position', 'static');
-                this._offset = Point(this.mainElement.dndClientRect()).minus(this.api.getBorderedAxis());
-                this.ready = true;
+                this.element = this.mainElement.clone();
+                this.element.dndCss('position', 'static');
 
                 return this;
             },
 
-            createElementByTemplate: function () {
+            compile: function () {
                 this.element = $compile(this.template)(this.scope);
 
                 return this;
@@ -1763,23 +1753,20 @@ function ($timeout, $parse, $http, $compile, $q, $templateCache, EventEmitter) {
                 return this;
             },
 
-            setBorderOffset: function (axis) {
-                var crect = this.mainElement.dndClientRect();
+            setBorderOffset: function () {
+                var crect = wrapper.dndClientRect();
 
                 this.borderOffset = {
-                    top: axis.y - crect.top,
-                    left: axis.x - crect.left,
-                    bottom: axis.y - crect.top - crect.height,
-                    right: axis.x - crect.left - crect.width
+                    top: 0,
+                    left: 0,
+                    bottom: -crect.height,
+                    right: -crect.width
                 };
             },
 
-            updatePosition: function () {
-                var position = this.api.getRelBorderedAxis(this.borderOffset).plus(this._offset);
-
-                wrapper.dndCss(position.getAsCss());
+            updatePosition: function (axis) {
+                wrapper.dndCss( axis.getAsCss() );
             },
-
 
             destroy: function () {
                 this.element.remove();
@@ -1808,7 +1795,8 @@ function ($timeout, $parse, $http, $compile, $q, $templateCache, EventEmitter) {
         var dragCallback = $parse(attrs.dndOnDrag);
         var dragendCallback = $parse(attrs.dndOnDragend);
         var draggable = opts.helper ? new HelperTarget(element, opts.helper, scope) : new ElementTarget(element, rect);
-        var started, handle = opts.handle ? element[0].querySelector(opts.handle) : '';
+        var started,
+            handle = opts.handle ? element[0].querySelector(opts.handle) : '';
 
         function dragstart(api) {
             started = false;
@@ -1827,7 +1815,7 @@ function ($timeout, $parse, $http, $compile, $q, $templateCache, EventEmitter) {
                 return;
             }
 
-            draggable.init(api);
+            draggable.init();
 
             // ставим флаг, что элемент начал двигаться
             started = true;
@@ -1840,9 +1828,9 @@ function ($timeout, $parse, $http, $compile, $q, $templateCache, EventEmitter) {
             api.dragmodel = model ? model.get() : null;
 
             if (opts.restrictMovement) {
-                var $bounder = container ? container.getElement() : document.body;
+                var $bounder = container ? container.getElement() : angular.element(document.body);
 
-                api.setBounderElement($bounder);
+                api.setBounderElement( $bounder );
             }
 
             // ставим флаг, что процесс перемещения элемента начался
@@ -1863,7 +1851,7 @@ function ($timeout, $parse, $http, $compile, $q, $templateCache, EventEmitter) {
                 return;
             }
 
-            draggable.updatePosition();
+            draggable.updatePosition( api.getRelBorderedAxis(draggable.borderOffset) );
             dragCallback(scope, {'$dragmodel':api.dragmodel, '$dropmodel': api.dropmodel, '$api': api});
 
             scope.$apply();
@@ -1894,6 +1882,7 @@ function ($timeout, $parse, $http, $compile, $q, $templateCache, EventEmitter) {
         element.dndBind(bindings);
 
         scope.$dragged = false;
+
     }
 
     return {
@@ -2290,223 +2279,135 @@ module.directive('dndResizable', ['$parse', '$timeout', function($parse, $timeou
 ;
 
 module.directive('dndSortable', ['$parse', '$compile', function($parse, $compile) {
-    var placeholder, ngRepeatRegExp = /^\s*([\s\S]+?)\s+in\s+([\s\S]+?)(?:\s+track\s+by\s+([\s\S]+?))?\s*$/;
-
-    function join(obj, sep1, sep2) {
-        return Object.getOwnPropertyNames(obj).map(function(key) {
-            return [key, obj[key]].join(sep1);
-        }).join(sep2);
-    }
-
-    function joinObj (obj) {
-        return '{' + join(obj, ':', ',') + '}';
-    }
-
-    function joinAttrs (attrs) {
-        return join(attrs, '="', '" ') + '"';
-    }
-
-    function template(element, tAttrs) {
-        var tag = element[0].nodeName.toLowerCase();
-        var ngRepeat = tAttrs.ngRepeat || '';
-        var match = ngRepeat.match(ngRepeatRegExp);
-
-        if(!match) {
-            throw 'dnd-sortable-item requires ng-repeat as dependence';
-        }
-
-        var opts = angular.extend({
-            layer: "'common'",
-            restrictMovement: false
-        }, $parse(tAttrs.dndSortableOpts)());
-
-        var attrs = {
-            'ng-transclude': '',
-            'dnd-draggable': '',
-            'dnd-draggable-opts': joinObj({
-                helper: "'clone'",
-                useAsPoint: true,
-                layer: opts.layer,
-                restrictMovement: opts.restrictMovement
-            }),
-            'dnd-droppable': '',
-            'dnd-droppable-opts': joinObj({
-                layer: opts.layer,
-            }),
-            'dnd-on-dragstart': '$$onDragStart($api, $dropmodel, $dragmodel)',
-            'dnd-on-dragend': '$$onDragEnd($api, $dropmodel, $dragmodel)',
-            'dnd-on-dragover': '$$onDragOver($api, $dropmodel, $dragmodel)',
-            'dnd-on-drag': '$$onDrag($api, $dropmodel, $dragmodel)',
-            //'dnd-on-dragenter': '$$onDragEnter($api, $dropmodel, $dragmodel)',
-            //'dnd-on-dragleave': '$$onDragLeave($api, $dropmodel, $dragmodel)',
-            'dnd-model': '{item: ' + match[1] + ', list: ' + match[2] + ', index: $index}',
-        };
-
-        return '<' + tag + ' ' + joinAttrs(attrs) + '></' + tag + '>';
-    }
-
-    function link(scope, element, attrs) {
-        var defaults = {
-            layer: 'common'
-        };
-
-        var parentNode = element[0].parentNode;
-        var parentElement = angular.element(parentNode);
-        var parentData = parentElement.data('dnd-sortable');
-        var getter = $parse(attrs.dndModel) || noop;
-        var css = element.dndCss(['float', 'display']);
-        var floating = /left|right|inline/.test(css.float + css.display);
-        var opts = extend({}, defaults, $parse(attrs.dndSortableOpts)(scope) || {});
-
-        var sortstartCallback = $parse(attrs.dndOnSortstart),
-            sortCallback = $parse(attrs.dndOnSort),
-            sortchangeCallback = $parse(attrs.dndOnSortchange),
-            sortendCallback = $parse(attrs.dndOnSortend),
-            sortenterCallback = $parse(attrs.dndOnSortenter),
-            sortleaveCallback = $parse(attrs.dndOnSortleave);
-
-        if(!parentData || !parentData[opts.layer]) {
-            parentData = parentData || {};
-            parentData[opts.layer] = true;
-
-            var bindings = {};
-
-            bindings[opts.layer+'.dragover'] = function(api) {
-                if(api.getEvent().target !== parentNode || getter(scope).list.length > 1) {
-                    return;
-                }
-
-                api.$sortable.model = getter(scope);
-                api.$sortable.insertBefore = true;
-                parentElement.append(placeholder[0]);
-            };
-
-            parentElement.dndBind(bindings).data('dnd-sortable', parentData);
-        }
-
-        function isHalfway(dragTarget, axis, dropmodel) {
-            var rect = element.dndClientRect();
-
-            return (floating ? (axis.x - rect.left) / rect.width : (axis.y - rect.top) / rect.height) > 0.5;
-        }
-
-        function moveValue(fromIndex, fromList, toIndex, toList) {
-            toList = toList || fromList;
-            toList.splice(toIndex, 0, fromList.splice(fromIndex, 1)[0]);
-        }
-
-        scope.$$onDragStart = function(api) {
-            sortstartCallback(scope);
-
-            placeholder = element.clone();
-            element.addClass('ng-hide');
-            placeholder.addClass('angular-dnd-placeholder');
-            parentNode.insertBefore(placeholder[0], element[0]);
-            api.$sortable = {};
-            api.clearCache();
-
-            scope.$apply();
-        };
-
-        scope.$$onDragOver = function(api, dropmodel, dragmodel) {
-            var halfway = isHalfway(api.getDragTarget(), api.getBorderedAxis());
-
-            halfway ? parentNode.insertBefore(placeholder[0], element[0].nextSibling) : parentNode.insertBefore(placeholder[0], element[0]);
-
-            var model = getter(scope);
-
-            if (sortchangeCallback !== angular.noop && (!api.$sortable.model || api.$sortable.model.index !== model.index)) {
-                sortchangeCallback(scope);
-                scope.$apply();
-            }
-
-            api.$sortable.model = model;
-            api.$sortable.insertBefore = !halfway;
-
-            api.clearCache();
-        };
-
-        scope.$$onDragEnd = function(api) {
-            element.removeClass('ng-hide');
-            placeholder.addClass('ng-hide');
-
-            if(!api.$sortable.model) {
-                return;
-            }
-
-            var fromIndex = scope.$index,
-                toIndex = api.$sortable.model.index,
-                fromList = getter(scope).list,
-                toList = api.$sortable.model.list;
-
-            if(toList === fromList) {
-                if(toIndex < fromIndex) {
-                    if(!api.$sortable.insertBefore) toIndex++;
-                } else {
-                    if(api.$sortable.insertBefore) toIndex--;
-                }
-            } else if(!api.$sortable.insertBefore) toIndex++;
-
-            moveValue(fromIndex, fromList, toIndex, toList);
-
-            api.clearCache();
-
-            //console.log('===', fromList===toList)
-
-            sortendCallback(scope);
-            scope.$apply();
-        };
-
-        (sortCallback !== angular.noop) && (scope.$$onDrag = function(api) {
-            sortCallback(scope);
-            scope.$apply();
-        });
-
-        //(sortCallback !== angular.noop) && (scope.$$onDrop = function(api) {
-            //sortCallback(scope);
-            //scope.$apply();
-        //});
-
-        //(sortenterCallback !== angular.noop) && (scope.$$onDragEnter = function(api) {
-            //sortenterCallback(scope);
-            //scope.$apply();
-        //});
-
-        //(sortleaveCallback !== angular.noop) && (scope.$$onDragLeave = function(api) {
-            //sortleaveCallback(scope);
-            //scope.$apply();
-        //});
-
-    }
+    var ngRepeatRegExp = /^\s*([\s\S]+?)\s+in\s+([\s\S]+?)(?:\s+track\s+by\s+([\s\S]+?))?\s*$/;
+    var placeholder;// = angular.element('<div class = "dnd-placeholder"></div>');
 
     return {
         scope: true,
         transclude: true,
-        template: template,
+        template: function(element, attrs) {
+            var tag = element[0].nodeName.toLowerCase();
+
+            var ngRepeat = attrs.ngRepeat || '';
+            var match = ngRepeat.match(ngRepeatRegExp);
+
+            if(!match) {
+                throw 'dnd-sortable-item requires ng-repeat as dependence';
+            }
+
+            var opts = angular.extend({
+                layer: "'common'",
+                restrictMovement: false
+            }, $parse(attrs.dndSortableOpts)());
+
+            return '' +
+            '<' + tag + ' ng-transclude ' +
+            'dnd-draggable dnd-draggable-opts = "{helper:\'clone\', restrictMovement: ' + opts.restrictMovement + ', useAsPoint: true, layer: ' + opts.layer + '}" ' +
+            'dnd-droppable dnd-droppable-opts = "{layer: ' + opts.layer + '}"' +
+            'dnd-on-dragstart = "$$onDragStart($api, $dropmodel, $dragmodel)"' +
+            'dnd-on-dragend = "$$onDragEnd($api, $dropmodel, $dragmodel)"' +
+            'dnd-on-dragover = "$$onDragOver($api, $dropmodel, $dragmodel)"' +
+            'dnd-model = "{item: '+match[1]+', list: '+match[2]+', index: $index}"' +
+            '></' + tag + '>';
+
+        },
         replace: true,
-        link: link
+        link: function(scope, element, attrs) {
+            var defaults = {
+                layer: 'common'
+            };
+
+            var parentNode = element[0].parentNode;
+            var parentElement = angular.element(parentNode);
+            var parentData = parentElement.data('dnd-sortable');
+            var getterSortable = $parse(attrs.dndSortable);
+            var opts = extend({}, defaults, $parse(attrs.dndSortableOpts)(scope) || {});
+            var getter = $parse(attrs.dndModel) || noop;
+            var css = element.dndCss(['float', 'display']);
+            var floating = /left|right|inline/.test(css.float + css.display);
+
+            if(!parentData || !parentData[opts.layer]) {
+                parentData = parentData || {};
+                parentData[opts.layer] = true;
+
+                var bindings = {};
+
+                bindings[opts.layer+'.dragover'] = function(api) {
+                    if(api.getEvent().target !== parentNode || getter(scope).list.length > 1) {
+                        return;
+                    }
+
+                    api.$sortable.model = getter(scope);
+                    api.$sortable.insertBefore = true;
+                    parentElement.append(placeholder[0]);
+                };
+
+                parentElement.dndBind(bindings).data('dnd-sortable', parentData);
+            }
+
+            function isHalfway(dragTarget, axis, dropmodel) {
+                var rect = element.dndClientRect();
+
+                return (floating ? (axis.x - rect.left) / rect.width : (axis.y - rect.top) / rect.height) > 0.5;
+            }
+
+            function moveValue(fromIndex, fromList, toIndex, toList) {
+                toList = toList || fromList;
+                toList.splice(toIndex, 0, fromList.splice(fromIndex, 1)[0]);
+            }
+
+            scope.$$onDragStart = function(api) {
+                placeholder = element.clone();
+                element.addClass('ng-hide');
+                placeholder.addClass('angular-dnd-placeholder');
+                parentNode.insertBefore(placeholder[0], element[0]);
+                api.$sortable = {};
+                api.clearCache();
+            };
+
+            scope.$$onDragEnd = function(api) {
+                element.removeClass('ng-hide');
+                placeholder.addClass('ng-hide');
+
+                if(!api.$sortable.model) {
+                    return;
+                }
+
+                var fromIndex = scope.$index;
+                var toIndex = api.$sortable.model.index;
+                var fromList = getter(scope).list;
+                var toList = api.$sortable.model.list;
+
+                if(toList === fromList) {
+                    if(toIndex < fromIndex) {
+                        if(!api.$sortable.insertBefore) toIndex++;
+                    } else {
+                        if(api.$sortable.insertBefore) toIndex--;
+                    }
+                } else if(!api.$sortable.insertBefore) toIndex++;
+
+                moveValue(fromIndex, fromList, toIndex, toList);
+
+                api.clearCache();
+
+                scope.$apply();
+            };
+
+            scope.$$onDragOver = function(api, dropmodel, dragmodel) {
+                var halfway = isHalfway(api.getDragTarget(), api.getBorderedAxis());
+
+                halfway ? parentNode.insertBefore(placeholder[0], element[0].nextSibling) : parentNode.insertBefore(placeholder[0], element[0]);
+
+                api.$sortable.model = getter(scope);
+                api.$sortable.insertBefore = !halfway;
+
+                api.clearCache();
+            };
+
+
+        }
     };
 }]);
-
-//create - вызывается при создании списка
-
-//activate - начат процесс сортировки (вызывается у всех связанных списков)
-//start - начат процесс сортировки (вызывается только у списка инициатора)
-
-//sort - вызывается при любом движении манипулятора при сортировке
-//change - сортировка списка изменилась
-//out - манипулятор с элементом вынесен за пределы списка (а также, если было событие over и небыло out то и  при окончании сортировки)
-//over -  манипулятор с элементом внесен в пределы списка
-
-//beforeStop - будет вызвано у списка инициатора
-//update - будет вызвано если список изменился
-//deactivate - вызывается у всех связанных списков
-//stop - вызывается самым последним у списка инициатора
-
-//receive - элемент дропнулся ИЗ другого списка
-//remove - элмент дропнулся В другой список
-
-//http://jsfiddle.net/UAcC7/1441/
 ;
 
 module.directive('dndSelectable', ['$parse', function($parse){

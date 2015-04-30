@@ -568,7 +568,7 @@ extend($.prototype, {
     },
 
     dndGetParentScrollArea: function() {
-        var ret = [], parents = this.dndParents(), scrollX, clientX, scrollY, clientY, paddingX, paddingY, paddings, htmlEl = document.documentElement;
+        var ret, parents = this.dndParents(), scrollX, clientX, scrollY, clientY, paddingX, paddingY, paddings, htmlEl = document.documentElement;
 
         forEach(parents, function(element) {
 
@@ -583,11 +583,14 @@ extend($.prototype, {
             paddingX = parseFloat(paddings['padding-left']) + parseFloat(paddings['padding-right']);
 
             if ( scrollX - paddingX !== clientX || scrollY - paddingY !== clientY ) {
-                ret.push(element);
+                ret = element;
+                return false;
             }
         });
 
-        ret.push(window);
+        if (htmlEl && ret === htmlEl) {
+            ret = window;
+        }
 
         return $(ret);
     },
@@ -623,47 +626,38 @@ extend($.prototype, {
         return $(ret);
     },
     dndGetAngle: function (degs) {
+
         var matrix = this.dndCss(TRANSFORM);
 
         if (matrix === 'none' || matrix === '') {
             return 0;
         }
 
-        var values = matrix.split('(')[1].split(')')[0].split(','),
-            a = values[0], b = values[1], rads = Math.atan2(b, a);
+        var values = matrix.split('(')[1].split(')')[0].split(',');
+
+        var a = values[0];
+
+        var b = values[1];
+
+        var rads = Math.atan2(b, a);
 
         rads = rads < 0 ? rads +=Math.PI*2 : rads;
 
         return degs ? Math.round(rads * 180/Math.PI) : rads;
-    },
 
-    dndCloneByStyles: function () {
-        var ret = [];
-
-        for (var i = 0, length = this.length; i < length; i++) {
-            var node = this[i].cloneNode();
-
-            angular.element(node).append(angular.element(this[0].childNodes).dndCloneByStyles());
-
-            if (this[i].nodeType === 1) {
-                node.style.cssText = document.defaultView.getComputedStyle(this[0], "").cssText;
-            }
-
-            ret.push(node);
-        }
-
-        return angular.element(ret);
     },
 
     dndCss: (function() {
-        var SPECIAL_CHARS_REGEXP = /([\:\-\_\.]+(.))/g,
-            MOZ_HACK_REGEXP = /^moz([A-Z])/, hooks = {};
+        var SPECIAL_CHARS_REGEXP = /([\:\-\_\.]+(.))/g;
+        var MOZ_HACK_REGEXP = /^moz([A-Z])/;
 
         function toCamelCase(string) {
             return string.replace(SPECIAL_CHARS_REGEXP, function(_, separator, letter, offset) {
                 return offset ? letter.toUpperCase() : letter;
             }).replace(MOZ_HACK_REGEXP, 'Moz$1');
         }
+
+        var hooks = {};
 
         (function() {
             var arr = {
@@ -782,6 +776,7 @@ extend($.prototype, {
 /* INIT ANGULAR MODULE */
 
 var module = angular.module('dnd', []);
+
 
 /* ANGULAR.ELEMENT DND PLUGIN - CORE OF ANGULAR-DND */
 
@@ -939,6 +934,7 @@ var module = angular.module('dnd', []);
             },
 
             destroy: function() {
+
                 if ( this.mouse ) {
                     this.mouse.destroy();
                     delete this.mouse;
@@ -974,9 +970,6 @@ var module = angular.module('dnd', []);
         }
 
         Api.prototype = {
-            getAxis: function() {
-                return this._manipulator.getClientAxis.apply(this._manipulator, arguments);
-            },
             getBorderedAxis: function() {
                 return this._manipulator.getBorderedAxis.apply(this._manipulator, arguments);
             },
@@ -1001,12 +994,12 @@ var module = angular.module('dnd', []);
             useAsPoint: function(value) {
                 return this._manipulator.asPoint = value === false ? false : true;
             },
-            setBounderElement: function(node) {
-                this._manipulator.$bounder = angular.element(node);
+            setBounderElement: function(element) {
+                this._manipulator.$bounder = element;
                 this.clearCache();
             },
-            setReferenceElement: function(node) {
-                this._manipulator.$reference = angular.element(node);
+            setReferenceElement: function(element) {
+                this._manipulator.$reference = element;
             },
             getBorders: function() {
                 return this._manipulator.getBorders.apply(this._manipulator, arguments);
@@ -1115,9 +1108,9 @@ var module = angular.module('dnd', []);
                 this.targets = [];
                 this.asPoint = false;
                 this.api = new Api(this);
-                this.$scrollareas = this.dnd.$el.dndGetParentScrollArea();
+                this.$scrollarea = this.dnd.$el.dndGetParentScrollArea();
                 this.$reference = this.dnd.$el.dndGetFirstNotStaticParent();
-                this.$scrollareas.on('scroll', this.onscroll);
+                this.$scrollarea.on('scroll', this.onscroll);
                 this.dnd.trigger('dragstart', this.api);
             },
 
@@ -1139,7 +1132,7 @@ var module = angular.module('dnd', []);
             },
 
             stop: function() {
-                this.$scrollareas.off ('scroll', this.onscroll);
+                this.$scrollarea.off ('scroll', this.onscroll);
 
                 if (this.targets.length) {
                     for(var i = 0, length = this.targets.length; i < length; i++) {

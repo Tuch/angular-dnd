@@ -59,10 +59,9 @@
         };
 
         this.reset = function(){
-            this.rect = {top:'0', left:'240px', width: '100px', height: '100px', transform: 'matrix(1, 0, 0, 1, 0, 0)'};
+            this.rect = {top:'20px', left:'240px', width: '100px', height: '100px', transform: 'matrix(1, 0, 0, 1, 0, 0)'};
             this.rect2 = {top:'200px', left:'440px', width: '100px', height: '100px', transform: 'matrix(1, 0, 0, 1, 0, 0)'};
             this.rect3 = {top:'0', left:'440px', width: '100px', height: '100px', transform: 'matrix(1, 0, 0, 1, 0, 0)'};
-            this.rect4 = {top:'200px', left:'240px', width: '100px', height: '100px', transform: 'matrix(1, 0, 0, 1, 0, 0)'};
         }
 
         this.reset();
@@ -166,23 +165,6 @@
                 <div class = "handle" dnd-draggable-handle style = "position:absolute; top:0; left:0;width:20px;height:20px; background:#ccc; color:#fff">
                     O
                 </div>
-
-            </div>
-            <div class = "draggable handle" style = "position: absolute;"
-                 ng-style = "{'line-height': main.rect4.height}"
-                 ng-click = "click(!$dragged && !$resized && !$rotated, $dropmodel)"
-
-                 dnd-draggable = "true"
-                 dnd-draggable-opts = "{layer: 'layer1', helper : 'clone'}"
-                 dnd-on-dragstart = "main.dragstart()"
-                 dnd-on-drag = "main.drag($dropmodel)"
-                 dnd-on-dragend = "main.dragend($dropmodel)"
-
-                 dnd-rect = "main.rect4"
-                 dnd-fittext = "{width:main.rect4.width, height:main.rect4.height}"
-                 dnd-model = "main.dragmodel">
-
-                Drag me with clone helper
 
             </div>
 
