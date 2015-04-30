@@ -12,9 +12,6 @@ module.directive('dndSelectable', ['$parse', function($parse){
         var onSelecting = $parse($attrs.dndOnSelecting);
         var onUnselecting = $parse($attrs.dndOnUnselecting);
 
-
-
-
         setterSelected($scope, false);
         setterSelecting($scope, false);
 
