@@ -44,8 +44,6 @@ module.directive('dndSortable', ['$parse', '$compile', function($parse, $compile
             'dnd-on-dragend': '$$onDragEnd($api, $dropmodel, $dragmodel)',
             'dnd-on-dragover': '$$onDragOver($api, $dropmodel, $dragmodel)',
             'dnd-on-drag': '$$onDrag($api, $dropmodel, $dragmodel)',
-            //'dnd-on-dragenter': '$$onDragEnter($api, $dropmodel, $dragmodel)',
-            //'dnd-on-dragleave': '$$onDragLeave($api, $dropmodel, $dragmodel)',
             'dnd-model': '{item: ' + match[1] + ', list: ' + match[2] + ', index: $index}',
         };
 
@@ -158,8 +156,6 @@ module.directive('dndSortable', ['$parse', '$compile', function($parse, $compile
 
             api.clearCache();
 
-            //console.log('===', fromList===toList)
-
             sortendCallback(scope);
             scope.$apply();
         };
@@ -168,22 +164,6 @@ module.directive('dndSortable', ['$parse', '$compile', function($parse, $compile
             sortCallback(scope);
             scope.$apply();
         });
-
-        //(sortCallback !== angular.noop) && (scope.$$onDrop = function(api) {
-            //sortCallback(scope);
-            //scope.$apply();
-        //});
-
-        //(sortenterCallback !== angular.noop) && (scope.$$onDragEnter = function(api) {
-            //sortenterCallback(scope);
-            //scope.$apply();
-        //});
-
-        //(sortleaveCallback !== angular.noop) && (scope.$$onDragLeave = function(api) {
-            //sortleaveCallback(scope);
-            //scope.$apply();
-        //});
-
     }
 
     return {
@@ -194,7 +174,7 @@ module.directive('dndSortable', ['$parse', '$compile', function($parse, $compile
         link: link
     };
 }]);
-
+//TODO:
 //create - вызывается при создании списка
 
 //activate - начат процесс сортировки (вызывается у всех связанных списков)
@@ -213,4 +193,4 @@ module.directive('dndSortable', ['$parse', '$compile', function($parse, $compile
 //receive - элемент дропнулся ИЗ другого списка
 //remove - элмент дропнулся В другой список
 
-//http://jsfiddle.net/UAcC7/1441/
+//example: http://jsfiddle.net/UAcC7/1441/

@@ -1,5 +1,10 @@
 # [Changes]
 
+## v0.1.11
+* **dnd-containment
+  * **API BREAKING CHANGE!** implement dnd-containment instead dnd-container
+* **
+
 ## v0.1.10
 * **Draggable
   * **API BREAKING CHANGE!** handle - новая опция
