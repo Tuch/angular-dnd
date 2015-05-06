@@ -1,194 +1,196 @@
 Angular-DND 0.1.11
 =========
 
-Особенности:
+Features:
 ---------
-- Не jQueryUI обертка
-- Поддержка touch событий
+- Not jQueryUI wrapper
+- Support touch events
 
-Директивы:
+Directives:
 ---------
 
 ### dnd-draggable [expression]
-Обеспечивает возможность перемещения элемент. Параметр 'false' отключает директиву.
+Provides movement ability to the element. Parameter 'false' disables the directive.
 
-#### dnd-draggable-opts [object] - опции директивы:
-- layer[string]: Имя layer. Что бы droppable-элементы реагировали на draggable-элементы они должны находиться на одном layer. По умолчанию layer = 'common'
-- useAsPoint[boolean]: Droppable область будет взаимодействовать с элементом, только если курсор манипулятора окажется в пределах droppable элемента
-- helper[string]: 'clone' или templateUrl - позволяют для перемещения использовать helper, а не сам элемент
-- handle[string]: селектор хэндла, который будет использован для перетягивания элемента
+#### dnd-draggable-opts [object] - directive options:
+- layer[string]: What would droppable elements react to draggable elements, they must be in a single layer. By default, layer = 'common'
+- useAsPoint[boolean]: Droppable area will interact with the item only if the manipulator cursor will be within the droppable element
+- helper[string]: 'clone' or templateUrl - allow to move to use helper, instead of the element
+- handle[string]: Selector of handle element to be used for pulling element
 
 #### watching attributes:
-- dnd-on-dragstart [function()]: срабатывающая в начале движения элемента
-- dnd-on-drag [function()]: срабатывающая при движении элемента
-- dnd-on-dragend [function()]: срабатывающая в конце движения элемента
+- dnd-on-dragstart [function()]: Triggered at the start of drag element
+- dnd-on-drag [function()]: Triggered at the process of drag element
+- dnd-on-dragend [function()]: Triggered at the end of drag element
 
 #### scope:
-- $dragged [boolean] - флаг, который позволяют узнать было ли движение элемента в течении последнего цикла событий (последние ~5мс). Удобно использовать например в ng-click (см. пример).
-- $dropmodel [string] - модель droppable элемента, заданная в директиве dnd-model
+- $dragged [boolean] - Register that lets you know whether the movement element during the last cycle of events (the last ~ 5ms). Convenient to use for example in ng-click (see. Example).
+- $dropmodel [string] - Droppable element model defined in the dnd-model directive
 
 ### dnd-pointer-none
-Атрибут работает по аналогии с pointer-events: none - игнорирование событий, но по отношению к dnd- директивам (см.пример 2 sortable директивы - поле для ввода текста)
+Attribute operates similar to the pointer-events: none - ignoring the event, but in relation to dnd- directives (see Example 2 sortable directive - the text field)
 
 
 
 
 ### dnd-droppable [expression]
-Позволяет определить droppable-элемент, который будет реагировать на draggable-элементы. Параметр 'false' отключает директиву.
+Create targets for draggable elements. Parameter 'false' disables the directive.
 
 #### dnd-droppable-opts [object]:
-- layer[string]: Имя layer. Что бы droppable-элементы реагировали на draggable-элементы они должны находитья на одном layer. По умолчанию layer = 'common'
+- layer[string]: What would droppable elements react to draggable elements, they must be in a single layer. By default, layer = 'common'
 
 #### watching attributes:
-- dnd-on-dragenter [function()]: срабатывающая при попадании draggable-элемента в пределы droppable-элемента
-- dnd-on-dragover [function()]: срабатывающая при движении draggable-элемента внутри droppable-элемента
-- dnd-on-dragleave [function()]: срабатывающая при выходе draggable-элемента за пределы droppable-элемента
-- dnd-on-drop [function()]: срабатывающая если отпустить draggable-элемент внутри границ droppable-элемента
+- dnd-on-dragenter [function()]: Triggered when hit draggable within the droppable
+- dnd-on-dragover [function()]: Triggered when an accepted draggable is dragged over the droppable
+- dnd-on-dragleave [function()]: Triggered when leave draggable within the droppable
+- dnd-on-drop [function()]: Triggered when an accepted draggable is dropped on the droppable
 
 #### scope:
-- $dragmodel [string] модель draggable элемента, заданая в директиве dnd-model
+- $dragmodel [string] Draggable element model defined in the dnd-model directive
 
 
 
 
 
 ### dnd-rotatable [expression]
-Обеспечивает возможность вращения элемента. Параметр 'false' отключает директиву.
+Provides rotate ability to the element. Parameter 'false' disables the directive.
 
 #### watching attributes:
-- dnd-on-dragstart [function()]: срабатывает в начале вращения элемента
-- dnd-on-drag [function()]: срабатывает при вращении элемента
-- dnd-on-dragend [function()]: срабатывает в конце вращения элемента
+- dnd-on-dragstart [function()]: Triggered at the start of element rotation
+- dnd-on-drag [function()]: Triggered at the process of element rotation
+- dnd-on-dragend [function()]: Triggered at the end of element rotation
 
 #### scope:
-- $rotated [boolean] - флаг, который позволяют узнать вращался ли элемент в течении последнего цикла событий (последние ~5мс). Удобно использовать например в ng-click (см. пример).
+- $rotated [boolean] - Register that lets you know whether the element rotation during the last cycle of events (the last ~ 5ms). Convenient to use for example in ng-click (see. Example).
 
 
 
 
 
 ### dnd-resizable [expression]
-Обеспечивает возможность изменения размеров элемента. Параметр 'false' отключает директиву.
+Provides resize ability to the element. Parameter 'false' disables the directive.
 
 #### watching attributes:
-- dnd-on-dragstart [function()]: срабатывает в начале изменения размеров элемента
-- dnd-on-drag [function()]: срабатывает при изменении размеров элемента
-- dnd-on-dragend [function()]: срабатывает в конце изменения размеров элемента
+- dnd-on-dragstart [function()]: Triggered at the start of resizing element
+- dnd-on-drag [function()]: Triggered at the process of resizing element
+- dnd-on-dragend [function()]: Triggered at the end of resizing element
 
 #### scope:
-- $resized [boolean] - флаг, который позволяют узнать было ли изменение размеров элемента в течении последнего цикла событий (последние ~5мс). Удобно использовать например в ng-click (см. пример).
+- $resized [boolean] - Register that lets you know whether the element resizing during the last cycle of events (the last ~ 5ms). Convenient to use for example in ng-click (see. Example).
 
 
 
 
 
 ### dnd-sortable [expression]
-Позволяет организовать сортировку списка
+Reorder elements in a list or grid.
 
 #### watching attributes:
-- dnd-on-dragstart [function()]: срабатывает в начале изменения размеров элемента
-- dnd-on-drag [function()]: срабатывает при изменении размеров элемента
-- dnd-on-dragend [function()]: срабатывает в конце изменения размеров элемента
+- dnd-on-sortstart [function()]: Triggered at the start of sorting element
+- dnd-on-sort [function()]: Triggered at the process of sorting element
+- dnd-on-sortchange [function()]: This event is triggered during sorting, but only when the DOM position has changed
+- dnd-on-sortend [function()]: Triggered at the end of sorting element
 
 
 
 
 
 ### dnd-lasso-area [expression]
-Директива, предназначенная для создания rect моделей с помощью инструмента lasso. Также эта директива работает в паре с selectable директивой (в роли контейнера) (см. пример). Параметр 'false' отключает директиву.
+This Directive is to create rect models with lasso tool. Also, this directive can work with a selectable directive (as a container) (see. Example). Parameter 'false' disables the directive.
 
 #### watching attributes:
- - dnd-lasso-onstart [function()]: срабатывает в начале изменения размеров lasso.
- - dnd-lasso-ondrag [function([rect])]: срабатывает при изменении размеров lasso
- - dnd-lasso-onend [function([rect])]: срабатывает при окончании изменения размеров lasso
+ - dnd-on-lassostart [function()]: Triggered at the start of lasso change size
+ - dnd-on-lasso [function([rect])]: Triggered at process of lasso change size
+ - dnd-on-lassoend [function([rect])]: Triggered at end of lasso change size
 
 #### scope:
-- $dragged [boolean] - флаг, который позволяют узнать было ли движение lasso в течении последнего цикла событий (последние ~5мс). Удобно использовать например в ng-click (см. пример).
+- $dragged [boolean] - Register that lets you know whether the movement leasso during the last cycle of events (the last ~ 5ms). Convenient to use for example in ng-click (see. Example).
 
 
 
 
 
 ### dnd-selectable [expression]
-Директива, позволяющая выделять объекты. Как инструмент выделения используется lasso (см. пример). Параметр 'false' отключает директиву.
-Последователбность событий: если click - selected(true/false). Если не click - selecting(true) -> selected(true/false) -> selecting(false)
+Use manipulator to select elements, individually or in a group.
 
-#### Требования:
+#### Requirements:
  - dnd-lasso-area как родительский элемент
 
 #### watching attributes:
- - dnd-on-selected [function([$keyPressed])]: срабатывает ПЕРЕД изменением значения selected (dnd-model-selected) c false на true. В случае если функция вернет false значение останется прежним.
- - dnd-on-unselected [function([$keyPressed])]: срабатывает ПЕРЕД изменениеми значения selected (dnd-model-selected) c true на false. В случае если функция вернет false значение останется прежним.
- - dnd-on-selecting [function([$keyPressed])]: срабатывает ПЕРЕД изменением значения selecting (dnd-model-selecting) c false на true. В случае если функция вернет false значение останется прежним.
- - dnd-on-unselecting [function([$keyPressed])]: срабатывает ПЕРЕД изменением значения selecting (dnd-model-selecting) c true на false. В случае если функция вернет false значение останется прежним.
+ - dnd-on-selected [function([$keyPressed])]: interrupt BEFORE changing selected value (dnd-model-selected) from false to true. In case if function return false the value will remain the same.
+ - dnd-on-unselected [function([$keyPressed])]: interrupt BEFORE changing selected value (dnd-model-selected) c true на false. In case if function return false the value will remain the same.
+ - dnd-on-selecting [function([$keyPressed])]: interrupt BEFORE changing  selecting value (dnd-model-selecting) c false на true. In case if function return false the value will remain the same.
+ - dnd-on-unselecting [function([$keyPressed])]: interrupt BEFORE changing selecting value (dnd-model-selecting) c true на false. In case if function return false the value will remain the same.
 
 #### model attributes:
- - dnd-model-selected: указывается име переменной в scope, в которой хранится состояние selected
- - dnd-model-selecting:  указывается име переменной в scope, в которой хранится состояние selecting
+ - dnd-model-selected: varibale name of selected state
+ - dnd-model-selecting: varibale name of selecting state
 
 #### scope:
-- $keypressed - флаг, который указывает, была ли нажата клавиша ctrl, shift или cmd во время события
+- $keypressed - Register that indicates whether the button is pressed ctrl, shift or cmd during the event
 
+#### Sequence of events:
+- if click - selected(true/false).
+- If not click - selecting(true) -> selected(true/false) -> selecting(false)
 
 
 
 
 ### dnd-rect (string)
-Директива, которая представляет собой модель элемента, описывающую его координаты относительно верхнего левого угла, размеры и матрицу преобразования (top, left, width, height, transform).
-Директивы dnd-draggable, dnd-resizable, dnd-rotatable, dnd-fittext, а также dnd-selectable(опционально) работают в связке с dnd-rect.
+Model of element rectangle (top, left, width, height, transform). Core directive.
+Use with dnd-draggable, dnd-resizable, dnd-rotatable, dnd-fittext, dnd-sortable, and also dnd-selectable(optional) work with dnd-rect.
 
 
 
 
 
 ### dnd-containment(string, selector)
-Ограничивает область действия draggable/resizable/rotatable элементов. По умолчанию контейнером служит body.
+Containment work area of draggable/resizable/rotatable elements. By default containment is body.
 
 
 
 
 
-### dnd-fittext
-Отличная директива для подгонки текста под размер блока (удобно с resizable элементами), в котором этот текст находится.
-за единственный аргумент функция принимает объект rect, содержащий в себе
-На основе этих параметров идет расчет высоты шрифта.
-Также директва поддерживает дополнительные атрибуты-настройки: dnd-fittext-max и dnd-fittext-min, которые позволяют задать максимальное и минимальное соответственно значения шрифта в пикселях.
+### dnd-fittext (mix)
+Directive for text fitting under element sizes.
 
-#### Параметр:
-- имя переменной scope изменение величины которой служит тригером (может быть объектом, например {width: rect.width, height: rect.height} или строкой, например rect.height, где rect это модель, определенная в атрибуте dnd-rect , см. пример).
+#### dnd-fittext parameter:
+- Value, change which triggers resizing text. (ex: {width: rect.width, height: rect.height, text: rect.text}. see example)
 
-
+- dnd-fittext-min - min font size in px
+- dnd-fittext-max - max font size in px
 
 
 
 
 
-Сервисы:
+
+Services:
 ---------
 
 ### DndLasso
-Сервис-класс, предназначенный для обеспечения директивам интерфейса к одноименному инструменту прямоугольного lasso
+Service-Class to provide directives interface of the rectangular lasso tool
 
 
 
 
 
 ### dndKey
-Сервис для отслеживания нажатых на клавиатуре клавиш
+Service for control key pressing
 
-#### Методы
- - get(): Получить массив нажатых клавиш
- - isset(code): Проверить состояние клавиши по коду клавиши
-
-
+#### Methods
+ - get(): get array of pressed keys
+ - isset(code): check key state by key code
 
 
 
-Примеры
+
+
+Examples
 ---------
 
-Все примеры внутри в папке Demo.
-Также доступна [ссылка](http://tuch.github.io/angular-dnd/latest/demo)
+- All examples inside demo folder
+- Also available [link](http://tuch.github.io/angular-dnd/latest/demo)
 
 
 TODO:
@@ -200,7 +202,9 @@ TODO:
 - **supporting dynamic options**
 - **supporting ng-animate**
 - **supporting HTML5 dnd events**
-- **separate components**
-	- separate components to files
-	- separate directives and jQuery methods like $.fn.draggable/$.fn.droppable/$.fn.resizable/$.fn.rotatable and refactoring sortable after (jQuery UI like o_O)
-- **translate docs to english**
+
+
+PS:
+--------
+Sorry for bad translation.
+Waiting for your pull requests.

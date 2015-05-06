@@ -2841,9 +2841,9 @@ module.directive('dndLassoArea', ['DndLasso', '$parse', '$timeout', 'dndKey', fu
 
             var getterLassoArea = $parse(attrs.dndLassoArea);
             var opts = extend({}, defaults, $parse(attrs.dndLassoAreaOpts)(scope) || {});
-            var dragstartCallback = $parse(attrs.dndLassoOnstart);
-            var dragCallback = $parse(attrs.dndLassoOndrag);
-            var dragendCallback = $parse(attrs.dndLassoOnend);
+            var dragstartCallback = $parse(attrs.dndOnLassostart);
+            var dragCallback = $parse(attrs.dndOnLasso);
+            var dragendCallback = $parse(attrs.dndOnLassoend);
             var clickCallback = $parse(attrs.dndLassoOnclick);
             var lasso = new DndLasso({ $el:$el }), selectable, keyPressed;
 
