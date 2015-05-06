@@ -2,7 +2,7 @@
 
 ## v0.1.11
 * **dnd-containment
-  * **API BREAKING CHANGE!** implement dnd-containment instead dnd-container
+  * **API BREAKING CHANGE!** implement dnd-containment instead dnd-container and restrictTheMovement options
 * **
 
 ## v0.1.10
