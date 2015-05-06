@@ -1,4 +1,4 @@
-Angular-DND 0.1.10
+Angular-DND 0.1.11
 =========
 
 Особенности:
@@ -16,7 +16,6 @@ Angular-DND 0.1.10
 - layer[string]: Имя layer. Что бы droppable-элементы реагировали на draggable-элементы они должны находиться на одном layer. По умолчанию layer = 'common'
 - useAsPoint[boolean]: Droppable область будет взаимодействовать с элементом, только если курсор манипулятора окажется в пределах droppable элемента
 - helper[string]: 'clone' или templateUrl - позволяют для перемещения использовать helper, а не сам элемент
-- restrictMovement[boolean]: игнорирование контейнера (читайте ниже dnd-contaier)
 - handle[string]: селектор хэндла, который будет использован для перетягивания элемента
 
 #### watching attributes:
@@ -83,6 +82,18 @@ Angular-DND 0.1.10
 
 
 
+### dnd-sortable [expression]
+Позволяет организовать сортировку списка
+
+#### watching attributes:
+- dnd-on-dragstart [function()]: срабатывает в начале изменения размеров элемента
+- dnd-on-drag [function()]: срабатывает при изменении размеров элемента
+- dnd-on-dragend [function()]: срабатывает в конце изменения размеров элемента
+
+
+
+
+
 ### dnd-lasso-area [expression]
 Директива, предназначенная для создания rect моделей с помощью инструмента lasso. Также эта директива работает в паре с selectable директивой (в роли контейнера) (см. пример). Параметр 'false' отключает директиву.
 
@@ -130,7 +141,7 @@ Angular-DND 0.1.10
 
 
 
-### dnd-container
+### dnd-containment(string, selector)
 Ограничивает область действия draggable/resizable/rotatable элементов. По умолчанию контейнером служит body.
 
 

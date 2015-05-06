@@ -29,11 +29,14 @@ function ($timeout, $parse, $http, $compile, $q, $templateCache, EventEmitter) {
                 };
             },
 
-            init: function () {
+            init: function (api) {
+                this.api = api;
                 delete this.start;
             },
 
-            updatePosition: function ( axis ) {
+            updatePosition: function () {
+                var axis = this.api.getRelBorderedAxis(this.borderOffset);
+
                 if (!this.start) {
                     this.start = new Point(this.element.dndStyleRect()).minus(axis);
                 }
@@ -43,65 +46,65 @@ function ($timeout, $parse, $http, $compile, $q, $templateCache, EventEmitter) {
                 this.rect ? this.rect.update( position.getAsCss() ) : this.element.dndCss( position.getAsCss() );
             },
 
-            destroy: function () {
-
-            },
-
+            destroy: function () {},
         };
 
         return ElementTarget;
     })();
 
     var HelperTarget = (function () {
+        var wrapper = $('<div class = "angular-dnd-draggable-helper"></div>').dndCss({position: 'absolute'});
 
-        var wrapper = $('<div class = "angular-dnd-helper"></div>').dndCss({position: 'absolute'});
-
-        function HelperTarget(mainElement, templateUrl, scope) {
-            var self = this;
-
-            this.mainElement = mainElement;
+        function HelperTarget(mainNode, templateUrl, scope) {
+            this.mainElement = angular.element(mainNode);
             this.scope = scope;
-            this._inited = false;
             this.templateUrl = templateUrl;
 
-            function createTemplateByUrl(templateUrl) {
-                templateUrl = angular.isFunction (templateUrl) ? templateUrl() : templateUrl;
-
-                return $http.get(templateUrl, {cache: $templateCache}).then(function (result) {
-                    self.template = result.data;
-                });
-            }
-
             if (templateUrl !== 'clone')  {
-                createTemplateByUrl(templateUrl);
+                this.createTemplateByUrl(templateUrl);
+            } else {
+                this.ready = true;
             }
         }
 
         HelperTarget.prototype = {
 
-            init: function () {
+            init: function (api) {
                 delete this.start;
                 delete this.element;
+                this.api = api;
+                this.ready = false;
 
-                if (this.templateUrl === 'clone') {
-                    this.createElementByClone().wrap().appendTo( this.mainElement.parent());
-                } else {
-                    this.compile(this.scope).wrap().appendTo( this.mainElement.parent());
-                }
+                this.templateUrl === 'clone' ? this.createElementByClone() : this.createElementByTemplate();
+
+                this.wrap().appendTo($(document.body));
 
                 this.scope.$apply();
 
+                api.setReferenceElement(document.body);
+
                 return this;
+            },
+
+            createTemplateByUrl: function (templateUrl) {
+                templateUrl = angular.isFunction (templateUrl) ? templateUrl() : templateUrl;
+
+                return $http.get(templateUrl, {cache: $templateCache}).then(function (result) {
+                    this.template = result.data;
+                    this._offset = Point();
+                    this.ready = true;
+                }.bind(this));
             },
 
             createElementByClone: function () {
-                this.element = this.mainElement.clone();
-                this.element.dndCss('position', 'static');
+                this.element = this.mainElement.dndCloneByStyles().dndCss('position', 'static');
+                this._offset = Point(this.mainElement.dndClientRect()).minus(this.api.getBorderedAxis());
+                this.ready = true;
 
                 return this;
             },
 
-            compile: function () {
+            createElementByTemplate: function () {
                 this.element = $compile(this.template)(this.scope);
 
                 return this;
@@ -120,20 +123,23 @@ function ($timeout, $parse, $http, $compile, $q, $templateCache, EventEmitter) {
                 return this;
             },
 
-            setBorderOffset: function () {
-                var crect = wrapper.dndClientRect();
+            setBorderOffset: function (axis) {
+                var crect = this.mainElement.dndClientRect();
 
                 this.borderOffset = {
-                    top: 0,
-                    left: 0,
-                    bottom: -crect.height,
-                    right: -crect.width
+                    top: axis.y - crect.top,
+                    left: axis.x - crect.left,
+                    bottom: axis.y - crect.top - crect.height,
+                    right: axis.x - crect.left - crect.width
                 };
             },
 
-            updatePosition: function (axis) {
-                wrapper.dndCss( axis.getAsCss() );
+            updatePosition: function () {
+                var position = this.api.getRelBorderedAxis(this.borderOffset).plus(this._offset);
+
+                wrapper.dndCss(position.getAsCss());
             },
+
 
             destroy: function () {
                 this.element.remove();
@@ -146,13 +152,12 @@ function ($timeout, $parse, $http, $compile, $q, $templateCache, EventEmitter) {
     function link (scope, element, attrs, ctrls) {
         var rect = ctrls[0],
             model = ctrls[1],
-            container = ctrls[2];
+            containment = ctrls[2];
 
         var defaults = {
             layer: 'common',
             useAsPoint: false,
             helper: null,
-            restrictMovement: true,
             handle: ''
         };
 
@@ -162,8 +167,7 @@ function ($timeout, $parse, $http, $compile, $q, $templateCache, EventEmitter) {
         var dragCallback = $parse(attrs.dndOnDrag);
         var dragendCallback = $parse(attrs.dndOnDragend);
         var draggable = opts.helper ? new HelperTarget(element, opts.helper, scope) : new ElementTarget(element, rect);
-        var started,
-            handle = opts.handle ? element[0].querySelector(opts.handle) : '';
+        var started, handle = opts.handle ? element[0].querySelector(opts.handle) : '';
 
         function dragstart(api) {
             started = false;
@@ -182,7 +186,7 @@ function ($timeout, $parse, $http, $compile, $q, $templateCache, EventEmitter) {
                 return;
             }
 
-            draggable.init();
+            draggable.init(api);
 
             // ставим флаг, что элемент начал двигаться
             started = true;
@@ -194,11 +198,7 @@ function ($timeout, $parse, $http, $compile, $q, $templateCache, EventEmitter) {
             // задаем модель данному элементу
             api.dragmodel = model ? model.get() : null;
 
-            if (opts.restrictMovement) {
-                var $bounder = container ? container.getElement() : angular.element(document.body);
-
-                api.setBounderElement( $bounder );
-            }
+            api.setBounderElement( containment ? containment.get() : angular.element(document.body) );
 
             // ставим флаг, что процесс перемещения элемента начался
             scope.$dragged = true;
@@ -218,7 +218,7 @@ function ($timeout, $parse, $http, $compile, $q, $templateCache, EventEmitter) {
                 return;
             }
 
-            draggable.updatePosition( api.getRelBorderedAxis(draggable.borderOffset) );
+            draggable.updatePosition();
             dragCallback(scope, {'$dragmodel':api.dragmodel, '$dropmodel': api.dropmodel, '$api': api});
 
             scope.$apply();
@@ -249,11 +249,10 @@ function ($timeout, $parse, $http, $compile, $q, $templateCache, EventEmitter) {
         element.dndBind(bindings);
 
         scope.$dragged = false;
-
     }
 
     return {
-        require: ['?dndRect', '?dndModel', '?^dndContainer'],
+        require: ['?dndRect', '?dndModel', '?dndContainment'],
         scope: true,
         link: link
     };

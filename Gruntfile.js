@@ -18,7 +18,7 @@ module.exports = function (grunt) {
                     'src/directives/dndLassoArea.js',
                     'src/directives/dndFittext.js',
                     'src/directives/dndKeyModel.js',
-                    'src/directives/dndContainer.js',
+                    'src/directives/dndContainment.js',
                     'src/services/dndKey.js',
                     'src/services/dndLasso.js',
                     'src/services/EventEmitter.js'
@@ -68,7 +68,14 @@ module.exports = function (grunt) {
                 "wrap",
                 "uglify"
             ]
-        }
+        },
+        connect: {
+            def: {
+                options: {
+                    port: 3000,
+                }
+            },
+        },
     });
 
     function loadNpmTasks(tasks) {
@@ -81,13 +88,15 @@ module.exports = function (grunt) {
         'grunt-contrib-uglify',
         'grunt-wrap',
         'grunt-contrib-concat',
-        'grunt-contrib-watch'
+        'grunt-contrib-connect',
+        'grunt-contrib-watch',
     ]);
 
     grunt.registerTask('default', [
         "concat",
         "wrap",
         "uglify",
+        "connect",
         'watch'
     ]);
 };
