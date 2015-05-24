@@ -1,3 +1,22 @@
+var srcFiles = [
+    'src/core.js',
+    'src/directives/dndDraggable.js',
+    'src/directives/dndDroppable.js',
+    'src/directives/dndRotatable.js',
+    'src/directives/dndResizable.js',
+    'src/directives/dndSortable.js',
+    'src/directives/dndSelectable.js',
+    'src/directives/dndRect.js',
+    'src/directives/dndModel.js',
+    'src/directives/dndLassoArea.js',
+    'src/directives/dndFittext.js',
+    'src/directives/dndKeyModel.js',
+    'src/directives/dndContainment.js',
+    'src/services/dndKey.js',
+    'src/services/dndLasso.js',
+    'src/services/EventEmitter.js'
+];
+
 module.exports = function (grunt) {
     grunt.initConfig({
         concat: {
@@ -5,24 +24,7 @@ module.exports = function (grunt) {
                 separator: ';\n\n',
             },
             dist: {
-                src: [
-                    'src/core.js',
-                    'src/directives/dndDraggable.js',
-                    'src/directives/dndDroppable.js',
-                    'src/directives/dndRotatable.js',
-                    'src/directives/dndResizable.js',
-                    'src/directives/dndSortable.js',
-                    'src/directives/dndSelectable.js',
-                    'src/directives/dndRect.js',
-                    'src/directives/dndModel.js',
-                    'src/directives/dndLassoArea.js',
-                    'src/directives/dndFittext.js',
-                    'src/directives/dndKeyModel.js',
-                    'src/directives/dndContainment.js',
-                    'src/services/dndKey.js',
-                    'src/services/dndLasso.js',
-                    'src/services/EventEmitter.js'
-                ],
+                src: srcFiles,
                 dest: 'dist/angular-dnd.js',
             },
         },
@@ -45,24 +47,7 @@ module.exports = function (grunt) {
             }
         },
         watch: {
-            files: [
-                'src/core.js',
-                'src/directives/dndDraggable.js',
-                'src/directives/dndDroppable.js',
-                'src/directives/dndRotatable.js',
-                'src/directives/dndResizable.js',
-                'src/directives/dndSortable.js',
-                'src/directives/dndSelectable.js',
-                'src/directives/dndRect.js',
-                'src/directives/dndModel.js',
-                'src/directives/dndLassoArea.js',
-                'src/directives/dndFittext.js',
-                'src/directives/dndKeyModel.js',
-                'src/directives/dndContainer.js',
-                'src/services/dndKey.js',
-                'src/services/dndLasso.js',
-                'src/services/EventEmitter.js'
-            ],
+            files: srcFiles,
             tasks: [
                 "concat",
                 "wrap",
