@@ -26,7 +26,11 @@
 	path = 0.1.10
 	url = https://github.com/Tuch/angular-dnd.git
     branch = 0.1.10
-[submodule "0.1.10"]
+[submodule "0.1.11"]
 	path = 0.1.11
 	url = https://github.com/Tuch/angular-dnd.git
     branch = 0.1.11
+[submodule "0.1.12"]
+	path = 0.1.12
+	url = https://github.com/Tuch/angular-dnd.git
+    branch = 0.1.12
