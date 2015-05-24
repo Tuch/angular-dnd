@@ -1,5 +1,13 @@
 # [Changes]
 
+## v0.1.12
+* **bug-fixes
+  * Fix bug with child elements of dnd-pointer-none
+  * Fix bug with drag 'tempateUrl' elements
+  * Toggle off angular.dnd.debug.mode
+  * Implement angular.element.dndClosest instead angular.element.dndParent
+* **
+
 ## v0.1.11
 * **dnd-containment
   * **API BREAKING CHANGE!** implement dnd-containment instead dnd-container and restrictTheMovement options

@@ -2,7 +2,7 @@
 
 
 /**
-* @license AngularJS-DND v0.1.11
+* @license AngularJS-DND v0.1.12
 * (c) 2014-2015 Alexander Afonin (toafonin@gmail.com, http://github.com/Tuch)
 * License: MIT
 */
@@ -19,10 +19,10 @@
 
 /* ENVIRONMENT VARIABLES */
 
-var version = '0.1.11',
+var version = '0.1.12',
     $ = angular.element, $window = $(window), $document = $(document), body = 'body', TRANSFORM, TRANSFORMORIGIN, MATCHES_SELECTOR,
     debug = {
-        mode: true,
+        mode: false,
         helpers: {}
     },
     forEach = angular.forEach,
@@ -575,7 +575,7 @@ extend($.prototype, {
     },
 
     dndGetParentScrollArea: function() {
-        var ret = [], parents = this.dndParents(), scrollX, clientX, scrollY, clientY, paddingX, paddingY, paddings, htmlEl = document.documentElement;
+        var ret = [], parents = this.dndClosest(), scrollX, clientX, scrollY, clientY, paddingX, paddingY, paddings, htmlEl = document.documentElement;
 
         forEach(parents, function(element) {
 
@@ -600,7 +600,7 @@ extend($.prototype, {
     },
 
     dndGetFirstNotStaticParent: function() {
-        var ret, position, parents = this.dndParents();
+        var ret, position, parents = this.dndClosest();
 
         forEach(parents, function(element) {
 
@@ -619,9 +619,9 @@ extend($.prototype, {
         return $(ret);
     },
 
-    dndParents: function(selector) {
+    dndClosest: function(selector) {
         selector = selector || '*';
-        var parent = this[0].parentElement, ret = [];
+        var parent = this[0], ret = [];
 
         while(parent) {
             parent[MATCHES_SELECTOR](selector) && ret.push(parent);
@@ -1183,7 +1183,8 @@ var module = angular.module('dnd', []);
             },
 
             begin: function (event) {
-                if (this.dnd.getCurrentManipulator() || event.target.getAttribute('dnd-pointer-none') !== null) {
+                if (this.dnd.getCurrentManipulator() ||
+                $(event.target).dndClosest('[dnd-pointer-none]').length) {
                     return false;
                 }
 
@@ -1664,7 +1665,8 @@ function ($timeout, $parse, $http, $compile, $q, $templateCache, EventEmitter) {
         }
 
         ElementTarget.prototype = {
-            setBorderOffset: function (axis) {
+            initBorderOffset: function () {
+                var axis = this.api.getBorderedAxis();
                 var crect = this.element.dndClientRect();
 
                 this.borderOffset = {
@@ -1678,6 +1680,7 @@ function ($timeout, $parse, $http, $compile, $q, $templateCache, EventEmitter) {
             init: function (api) {
                 this.api = api;
                 delete this.start;
+                this.initBorderOffset();
             },
 
             updatePosition: function () {
@@ -1728,6 +1731,7 @@ function ($timeout, $parse, $http, $compile, $q, $templateCache, EventEmitter) {
                 this.scope.$apply();
 
                 api.setReferenceElement(document.body);
+                this.initBorderOffset();
 
                 return this;
             },
@@ -1769,19 +1773,33 @@ function ($timeout, $parse, $http, $compile, $q, $templateCache, EventEmitter) {
                 return this;
             },
 
-            setBorderOffset: function (axis) {
-                var crect = this.mainElement.dndClientRect();
+            initBorderOffset: function () {
+                var axis = this.api.getBorderedAxis();
 
-                this.borderOffset = {
-                    top: axis.y - crect.top,
-                    left: axis.x - crect.left,
-                    bottom: axis.y - crect.top - crect.height,
-                    right: axis.x - crect.left - crect.width
-                };
+                if (this.templateUrl === 'clone') {
+                    var crect = this.mainElement.dndClientRect();
+
+                    this.borderOffset = {
+                        top: axis.y - crect.top,
+                        left: axis.x - crect.left,
+                        bottom: axis.y - crect.top - crect.height,
+                        right: axis.x - crect.left - crect.width
+                    };
+                } else {
+                    var crect = wrapper.dndClientRect();
+
+                    this.borderOffset = {
+                        top: 0,
+                        left: 0,
+                        bottom: -crect.height,
+                        right: -crect.width
+                    };
+                }
             },
 
             updatePosition: function () {
                 var position = this.api.getRelBorderedAxis(this.borderOffset).plus(this._offset);
+                console.log(this.api.getRelBorderedAxis())
 
                 wrapper.dndCss(position.getAsCss());
             },
@@ -1848,9 +1866,6 @@ function ($timeout, $parse, $http, $compile, $q, $templateCache, EventEmitter) {
 
             // ставим флаг, что процесс перемещения элемента начался
             scope.$dragged = true;
-
-            // задаем смещение границ контейнера
-            draggable.setBorderOffset(api.getBorderedAxis());
 
             // применяем пользовательский callback
             dragstartCallback(scope, {'$dragmodel':api.dragmodel, '$dropmodel': api.dropmodel, '$api': api});
@@ -2364,13 +2379,12 @@ module.directive('dndSortable', ['$parse', '$compile', function($parse, $compile
         var css = element.dndCss(['float', 'display']);
         var floating = /left|right|inline/.test(css.float + css.display);
         var opts = extend({}, defaults, $parse(attrs.dndSortableOpts)(scope) || {});
-
-        var sortstartCallback = $parse(attrs.dndOnSortstart),
-            sortCallback = $parse(attrs.dndOnSort),
-            sortchangeCallback = $parse(attrs.dndOnSortchange),
-            sortendCallback = $parse(attrs.dndOnSortend),
-            sortenterCallback = $parse(attrs.dndOnSortenter),
-            sortleaveCallback = $parse(attrs.dndOnSortleave);
+        var sortstartCallback = $parse(attrs.dndOnSortstart);
+        var sortCallback = $parse(attrs.dndOnSort);
+        var sortchangeCallback = $parse(attrs.dndOnSortchange);
+        var sortendCallback = $parse(attrs.dndOnSortend);
+        var sortenterCallback = $parse(attrs.dndOnSortenter);
+        var sortleaveCallback = $parse(attrs.dndOnSortleave);
 
         if(!parentData || !parentData[opts.layer]) {
             parentData = parentData || {};
@@ -3113,7 +3127,9 @@ module.directive('dndContainment', ['$parse', function($parse){
         var getterSelector = $parse($attrs.dndContainment);
 
         this.get = function () {
-            return $element.dndParents(getterSelector($scope)).eq(0);
+            var selector = getterSelector($scope);
+
+            return selector ? $element.dndClosest().eq(0) : $element.parent();
         }
     }
 

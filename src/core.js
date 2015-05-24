@@ -1,6 +1,6 @@
 
 /**
-* @license AngularJS-DND v0.1.11
+* @license AngularJS-DND v0.1.12
 * (c) 2014-2015 Alexander Afonin (toafonin@gmail.com, http://github.com/Tuch)
 * License: MIT
 */
@@ -17,10 +17,10 @@
 
 /* ENVIRONMENT VARIABLES */
 
-var version = '0.1.11',
+var version = '0.1.12',
     $ = angular.element, $window = $(window), $document = $(document), body = 'body', TRANSFORM, TRANSFORMORIGIN, MATCHES_SELECTOR,
     debug = {
-        mode: true,
+        mode: false,
         helpers: {}
     },
     forEach = angular.forEach,
@@ -573,7 +573,7 @@ extend($.prototype, {
     },
 
     dndGetParentScrollArea: function() {
-        var ret = [], parents = this.dndParents(), scrollX, clientX, scrollY, clientY, paddingX, paddingY, paddings, htmlEl = document.documentElement;
+        var ret = [], parents = this.dndClosest(), scrollX, clientX, scrollY, clientY, paddingX, paddingY, paddings, htmlEl = document.documentElement;
 
         forEach(parents, function(element) {
 
@@ -598,7 +598,7 @@ extend($.prototype, {
     },
 
     dndGetFirstNotStaticParent: function() {
-        var ret, position, parents = this.dndParents();
+        var ret, position, parents = this.dndClosest();
 
         forEach(parents, function(element) {
 
@@ -617,9 +617,9 @@ extend($.prototype, {
         return $(ret);
     },
 
-    dndParents: function(selector) {
+    dndClosest: function(selector) {
         selector = selector || '*';
-        var parent = this[0].parentElement, ret = [];
+        var parent = this[0], ret = [];
 
         while(parent) {
             parent[MATCHES_SELECTOR](selector) && ret.push(parent);
@@ -1181,7 +1181,8 @@ var module = angular.module('dnd', []);
             },
 
             begin: function (event) {
-                if (this.dnd.getCurrentManipulator() || event.target.getAttribute('dnd-pointer-none') !== null) {
+                if (this.dnd.getCurrentManipulator() ||
+                $(event.target).dndClosest('[dnd-pointer-none]').length) {
                     return false;
                 }
 

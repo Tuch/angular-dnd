@@ -62,13 +62,12 @@ module.directive('dndSortable', ['$parse', '$compile', function($parse, $compile
         var css = element.dndCss(['float', 'display']);
         var floating = /left|right|inline/.test(css.float + css.display);
         var opts = extend({}, defaults, $parse(attrs.dndSortableOpts)(scope) || {});
-
-        var sortstartCallback = $parse(attrs.dndOnSortstart),
-            sortCallback = $parse(attrs.dndOnSort),
-            sortchangeCallback = $parse(attrs.dndOnSortchange),
-            sortendCallback = $parse(attrs.dndOnSortend),
-            sortenterCallback = $parse(attrs.dndOnSortenter),
-            sortleaveCallback = $parse(attrs.dndOnSortleave);
+        var sortstartCallback = $parse(attrs.dndOnSortstart);
+        var sortCallback = $parse(attrs.dndOnSort);
+        var sortchangeCallback = $parse(attrs.dndOnSortchange);
+        var sortendCallback = $parse(attrs.dndOnSortend);
+        var sortenterCallback = $parse(attrs.dndOnSortenter);
+        var sortleaveCallback = $parse(attrs.dndOnSortleave);
 
         if(!parentData || !parentData[opts.layer]) {
             parentData = parentData || {};

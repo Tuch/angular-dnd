@@ -18,7 +18,8 @@ function ($timeout, $parse, $http, $compile, $q, $templateCache, EventEmitter) {
         }
 
         ElementTarget.prototype = {
-            setBorderOffset: function (axis) {
+            initBorderOffset: function () {
+                var axis = this.api.getBorderedAxis();
                 var crect = this.element.dndClientRect();
 
                 this.borderOffset = {
@@ -32,6 +33,7 @@ function ($timeout, $parse, $http, $compile, $q, $templateCache, EventEmitter) {
             init: function (api) {
                 this.api = api;
                 delete this.start;
+                this.initBorderOffset();
             },
 
             updatePosition: function () {
@@ -82,6 +84,7 @@ function ($timeout, $parse, $http, $compile, $q, $templateCache, EventEmitter) {
                 this.scope.$apply();
 
                 api.setReferenceElement(document.body);
+                this.initBorderOffset();
 
                 return this;
             },
@@ -123,19 +126,33 @@ function ($timeout, $parse, $http, $compile, $q, $templateCache, EventEmitter) {
                 return this;
             },
 
-            setBorderOffset: function (axis) {
-                var crect = this.mainElement.dndClientRect();
+            initBorderOffset: function () {
+                var axis = this.api.getBorderedAxis();
 
-                this.borderOffset = {
-                    top: axis.y - crect.top,
-                    left: axis.x - crect.left,
-                    bottom: axis.y - crect.top - crect.height,
-                    right: axis.x - crect.left - crect.width
-                };
+                if (this.templateUrl === 'clone') {
+                    var crect = this.mainElement.dndClientRect();
+
+                    this.borderOffset = {
+                        top: axis.y - crect.top,
+                        left: axis.x - crect.left,
+                        bottom: axis.y - crect.top - crect.height,
+                        right: axis.x - crect.left - crect.width
+                    };
+                } else {
+                    var crect = wrapper.dndClientRect();
+
+                    this.borderOffset = {
+                        top: 0,
+                        left: 0,
+                        bottom: -crect.height,
+                        right: -crect.width
+                    };
+                }
             },
 
             updatePosition: function () {
                 var position = this.api.getRelBorderedAxis(this.borderOffset).plus(this._offset);
+                console.log(this.api.getRelBorderedAxis())
 
                 wrapper.dndCss(position.getAsCss());
             },
@@ -202,9 +219,6 @@ function ($timeout, $parse, $http, $compile, $q, $templateCache, EventEmitter) {
 
             // ставим флаг, что процесс перемещения элемента начался
             scope.$dragged = true;
-
-            // задаем смещение границ контейнера
-            draggable.setBorderOffset(api.getBorderedAxis());
 
             // применяем пользовательский callback
             dragstartCallback(scope, {'$dragmodel':api.dragmodel, '$dropmodel': api.dropmodel, '$api': api});

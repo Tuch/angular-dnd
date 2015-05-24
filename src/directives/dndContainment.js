@@ -5,7 +5,9 @@ module.directive('dndContainment', ['$parse', function($parse){
         var getterSelector = $parse($attrs.dndContainment);
 
         this.get = function () {
-            return $element.dndParents(getterSelector($scope)).eq(0);
+            var selector = getterSelector($scope);
+
+            return selector ? $element.dndClosest().eq(0) : $element.parent();
         }
     }
 

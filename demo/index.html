@@ -181,12 +181,12 @@
                  dnd-on-drag = "main.drag($dropmodel)"
                  dnd-on-dragend = "main.dragend($dropmodel)"
 
+                 dnd-containment = "'.dnd-container'"
                  dnd-rect = "main.rect4"
                  dnd-fittext = "{width:main.rect4.width, height:main.rect4.height}"
                  dnd-model = "main.dragmodel">
 
                 Drag me with clone helper
-
             </div>
 
             <div
@@ -202,6 +202,7 @@
                 dnd-on-dragover = "main.dragover($dropmodel, $dragmodel)"
 
                 dnd-model = "dropmodel" >
+
 
             </div>
 
