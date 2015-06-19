@@ -1,4 +1,4 @@
-Angular-DND 0.1.12
+Angular-DND 0.1.13
 =========
 
 Features:
@@ -191,6 +191,15 @@ Examples
 
 - All examples inside demo folder
 - Also available [link](http://tuch.github.io/angular-dnd/latest/demo)
+
+
+
+
+
+Plunkers
+---------
+- [many drop zones](http://embed.plnkr.co/tdBHyg032OEK3Kn8ZQZw/preview)
+- [custom sortables](http://embed.plnkr.co/ElwZjFIQh3N2HHe18Gse/preview)
 
 
 TODO:
