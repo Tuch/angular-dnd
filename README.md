@@ -200,6 +200,7 @@ Plunkers
 ---------
 - [many drop zones](http://embed.plnkr.co/tdBHyg032OEK3Kn8ZQZw/preview)
 - [custom sortables](http://embed.plnkr.co/ElwZjFIQh3N2HHe18Gse/preview)
+- [useAsPointExample](http://plnkr.co/edit/sQqhYVlZwd2VxGTGoEA8?p=preview)
 
 
 TODO:
