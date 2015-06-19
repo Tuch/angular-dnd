@@ -172,7 +172,7 @@ function ($timeout, $parse, $http, $compile, $q, $templateCache, EventEmitter) {
 
         var defaults = {
             layer: 'common',
-            useAsPoint: false,
+            useAsPoint: true,
             helper: null,
             handle: ''
         };

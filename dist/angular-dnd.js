@@ -1200,7 +1200,7 @@ var module = angular.module('dnd', []);
             },
 
             _isTriggerByPoint: function (p, r) {
-                return (p.x > r.left) && (p.x < r.right) && (p.y > rr.top) && (p.y < r.bottom);
+                return (p.x > r.left) && (p.x < r.right) && (p.y > r.top) && (p.y < r.bottom);
             },
 
             _isTriggerByRect: function (a, b) {
@@ -1828,7 +1828,7 @@ function ($timeout, $parse, $http, $compile, $q, $templateCache, EventEmitter) {
 
         var defaults = {
             layer: 'common',
-            useAsPoint: false,
+            useAsPoint: true,
             helper: null,
             handle: ''
         };
