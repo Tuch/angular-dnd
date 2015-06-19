@@ -1007,7 +1007,7 @@ var module = angular.module('dnd', []);
                 this._manipulator.removeFromTargets();
             },
             useAsPoint: function(value) {
-                return this._manipulator.asPoint = value === false ? false : true;
+                return this._manipulator.asPoint = !(value === false);
             },
             setBounderElement: function(node) {
                 this._manipulator.$bounder = angular.element(node);
@@ -1199,6 +1199,18 @@ var module = angular.module('dnd', []);
                 return true;
             },
 
+            _isTriggerByPoint: function (p, r) {
+                return (p.x > r.left) && (p.x < r.right) && (p.y > r.top) && (p.y < r.bottom);
+            },
+
+            _isTriggerByRect: function (a, b) {
+                return a.top <= b.top && b.top <= a.bottom && ( a.left <= b.left && b.left <= a.right || a.left <= b.right && b.right <= a.right ) ||
+                a.top <= b.bottom && b.bottom <= a.bottom && ( a.left <= b.left && b.left <= a.right || a.left <= b.right && b.right <= a.right ) ||
+                a.left >= b.left && a.right <= b.right && ( b.top <= a.bottom && a.bottom <= b.bottom ||  b.bottom >= a.top && a.top >= b.top || a.top <= b.top && a.bottom >= b.bottom) ||
+                a.top >= b.top && a.bottom <= b.bottom && ( b.left <= a.right && a.right <= b.right || b.right >= a.left && a.left >= b.left || a.left <= b.left && a.right >= b.right) ||
+                a.top >= b.top && a.right <= b.right && a.bottom <= b.bottom && a.left >= b.left
+            },
+
             progress: function (event) {
                 this.event = event;
 
@@ -1217,18 +1229,15 @@ var module = angular.module('dnd', []);
 
                 this.dnd.trigger('drag', this.api);
 
-                var axis = this.getBorderedAxis(), x = axis.x, y = axis.y, asPoint = this.asPoint;
+                var isTrigger = this.asPoint ? this._isTriggerByPoint.bind(this, this.getBorderedAxis()) :
+                    this._isTriggerByRect.bind(this, angular.element(this.dnd.el).dndClientRect());
                 var dragenter = [];
                 var dragover = [];
                 var dragleave = [];
 
                 for(var i = 0; i < regions.length; i++) {
                     var region = regions[i],
-                        left = region.rect.left,
-                        right = left + region.rect.width,
-                        top = region.rect.top,
-                        bottom = top + region.rect.height,
-                        trigger = (x > left ) && (x < right) && (y > top) && (y < bottom),
+                        trigger = isTrigger(region.rect),
                         targetIndex = this.targets.indexOf(region.dnd.el);
 
                     if ( trigger ) {
@@ -1812,9 +1821,6 @@ function ($timeout, $parse, $http, $compile, $q, $templateCache, EventEmitter) {
 
             updatePosition: function () {
                 var position = this.api.getRelBorderedAxis(this.borderOffset).plus(this._offset);
-                if (debug.mode) {
-                    console.log(this.api.getRelBorderedAxis());
-                }
 
                 wrapper.dndCss(position.getAsCss());
             },
@@ -1835,7 +1841,7 @@ function ($timeout, $parse, $http, $compile, $q, $templateCache, EventEmitter) {
 
         var defaults = {
             layer: 'common',
-            useAsPoint: false,
+            useAsPoint: true,
             helper: null,
             handle: ''
         };
