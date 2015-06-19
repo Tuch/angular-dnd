@@ -1,5 +1,10 @@
 # [Changes]
 
+## v0.1.13
+* **bug-fixes
+  * Fixed a bug with the sequence of events call (leave -> enter -> over)
+* **
+
 ## v0.1.12
 * **bug-fixes
   * Fix bug with child elements of dnd-pointer-none
