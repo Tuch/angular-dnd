@@ -1,6 +1,6 @@
 
 /**
-* @license AngularJS-DND v0.1.12
+* @license AngularJS-DND v0.1.13
 * (c) 2014-2015 Alexander Afonin (toafonin@gmail.com, http://github.com/Tuch)
 * License: MIT
 */
@@ -17,7 +17,7 @@
 
 /* ENVIRONMENT VARIABLES */
 
-var version = '0.1.12',
+var version = '0.1.13',
     $ = angular.element, $window = $(window), $document = $(document), body = 'body', TRANSFORM, TRANSFORMORIGIN, MATCHES_SELECTOR,
     debug = {
         mode: false,
@@ -1229,6 +1229,9 @@ var module = angular.module('dnd', []);
 
                 var isTrigger = this.asPoint ? this._isTriggerByPoint.bind(this, this.getBorderedAxis()) :
                     this._isTriggerByRect.bind(this, angular.element(this.dnd.el).dndClientRect());
+                var dragenter = [];
+                var dragover = [];
+                var dragleave = [];
 
                 for(var i = 0; i < regions.length; i++) {
                     var region = regions[i],
@@ -1238,14 +1241,24 @@ var module = angular.module('dnd', []);
                     if ( trigger ) {
                         if (targetIndex === -1) {
                             this.targets.push(region.dnd.el);
-                            region.dnd.trigger('dragenter', this.api, this.dnd.el);
+                            dragenter.push(region.dnd);
                         } else {
-                            region.dnd.trigger('dragover', this.api, this.dnd.el);
+                            dragover.push(region.dnd);
                         }
                     } else if (targetIndex !== -1) {
-                        $(this.targets[targetIndex]).data('dnd')[this.dnd.layer()].trigger('dragleave', this.api, this.dnd.el);
+                        dragleave.push($(this.targets[targetIndex]).data('dnd')[this.dnd.layer()]);
                         this.targets.splice(targetIndex, 1);
                     }
+                }
+
+                this._triggerArray(dragleave, 'dragleave');
+                this._triggerArray(dragenter, 'dragenter');
+                this._triggerArray(dragover, 'dragover');
+            },
+
+            _triggerArray: function (arr, event) {
+                for (var i = 0; i < arr.length; i++) {
+                    arr[i].trigger(event, this.api, this.dnd.el);
                 }
             },
 
