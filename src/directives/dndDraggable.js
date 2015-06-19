@@ -152,9 +152,6 @@ function ($timeout, $parse, $http, $compile, $q, $templateCache, EventEmitter) {
 
             updatePosition: function () {
                 var position = this.api.getRelBorderedAxis(this.borderOffset).plus(this._offset);
-                if (debug.mode) {
-                    console.log(this.api.getRelBorderedAxis());
-                }
 
                 wrapper.dndCss(position.getAsCss());
             },
