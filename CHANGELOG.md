@@ -1,5 +1,10 @@
 # [Changes]
 
+## v0.1.14
+* **bug-fixes
+  * Fixed bug with touch manipulator and dnd-rect directive
+* **
+
 ## v0.1.13
 * **bug-fixes
   * Fixed a bug with the sequence of events call (leave -> enter -> over)

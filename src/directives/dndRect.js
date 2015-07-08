@@ -48,7 +48,7 @@ module.directive('dndRect', ['$parse', function($parse){
 
                 if(!css) css = $element.dndCss(getStyles);
 
-                rect[style] = style == 'transform' ? (css[TRANSFORM] == 'none' ? 'matrix(1, 0, 0, 1, 0, 0)' : css[TRANSFORM]) : css[style];
+                rect[style] = (style === 'transform') ? css[TRANSFORM] : css[style];
             }
 
             for(var key in rect){
@@ -81,17 +81,21 @@ module.directive('dndRect', ['$parse', function($parse){
             for(var val, i=0; i < setStyles.length; i++ ){
                 val = setStyles[i];
 
-                if(n[val] == undefined && o[val] != undefined) css[val] = '';
-                else if(n[val] != undefined) css[val] = n[val];
+                if(n[val] == undefined && o[val] != undefined) {
+                    css[val] = '';
+                } else if(n[val] != undefined) {
+                    css[val] = n[val];
+                }
             }
 
-            if(css.transform) css[TRANSFORM] = css.transform;
+            if(css.transform) {
+                css[TRANSFORM] = css.transform;
+            }
+
             $element.dndCss(css);
 
         }, true);
     }
-
-
 
     return {
         restrict: 'A',

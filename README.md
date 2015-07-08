@@ -1,4 +1,4 @@
-Angular-DND 0.1.13
+Angular-DND 0.1.14
 =========
 
 Features:

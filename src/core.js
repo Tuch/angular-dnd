@@ -1,6 +1,6 @@
 
 /**
-* @license AngularJS-DND v0.1.13
+* @license AngularJS-DND v0.1.14
 * (c) 2014-2015 Alexander Afonin (toafonin@gmail.com, http://github.com/Tuch)
 * License: MIT
 */
@@ -17,7 +17,7 @@
 
 /* ENVIRONMENT VARIABLES */
 
-var version = '0.1.13',
+var version = '0.1.14',
     $ = angular.element, $window = $(window), $document = $(document), body = 'body', TRANSFORM, TRANSFORMORIGIN, MATCHES_SELECTOR,
     debug = {
         mode: false,
@@ -288,7 +288,6 @@ var Point = (function() {
         },
         deltaAngle: function(other, aboutPoint, isdegree) {
             aboutPoint = aboutPoint === undefined ? {x:0,y:0} : aboutPoint;
-
             var ret = this.angle(aboutPoint) - other.angle(aboutPoint);
 
             if (ret < 0) {
@@ -411,11 +410,11 @@ var Matrix = (function() {
                 c = roundNumber(this.c, 3),
                 d = roundNumber(this.d, 3),
                 tx = roundNumber(this.tx, 3),
-                ty = roundNumber(this.ty, 3);
+                ty = roundNumber(this.ty, 3),
+                result = 'matrix(' + a + ', ' + b + ', ' + c + ', ' + d + ', ' + tx +', ' + ty + ')';
 
-            return 'matrix(' + a + ', ' + b + ', ' + c + ', ' + d + ', ' + tx +', ' + ty + ')';
-        },
-
+            return result === 'matrix(1, 0, 0, 1, 0, 0)' ? 'none' : result;
+        }
     };
 
     var fn = function(a, b, c, d, tx, ty) {
@@ -1373,7 +1372,7 @@ var module = angular.module('dnd', []);
 
             return event.changedTouches ?
                 Point(event.changedTouches[0].clientX + (offset ? offset.x : 0), event.changedTouches[0].clientY + (offset ? offset.y : 0)) :
-                Point(this.event.clientX + (offset ? offset.x : 0), this.event.clientY + (offset ? offset.y : 0));
+                Point(event.clientX + (offset ? offset.x : 0), event.clientY + (offset ? offset.y : 0));
         },
 
         touchstart: function (event) {
