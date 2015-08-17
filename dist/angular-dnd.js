@@ -2277,7 +2277,7 @@ module.directive('dndResizable', ['$parse', '$timeout', function($parse, $timeou
                 var realCenter = Point(styles.left+local.deltaX+styles.width/2, styles.top+local.deltaY+styles.height/2);
                 var boundedRect = Rect(styles.left+local.deltaX, styles.top+local.deltaY, styles.width, styles.height).applyMatrix( local.rotateMatrix, realCenter ).client();
 
-                if (local.borders && (boundedRect.left+1 < local.borders.left || boundedRect.top+1 < local.borders.top || boundedRect.right-1 > local.borders.right || boundedRect.bottom-1 > local.borders.bottom)) {
+                if (!opts.allowOverflow && local.borders && (boundedRect.left + 1 < local.borders.left || boundedRect.top + 1 < local.borders.top || boundedRect.right - 1 > local.borders.right || boundedRect.bottom - 1 > local.borders.bottom)) {
                     return;
                 }
 
