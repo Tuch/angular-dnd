@@ -1332,10 +1332,8 @@ var module = angular.module('dnd', []);
                 return;
             }
 
-            setTimeout(function() {
-                $document.on('mousemove', this.mousemove);
-                $document.on('mouseup', this.mouseup);
-            }.bind(this), 0);
+			$document.on('mousemove', this.mousemove);
+			$document.on('mouseup', this.mouseup);
         },
 
         mousemove: function(event) {
