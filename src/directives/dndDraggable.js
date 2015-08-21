@@ -84,7 +84,7 @@ function ($timeout, $parse, $http, $compile, $q, $templateCache, EventEmitter) {
                 this.scope.$apply();
 
                 api.setReferenceElement(document.body);
-                this.initBorderOffset();
+                setTimeout(function () { this.initBorderOffset(); }.bind(this), 0);
 
                 return this;
             },

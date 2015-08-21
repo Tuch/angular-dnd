@@ -1332,8 +1332,10 @@ var module = angular.module('dnd', []);
                 return;
             }
 
-            $document.on('mousemove', this.mousemove );
-            $document.on('mouseup', this.mouseup );
+            setTimeout(function() {
+                $document.on('mousemove', this.mousemove);
+                $document.on('mouseup', this.mouseup);
+            }.bind(this), 0);
         },
 
         mousemove: function(event) {
@@ -1752,7 +1754,7 @@ function ($timeout, $parse, $http, $compile, $q, $templateCache, EventEmitter) {
                 this.scope.$apply();
 
                 api.setReferenceElement(document.body);
-                this.initBorderOffset();
+                setTimeout(function () { this.initBorderOffset(); }.bind(this), 0);
 
                 return this;
             },
@@ -2216,6 +2218,7 @@ module.directive('dndResizable', ['$parse', '$timeout', function($parse, $timeou
                 local.deltaY = crect.top - srect.top + crect.height / 2 - srect.height / 2;
 
                 scope.$resized = true;
+                scope.$handler = side;
 
                 dragstartCallback(scope);
 
@@ -2275,7 +2278,7 @@ module.directive('dndResizable', ['$parse', '$timeout', function($parse, $timeou
                 var realCenter = Point(styles.left+local.deltaX+styles.width/2, styles.top+local.deltaY+styles.height/2);
                 var boundedRect = Rect(styles.left+local.deltaX, styles.top+local.deltaY, styles.width, styles.height).applyMatrix( local.rotateMatrix, realCenter ).client();
 
-                if (local.borders && (boundedRect.left+1 < local.borders.left || boundedRect.top+1 < local.borders.top || boundedRect.right-1 > local.borders.right || boundedRect.bottom-1 > local.borders.bottom)) {
+                if (!opts.allowOverflow && local.borders && (boundedRect.left + 1 < local.borders.left || boundedRect.top + 1 < local.borders.top || boundedRect.right - 1 > local.borders.right || boundedRect.bottom - 1 > local.borders.bottom)) {
                     return;
                 }
 
@@ -2646,7 +2649,9 @@ module.directive('dndSelectable', ['$parse', function($parse){
             function ondestroy() {
                 ctrls[1].remove(ctrls[0]);
 
-                if(!scope.$$phase) scope.$apply();
+                if (!scope.$$phase && (!scope.$root || !scope.$root.$$phase)) {
+                    scope.$apply();
+                }
             }
 
             $el.on('$destroy', ondestroy);
