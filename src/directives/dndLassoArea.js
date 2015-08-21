@@ -119,7 +119,6 @@ module.directive('dndLassoArea', ['DndLasso', '$parse', '$timeout', 'dndKey', fu
             }
 
             function onDrag(handler) {
-
                 scope.$dragged = true;
 
                 if(!handler.isActive()) return;

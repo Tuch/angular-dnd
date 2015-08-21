@@ -2,7 +2,7 @@
 
 
 /**
-* @license AngularJS-DND v0.1.14
+* @license AngularJS-DND v0.1.15
 * (c) 2014-2015 Alexander Afonin (toafonin@gmail.com, http://github.com/Tuch)
 * License: MIT
 */
@@ -19,7 +19,7 @@
 
 /* ENVIRONMENT VARIABLES */
 
-var version = '0.1.14',
+var version = '0.1.15',
     $ = angular.element, $window = $(window), $document = $(document), body = 'body', TRANSFORM, TRANSFORMORIGIN, MATCHES_SELECTOR,
     debug = {
         mode: false,
@@ -2573,25 +2573,37 @@ module.directive('dndSelectable', ['$parse', function($parse){
         };
 
         this.selecting = function(){
-            if(this.isSelectable() && onSelecting($scope) !== false) setterSelecting($scope, true);
+            if (!this.isSelectable()) {
+                return this;
+            }
+
+            setterSelecting($scope, true);
+            onSelecting($scope);
 
             return this;
         };
 
         this.unselecting = function(){
-            if(onUnselecting($scope) !== false) setterSelecting($scope, false);
+            setterSelecting($scope, false);
+            onUnselecting($scope);
 
             return this;
         };
 
         this.selected = function(){
-            if(this.isSelectable() && onSelected($scope) !== false) setterSelected($scope, true);
+            if (!this.isSelectable()) {
+                return this;
+            }
+
+            setterSelected($scope, true);
+            onSelected($scope);
 
             return this;
         };
 
         this.unselected = function(){
-            if(onUnselected($scope) !== false) setterSelected($scope, false);
+            setterSelected($scope, false);
+            onUnselected($scope);
 
             return this;
         };
@@ -2650,37 +2662,9 @@ module.directive('dndSelectable', ['$parse', function($parse){
             }
 
             $el.on('$destroy', ondestroy);
-
-            var selected = $parse(attrs.dndOnSelected);
-            var unselected = $parse(attrs.dndOnUnselected);
-            var selecting = $parse(attrs.dndOnSelecting);
-            var unselecting = $parse(attrs.dndOnUnselecting);
-
-            if(selected || unselected) {
-                selected = selected || noop;
-                unselected = unselected || noop;
-
-                scope.$watch(attrs.dndModelSelected, function(n, o){
-                    if(n === undefined || o === undefined || n === o) return;
-
-                    n ? selected(scope) : unselected(scope);
-                });
-            }
-
-
-            if(selecting || unselecting) {
-                selecting = selecting || noop;
-                unselecting = unselecting || noop;
-
-                scope.$watch(attrs.dndModelSelecting, function(n, o){
-                    if(n === undefined || o === undefined || n === o) return;
-
-                    n ? selecting(scope) : unselecting(scope);
-                });
-            }
         }
     };
-}])
+}]);
 ;
 
 module.directive('dndRect', ['$parse', function($parse){
@@ -2932,7 +2916,6 @@ module.directive('dndLassoArea', ['DndLasso', '$parse', '$timeout', 'dndKey', fu
             }
 
             function onDrag(handler) {
-
                 scope.$dragged = true;
 
                 if(!handler.isActive()) return;

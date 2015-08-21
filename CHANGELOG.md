@@ -1,6 +1,11 @@
 # [Changes]
 
-## v0.1.14
+## v0.1.15
+* **dnd-selectable
+  * In case if function return false the value will remain the same. - DEPRECATED
+* **
+
+## v0.1.15
 * **bug-fixes
   * Fixed bug with touch manipulator and dnd-rect directive
 * **
