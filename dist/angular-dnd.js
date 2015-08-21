@@ -2216,6 +2216,7 @@ module.directive('dndResizable', ['$parse', '$timeout', function($parse, $timeou
                 local.deltaY = crect.top - srect.top + crect.height / 2 - srect.height / 2;
 
                 scope.$resized = true;
+                scope.$handler = side;
 
                 dragstartCallback(scope);
 
