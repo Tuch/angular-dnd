@@ -8,12 +8,12 @@ module.directive('dndRect', ['$parse', function($parse){
 
     Controller.$inject = ['$scope', '$attrs', '$element'];
     function Controller( $scope, $attrs, $element ){
-        var getter = $parse($attrs.dndRect), setter = getter.assign, lastRect;
+        var getter = $parse($attrs.dndRect), setter = getter.assign || noop, lastRect;
 
         this.update = function(prop, value) {
             var values, rect = getter($scope) || {};
 
-            if(typeof prop != 'object') {
+            if (typeof prop != 'object') {
                 values = {};
                 values[prop] = value;
             } else values = prop;

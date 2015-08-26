@@ -2,7 +2,7 @@
 
 
 /**
-* @license AngularJS-DND v0.1.15
+* @license AngularJS-DND v0.1.16
 * (c) 2014-2015 Alexander Afonin (toafonin@gmail.com, http://github.com/Tuch)
 * License: MIT
 */
@@ -19,7 +19,7 @@
 
 /* ENVIRONMENT VARIABLES */
 
-var version = '0.1.15',
+var version = '0.1.16',
     $ = angular.element, $window = $(window), $document = $(document), body = 'body', TRANSFORM, TRANSFORMORIGIN, MATCHES_SELECTOR,
     debug = {
         mode: false,
@@ -648,11 +648,12 @@ extend($.prototype, {
         var ret = [];
 
         for (var i = 0, length = this.length; i < length; i++) {
-            var node = this[i].cloneNode();
+            var node = this[i].cloneNode(true);
+            var childNodes = angular.element(node.childNodes).dndCloneByStyles();
 
-            angular.element(node).append(angular.element(this[0].childNodes).dndCloneByStyles());
+            angular.element(node).append(childNodes);
 
-            if (this[i].nodeType === 1) {
+            if (node.nodeType === 1) {
                 node.style.cssText = window.getComputedStyle(this[i], "").cssText;
             }
 
@@ -1664,6 +1665,9 @@ angular.dnd = {
     debounce: debounce,
     debug: debug
 };
+
+
+
 ;
 
 module.directive('dndDraggable', ['$timeout', '$parse', '$http', '$compile', '$q', '$templateCache', 'EventEmitter',
@@ -2677,12 +2681,12 @@ module.directive('dndRect', ['$parse', function($parse){
 
     Controller.$inject = ['$scope', '$attrs', '$element'];
     function Controller( $scope, $attrs, $element ){
-        var getter = $parse($attrs.dndRect), setter = getter.assign, lastRect;
+        var getter = $parse($attrs.dndRect), setter = getter.assign || noop, lastRect;
 
         this.update = function(prop, value) {
             var values, rect = getter($scope) || {};
 
-            if(typeof prop != 'object') {
+            if (typeof prop != 'object') {
                 values = {};
                 values[prop] = value;
             } else values = prop;

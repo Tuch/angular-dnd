@@ -1,11 +1,18 @@
 # [Changes]
 
+## v0.1.16
+* **angular.element(...).dndCloneByStyles
+  * Fix bug with ignore text nodes
+* **dnd-rect
+  * Fix bug if dnd-rect attr is getter function
+* **
+
 ## v0.1.15
 * **dnd-selectable
   * In case if function return false the value will remain the same. - DEPRECATED
 * **
 
-## v0.1.15
+## v0.1.14
 * **bug-fixes
   * Fixed bug with touch manipulator and dnd-rect directive
 * **
