@@ -646,8 +646,8 @@ extend($.prototype, {
         var ret = [];
 
         for (var i = 0, length = this.length; i < length; i++) {
-            var node = this[i].cloneNode(true);
-            var childNodes = angular.element(node.childNodes).dndCloneByStyles();
+            var node = this[i].cloneNode();
+            var childNodes = angular.element(this[i].childNodes).dndCloneByStyles();
 
             angular.element(node).append(childNodes);
 
