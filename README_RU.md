@@ -192,7 +192,7 @@ Angular-DND 0.1.16
 ---------
 
 Все примеры внутри в папке Demo.
-Также доступна [ссылка](http://tuch.github.io/angular-dnd/latest/demo)
+Также доступна [ссылка](http://tuch.github.io/angular-dnd/demo)
 
 
 TODO:

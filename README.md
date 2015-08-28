@@ -190,7 +190,7 @@ Examples
 ---------
 
 - All examples inside demo folder
-- Also available [link](http://tuch.github.io/angular-dnd/latest/demo)
+- Also available [link](http://tuch.github.io/angular-dnd/demo)
 
 
 
