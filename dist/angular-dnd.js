@@ -2,7 +2,7 @@
 
 
 /**
-* @license AngularJS-DND v0.1.14
+* @license AngularJS-DND v0.1.16
 * (c) 2014-2015 Alexander Afonin (toafonin@gmail.com, http://github.com/Tuch)
 * License: MIT
 */
@@ -19,7 +19,7 @@
 
 /* ENVIRONMENT VARIABLES */
 
-var version = '0.1.14',
+var version = '0.1.16',
     $ = angular.element, $window = $(window), $document = $(document), body = 'body', TRANSFORM, TRANSFORMORIGIN, MATCHES_SELECTOR,
     debug = {
         mode: false,
@@ -649,10 +649,11 @@ extend($.prototype, {
 
         for (var i = 0, length = this.length; i < length; i++) {
             var node = this[i].cloneNode();
+            var childNodes = angular.element(this[i].childNodes).dndCloneByStyles();
 
-            angular.element(node).append(angular.element(this[0].childNodes).dndCloneByStyles());
+            angular.element(node).append(childNodes);
 
-            if (this[i].nodeType === 1) {
+            if (node.nodeType === 1) {
                 node.style.cssText = window.getComputedStyle(this[i], "").cssText;
             }
 
@@ -1332,8 +1333,8 @@ var module = angular.module('dnd', []);
                 return;
             }
 
-			$document.on('mousemove', this.mousemove);
-			$document.on('mouseup', this.mouseup);
+            $document.on('mousemove', this.mousemove );
+            $document.on('mouseup', this.mouseup );
         },
 
         mousemove: function(event) {
@@ -1664,6 +1665,9 @@ angular.dnd = {
     debounce: debounce,
     debug: debug
 };
+
+
+
 ;
 
 module.directive('dndDraggable', ['$timeout', '$parse', '$http', '$compile', '$q', '$templateCache', 'EventEmitter',
@@ -2576,25 +2580,37 @@ module.directive('dndSelectable', ['$parse', function($parse){
         };
 
         this.selecting = function(){
-            if(this.isSelectable() && onSelecting($scope) !== false) setterSelecting($scope, true);
+            if (!this.isSelectable()) {
+                return this;
+            }
+
+            setterSelecting($scope, true);
+            onSelecting($scope);
 
             return this;
         };
 
         this.unselecting = function(){
-            if(onUnselecting($scope) !== false) setterSelecting($scope, false);
+            setterSelecting($scope, false);
+            onUnselecting($scope);
 
             return this;
         };
 
         this.selected = function(){
-            if(this.isSelectable() && onSelected($scope) !== false) setterSelected($scope, true);
+            if (!this.isSelectable()) {
+                return this;
+            }
+
+            setterSelected($scope, true);
+            onSelected($scope);
 
             return this;
         };
 
         this.unselected = function(){
-            if(onUnselected($scope) !== false) setterSelected($scope, false);
+            setterSelected($scope, false);
+            onUnselected($scope);
 
             return this;
         };
@@ -2655,37 +2671,9 @@ module.directive('dndSelectable', ['$parse', function($parse){
             }
 
             $el.on('$destroy', ondestroy);
-
-            var selected = $parse(attrs.dndOnSelected);
-            var unselected = $parse(attrs.dndOnUnselected);
-            var selecting = $parse(attrs.dndOnSelecting);
-            var unselecting = $parse(attrs.dndOnUnselecting);
-
-            if(selected || unselected) {
-                selected = selected || noop;
-                unselected = unselected || noop;
-
-                scope.$watch(attrs.dndModelSelected, function(n, o){
-                    if(n === undefined || o === undefined || n === o) return;
-
-                    n ? selected(scope) : unselected(scope);
-                });
-            }
-
-
-            if(selecting || unselecting) {
-                selecting = selecting || noop;
-                unselecting = unselecting || noop;
-
-                scope.$watch(attrs.dndModelSelecting, function(n, o){
-                    if(n === undefined || o === undefined || n === o) return;
-
-                    n ? selecting(scope) : unselecting(scope);
-                });
-            }
         }
     };
-}])
+}]);
 ;
 
 module.directive('dndRect', ['$parse', function($parse){
@@ -2698,12 +2686,12 @@ module.directive('dndRect', ['$parse', function($parse){
 
     Controller.$inject = ['$scope', '$attrs', '$element'];
     function Controller( $scope, $attrs, $element ){
-        var getter = $parse($attrs.dndRect), setter = getter.assign, lastRect;
+        var getter = $parse($attrs.dndRect), setter = getter.assign || noop, lastRect;
 
         this.update = function(prop, value) {
             var values, rect = getter($scope) || {};
 
-            if(typeof prop != 'object') {
+            if (typeof prop != 'object') {
                 values = {};
                 values[prop] = value;
             } else values = prop;
@@ -2943,7 +2931,6 @@ module.directive('dndLassoArea', ['DndLasso', '$parse', '$timeout', 'dndKey', fu
             }
 
             function onDrag(handler) {
-
                 scope.$dragged = true;
 
                 if(!handler.isActive()) return;
@@ -2974,16 +2961,11 @@ module.directive('dndLassoArea', ['DndLasso', '$parse', '$timeout', 'dndKey', fu
                         if(s[i].isSelecting()) s[i].toggleSelected();
                     }
 
-                    scope.$apply();
-                }
-
-                dragendCallback(scope, { $rect: handler.getRect() });
-
-                if(!ctrl.empty()) {
-
                     for(var i = 0; i < s.length; i++){
                         s[i].unselecting();
                     }
+
+                    dragendCallback(scope, { $rect: handler.getRect() });
 
                     scope.$apply();
                 }
