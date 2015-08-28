@@ -78,7 +78,9 @@ module.directive('dndLassoArea', ['DndLasso', '$parse', '$timeout', 'dndKey', fu
                 if(!ctrl.empty()) {
 
                     if(keyPressed) {
-                        selectable.toggleSelected();
+                        if (selectable) {
+                            selectable.toggleSelected();
+                        }
                         return
                     }
 
