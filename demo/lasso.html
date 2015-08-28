@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="app">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Angular-DnD Lasso example</title>
+
+    <link rel="stylesheet" href="demo.css" />
+
+
+    <script src="bower_components/angular/angular.js"></script>
+    <script type="text/javascript" src = "../dist/angular-dnd.js"></script>
+    <link rel="stylesheet" href="../css/stylesheet.css" />
+
+
+
+    <script type="text/javascript">
+
+        var app = angular.module('app', ['dnd']);
+
+        app.controller('controller', function($scope){
+            $scope.data = {};
+            var models = $scope.data.models = [];
+
+            $scope.lassoEnable = true;
+
+            function Model(rect){
+                this.rect = rect;
+                this.selectable = true;
+                this.selecting = false;
+                this.selected = false;
+            }
+
+            $scope.lassoOnStart = function(item){
+                console.log('lasso start', arguments);
+            };
+
+            $scope.lassoOnDrag = function(item){
+                console.log('lasso drag', arguments);
+            };
+            $scope.lassoOnEnd = function(item){
+                var model = new Model(item);
+
+                models.push(model);
+                console.log('lasso end', arguments);
+            };
+
+            $scope.onSelecting = function(model){
+                console.log('selecting:', model);
+            };
+
+            $scope.onSelected = function(model, keyPressed){
+                console.log('selected:', model, $scope.key, keyPressed);
+            };
+
+            $scope.onUnselecting = function(model) {
+                console.log('unselecting:', model);
+            };
+
+            $scope.onUnselected = function(model){
+                console.log('unselected:', model);
+            };
+
+            $scope.onClick = function(dragged){
+                console.log('dragged:', dragged);
+            };
+        });
+
+    </script>
+
+</head>
+
+
+
+<body ng-controller="controller" style = "position: relative">
+
+
+<div class = "head" ng-include = "'./head.html'"></div>
+
+<div class = "title"> Some lasso examples </div>
+
+<div class = "lasso-area"
+     dnd-lasso-area = "lassoEnable"
+     dnd-on-lassostart = "lassoOnStart()"
+     dnd-on-lasso = "lassoOnDrag($rect)"
+     dnd-on-lassoend = "lassoOnEnd($rect)"
+     ng-click = "onClick($dragged)"
+>
+    <div class = "article"> Creating lasso </div>
+
+</div>
+
+<div class = "lasso-area"
+     dnd-lasso-area = "lassoEnable"
+>
+    <div class = "article"> Selecting lasso </div>
+    <div class = "lasso-area-creature"
+         ng-repeat = "model in data.models"
+         dnd-rect = "model.rect"
+         ng-class = "{selected: model.selected, selecting: model.selecting}"
+
+         dnd-selectable
+         dnd-model-selected = "model.selected"
+         dnd-model-selecting = "model.selecting"
+         dnd-on-selected = "onSelected(model, $keypressed)"
+         dnd-on-unselected = "onUnselected(model)"
+         dnd-on-selecting = "onSelecting(model)"
+         dnd-on-unselecting = "onUnselecting(model)"
+
+         dnd-draggable = "true"
+    >
+    </div>
+</div>
+<br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
+
+</body>
+</html>

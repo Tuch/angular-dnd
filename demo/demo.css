@@ -1,0 +1,178 @@
+html, body  {
+    padding:0;
+    margin:0;
+    font-family: Verdana;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+.title {
+    padding: 10px;
+    text-transform: uppercase;
+    font-size: 35px;
+    color: #777;
+    padding-bottom: 20px;
+}
+
+.draggable {
+    border: 1px solid #aaa;
+    background-color: #eee;
+    width:100px;
+    height:100px;
+    text-align: center;
+    text-transform: uppercase;
+    vertical-align: middle;
+}
+
+.handle {
+    cursor: pointer;
+}
+
+.dropzone {
+    margin:10px;
+    padding:7px;
+    width: 200px;
+    height: 200px;
+    line-height: 184px;
+    border:1px solid #aaa;
+    text-align: center;
+    text-transform: uppercase;
+}
+
+.dropzone.active {
+    background: #67AFAC;
+}
+
+.dropzone.dropped {
+    background: #ddffdd;
+}
+
+.dnd-container {
+    padding: 10px;
+    background: #ffffdd;
+    position: relative;
+}
+
+input {
+    margin:10px;
+    padding:7px;
+    display: block;
+    width: 200px;
+    border:1px solid #aaa;
+}
+
+input[type=radio] {
+    display: inline-block;
+    width: auto;
+}
+
+.menu .button {
+    display: inline-block;
+    background: #ddd;
+    border-radius: 10px;
+    margin: 10px;
+    padding: 10px;
+}
+
+.menu .button:link {
+    text-decoration: none;
+    color: #555;
+}
+
+.menu .button:visited {
+    text-decoration: none;
+    color: #555;
+}
+
+.menu .button:hover {
+    color: #222;
+    background: #eee;
+}
+
+.lasso-area {
+    width: 300px;
+    height: 300px;
+    background: #eee;
+    border: 1px solid #ddd;
+    margin: 10px;
+    display: inline-block;
+    position: relative;
+}
+
+.article {
+    position: absolute;
+    bottom: 100%;
+    padding-bottom: 5px;
+    color: #555;
+
+}
+
+.lasso-area-creature {
+    position: absolute;
+    background: #ffff33;
+    border-radius: 3px;
+}
+
+.lasso-area-creature.selected {
+    background: #bbffbb;
+}
+
+.lasso-area-creature.selecting {
+    background: #ffffbb;
+}
+
+button {
+    margin:10px;
+    font-size:20px;
+    cursor: pointer;
+    padding: 5px 20px;
+    background:#eee;
+    border: 1px solid #ddd;
+}
+
+button:hover {
+    background:#f7f7f7;
+}
+
+#section2 {
+    padding:10px;
+}
+
+.sortable {
+    list-style: none;
+    padding:0;
+}
+.sortable-1,.sortable-2 {
+    width: 200px;
+
+    background: #eee;
+    padding: 30px;
+}
+
+.sortable li {
+    background: #5F9EDF;
+    margin:5px;
+    padding:2px;
+    color:#fff;
+    cursor: pointer;
+}
+
+
+.container {
+    padding: 10px;
+    position: relative;
+}
+
+#sortable-exmaple2 .sortable {
+    padding: 0;
+}
+
+#sortable-exmaple2 .sortable li {
+    margin: 0;
+}
+
+#sortable-exmaple2 .sortable input {
+    width: auto;
+}
