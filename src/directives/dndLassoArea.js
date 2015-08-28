@@ -25,7 +25,11 @@ module.directive('dndLassoArea', ['DndLasso', '$parse', '$timeout', 'dndKey', fu
 
         this.getSelectable = function(element){
             for(var i = 0; i < ctrls.length; i++){
-                if(ctrls[i].getElement()[0] == element) return ctrls[i];
+                var curElement = element;
+                while (curElement) {
+                    if (ctrls[i].getElement()[0] == curElement) return ctrls[i];
+                    curElement = curElement.parentElement;
+                }
             }
 
             return undefined;
