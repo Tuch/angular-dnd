@@ -39,25 +39,37 @@ module.directive('dndSelectable', ['$parse', function($parse){
         };
 
         this.selecting = function(){
-            if(this.isSelectable() && onSelecting($scope) !== false) setterSelecting($scope, true);
+            if (!this.isSelectable()) {
+                return this;
+            }
+
+            setterSelecting($scope, true);
+            onSelecting($scope);
 
             return this;
         };
 
         this.unselecting = function(){
-            if(onUnselecting($scope) !== false) setterSelecting($scope, false);
+            setterSelecting($scope, false);
+            onUnselecting($scope);
 
             return this;
         };
 
         this.selected = function(){
-            if(this.isSelectable() && onSelected($scope) !== false) setterSelected($scope, true);
+            if (!this.isSelectable()) {
+                return this;
+            }
+
+            setterSelected($scope, true);
+            onSelected($scope);
 
             return this;
         };
 
         this.unselected = function(){
-            if(onUnselected($scope) !== false) setterSelected($scope, false);
+            setterSelected($scope, false);
+            onUnselected($scope);
 
             return this;
         };
@@ -118,34 +130,6 @@ module.directive('dndSelectable', ['$parse', function($parse){
             }
 
             $el.on('$destroy', ondestroy);
-
-            var selected = $parse(attrs.dndOnSelected);
-            var unselected = $parse(attrs.dndOnUnselected);
-            var selecting = $parse(attrs.dndOnSelecting);
-            var unselecting = $parse(attrs.dndOnUnselecting);
-
-            if(selected || unselected) {
-                selected = selected || noop;
-                unselected = unselected || noop;
-
-                scope.$watch(attrs.dndModelSelected, function(n, o){
-                    if(n === undefined || o === undefined || n === o) return;
-
-                    n ? selected(scope) : unselected(scope);
-                });
-            }
-
-
-            if(selecting || unselecting) {
-                selecting = selecting || noop;
-                unselecting = unselecting || noop;
-
-                scope.$watch(attrs.dndModelSelecting, function(n, o){
-                    if(n === undefined || o === undefined || n === o) return;
-
-                    n ? selecting(scope) : unselecting(scope);
-                });
-            }
         }
     };
-}])
+}]);

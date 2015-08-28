@@ -1,4 +1,4 @@
-Angular-DND 0.1.14
+Angular-DND 0.1.16
 =========
 
 Features:
@@ -117,10 +117,10 @@ Use manipulator to select elements, individually or in a group.
  - dnd-lasso-area как родительский элемент
 
 #### watching attributes:
- - dnd-on-selected [function([$keyPressed])]: interrupt BEFORE changing selected value (dnd-model-selected) from false to true. In case if function return false the value will remain the same.
- - dnd-on-unselected [function([$keyPressed])]: interrupt BEFORE changing selected value (dnd-model-selected) c true на false. In case if function return false the value will remain the same.
- - dnd-on-selecting [function([$keyPressed])]: interrupt BEFORE changing  selecting value (dnd-model-selecting) c false на true. In case if function return false the value will remain the same.
- - dnd-on-unselecting [function([$keyPressed])]: interrupt BEFORE changing selecting value (dnd-model-selecting) c true на false. In case if function return false the value will remain the same.
+ - dnd-on-selected [function([$keyPressed])]: interrupt after changing selected value (dnd-model-selected) from false to true.
+ - dnd-on-unselected [function([$keyPressed])]: interrupt after changing selected value (dnd-model-selected) from true на false.
+ - dnd-on-selecting [function([$keyPressed])]: interrupt after changing  selecting value (dnd-model-selecting) from false на true.
+ - dnd-on-unselecting [function([$keyPressed])]: interrupt after changing selecting value (dnd-model-selecting) from true на false.
 
 #### model attributes:
  - dnd-model-selected: varibale name of selected state
@@ -190,7 +190,7 @@ Examples
 ---------
 
 - All examples inside demo folder
-- Also available [link](http://tuch.github.io/angular-dnd/latest/demo)
+- Also available [link](http://tuch.github.io/angular-dnd/demo)
 
 
 

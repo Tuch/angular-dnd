@@ -1,6 +1,6 @@
 
 /**
-* @license AngularJS-DND v0.1.14
+* @license AngularJS-DND v0.1.16
 * (c) 2014-2015 Alexander Afonin (toafonin@gmail.com, http://github.com/Tuch)
 * License: MIT
 */
@@ -17,7 +17,7 @@
 
 /* ENVIRONMENT VARIABLES */
 
-var version = '0.1.14',
+var version = '0.1.16',
     $ = angular.element, $window = $(window), $document = $(document), body = 'body', TRANSFORM, TRANSFORMORIGIN, MATCHES_SELECTOR,
     debug = {
         mode: false,
@@ -647,10 +647,11 @@ extend($.prototype, {
 
         for (var i = 0, length = this.length; i < length; i++) {
             var node = this[i].cloneNode();
+            var childNodes = angular.element(this[i].childNodes).dndCloneByStyles();
 
-            angular.element(node).append(angular.element(this[0].childNodes).dndCloneByStyles());
+            angular.element(node).append(childNodes);
 
-            if (this[i].nodeType === 1) {
+            if (node.nodeType === 1) {
                 node.style.cssText = window.getComputedStyle(this[i], "").cssText;
             }
 
@@ -1330,8 +1331,8 @@ var module = angular.module('dnd', []);
                 return;
             }
 
-			$document.on('mousemove', this.mousemove);
-			$document.on('mouseup', this.mouseup);
+            $document.on('mousemove', this.mousemove );
+            $document.on('mouseup', this.mouseup );
         },
 
         mousemove: function(event) {
@@ -1662,3 +1663,6 @@ angular.dnd = {
     debounce: debounce,
     debug: debug
 };
+
+
+
