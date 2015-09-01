@@ -74,7 +74,7 @@ module.directive('dndLassoArea', ['DndLasso', '$parse', '$timeout', 'dndKey', fu
             var dragCallback = $parse(attrs.dndOnLasso);
             var dragendCallback = $parse(attrs.dndOnLassoend);
             var clickCallback = $parse(attrs.dndLassoOnclick);
-            var lasso = new DndLasso({ $el:$el }), selectable, keyPressed;
+            var lasso = new DndLasso({ $el: $el }), selectable, keyPressed, shiftKeyPressed;
 
             ctrls.push(ctrl);
 
@@ -83,7 +83,13 @@ module.directive('dndLassoArea', ['DndLasso', '$parse', '$timeout', 'dndKey', fu
 
                     if(keyPressed) {
                         if (selectable) {
-                            selectable.toggleSelected();
+                            if (opts.shiftAlwaysSelect && shiftKeyPressed) {
+                                if (!selectable.isSelected()) {
+                                    selectable.selected();
+                                }
+                            } else {
+                                selectable.toggleSelected();
+                            }
                         }
                         return
                     }
@@ -152,7 +158,15 @@ module.directive('dndLassoArea', ['DndLasso', '$parse', '$timeout', 'dndKey', fu
                 if(!ctrl.empty()) {
 
                     for(var i = 0; i < s.length; i++){
-                        if(s[i].isSelecting()) s[i].toggleSelected();
+                        if (s[i].isSelecting()) {
+                            if (opts.shiftAlwaysSelect && shiftKeyPressed) {
+                                if (!s[i].isSelected()) {
+                                    s[i].selected();
+                                }
+                            } else {
+                                s[i].toggleSelected();
+                            }
+                        }
                     }
 
                     for(var i = 0; i < s.length; i++){
@@ -174,7 +188,8 @@ module.directive('dndLassoArea', ['DndLasso', '$parse', '$timeout', 'dndKey', fu
 
                 //scope.$keypressed = keyPressed = ( dndKey.isset(16) || dndKey.isset(17) || dndKey.isset(18) );
                 scope.$keypressed = keyPressed = opts.selectAdditionals ? ( event.shiftKey || event.ctrlKey || event.metaKey ) : false;
-
+                shiftKeyPressed = event.shiftKey;
+				
                 if(!ctrl.empty()) {
                     selectable = ctrl.getSelectable(event.target);
                 }
