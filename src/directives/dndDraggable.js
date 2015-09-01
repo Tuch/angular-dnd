@@ -84,7 +84,7 @@ function ($timeout, $parse, $http, $compile, $q, $templateCache, EventEmitter) {
                 this.scope.$apply();
 
                 api.setReferenceElement(document.body);
-                this.initBorderOffset();
+                setTimeout(function () { this.initBorderOffset(); }.bind(this), 0);
 
                 return this;
             },
@@ -214,7 +214,9 @@ function ($timeout, $parse, $http, $compile, $q, $templateCache, EventEmitter) {
             // задаем модель данному элементу
             api.dragmodel = model ? model.get() : null;
 
-            api.setBounderElement( containment ? containment.get() : angular.element(document.body) );
+            if (!opts.allowOverflow) {
+                api.setBounderElement(containment ? containment.get() : angular.element(document.body));
+            }
 
             // ставим флаг, что процесс перемещения элемента начался
             scope.$dragged = true;

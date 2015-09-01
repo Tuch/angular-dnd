@@ -1331,8 +1331,10 @@ var module = angular.module('dnd', []);
                 return;
             }
 
-            $document.on('mousemove', this.mousemove );
-            $document.on('mouseup', this.mouseup );
+            setTimeout(function () {
+                $document.on('mousemove', this.mousemove);
+                $document.on('mouseup', this.mouseup);
+            }.bind(this), 0);
         },
 
         mousemove: function(event) {

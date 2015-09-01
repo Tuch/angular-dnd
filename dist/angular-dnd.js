@@ -1333,8 +1333,10 @@ var module = angular.module('dnd', []);
                 return;
             }
 
-            $document.on('mousemove', this.mousemove );
-            $document.on('mouseup', this.mouseup );
+            setTimeout(function () {
+                $document.on('mousemove', this.mousemove);
+                $document.on('mouseup', this.mouseup);
+            }.bind(this), 0);
         },
 
         mousemove: function(event) {
@@ -1756,7 +1758,7 @@ function ($timeout, $parse, $http, $compile, $q, $templateCache, EventEmitter) {
                 this.scope.$apply();
 
                 api.setReferenceElement(document.body);
-                this.initBorderOffset();
+                setTimeout(function () { this.initBorderOffset(); }.bind(this), 0);
 
                 return this;
             },
@@ -1886,7 +1888,9 @@ function ($timeout, $parse, $http, $compile, $q, $templateCache, EventEmitter) {
             // задаем модель данному элементу
             api.dragmodel = model ? model.get() : null;
 
-            api.setBounderElement( containment ? containment.get() : angular.element(document.body) );
+            if (!opts.allowOverflow) {
+                api.setBounderElement(containment ? containment.get() : angular.element(document.body));
+            }
 
             // ставим флаг, что процесс перемещения элемента начался
             scope.$dragged = true;
@@ -2220,6 +2224,7 @@ module.directive('dndResizable', ['$parse', '$timeout', function($parse, $timeou
                 local.deltaY = crect.top - srect.top + crect.height / 2 - srect.height / 2;
 
                 scope.$resized = true;
+                scope.$handler = side;
 
                 dragstartCallback(scope);
 
@@ -2279,7 +2284,7 @@ module.directive('dndResizable', ['$parse', '$timeout', function($parse, $timeou
                 var realCenter = Point(styles.left+local.deltaX+styles.width/2, styles.top+local.deltaY+styles.height/2);
                 var boundedRect = Rect(styles.left+local.deltaX, styles.top+local.deltaY, styles.width, styles.height).applyMatrix( local.rotateMatrix, realCenter ).client();
 
-                if (local.borders && (boundedRect.left+1 < local.borders.left || boundedRect.top+1 < local.borders.top || boundedRect.right-1 > local.borders.right || boundedRect.bottom-1 > local.borders.bottom)) {
+                if (!opts.allowOverflow && local.borders && (boundedRect.left + 1 < local.borders.left || boundedRect.top + 1 < local.borders.top || boundedRect.right - 1 > local.borders.right || boundedRect.bottom - 1 > local.borders.bottom)) {
                     return;
                 }
 
@@ -2662,7 +2667,9 @@ module.directive('dndSelectable', ['$parse', function($parse){
             function ondestroy() {
                 ctrls[1].remove(ctrls[0]);
 
-                if(!scope.$$phase) scope.$apply();
+                if (!scope.$$phase && (!scope.$root || !scope.$root.$$phase)) {
+                    scope.$apply();
+                }
             }
 
             $el.on('$destroy', ondestroy);
@@ -2826,7 +2833,11 @@ module.directive('dndLassoArea', ['DndLasso', '$parse', '$timeout', 'dndKey', fu
 
         this.getSelectable = function(element){
             for(var i = 0; i < ctrls.length; i++){
-                if(ctrls[i].getElement()[0] == element) return ctrls[i];
+                var curElement = element;
+                while (curElement) {
+                    if (ctrls[i].getElement()[0] == curElement) return ctrls[i];
+                    curElement = curElement.parentElement;
+                }
             }
 
             return undefined;
@@ -2871,7 +2882,7 @@ module.directive('dndLassoArea', ['DndLasso', '$parse', '$timeout', 'dndKey', fu
             var dragCallback = $parse(attrs.dndOnLasso);
             var dragendCallback = $parse(attrs.dndOnLassoend);
             var clickCallback = $parse(attrs.dndLassoOnclick);
-            var lasso = new DndLasso({ $el:$el }), selectable, keyPressed;
+            var lasso = new DndLasso({ $el: $el }), selectable, keyPressed, shiftKeyPressed;
 
             ctrls.push(ctrl);
 
@@ -2879,7 +2890,15 @@ module.directive('dndLassoArea', ['DndLasso', '$parse', '$timeout', 'dndKey', fu
                 if(!ctrl.empty()) {
 
                     if(keyPressed) {
-                        selectable.toggleSelected();
+                        if (selectable) {
+                            if (opts.shiftAlwaysSelect && shiftKeyPressed) {
+                                if (!selectable.isSelected()) {
+                                    selectable.selected();
+                                }
+                            } else {
+                                selectable.toggleSelected();
+                            }
+                        }
                         return
                     }
 
@@ -2947,7 +2966,15 @@ module.directive('dndLassoArea', ['DndLasso', '$parse', '$timeout', 'dndKey', fu
                 if(!ctrl.empty()) {
 
                     for(var i = 0; i < s.length; i++){
-                        if(s[i].isSelecting()) s[i].toggleSelected();
+                        if (s[i].isSelecting()) {
+                            if (opts.shiftAlwaysSelect && shiftKeyPressed) {
+                                if (!s[i].isSelected()) {
+                                    s[i].selected();
+                                }
+                            } else {
+                                s[i].toggleSelected();
+                            }
+                        }
                     }
 
                     for(var i = 0; i < s.length; i++){
@@ -2969,7 +2996,8 @@ module.directive('dndLassoArea', ['DndLasso', '$parse', '$timeout', 'dndKey', fu
 
                 //scope.$keypressed = keyPressed = ( dndKey.isset(16) || dndKey.isset(17) || dndKey.isset(18) );
                 scope.$keypressed = keyPressed = opts.selectAdditionals ? ( event.shiftKey || event.ctrlKey || event.metaKey ) : false;
-
+                shiftKeyPressed = event.shiftKey;
+				
                 if(!ctrl.empty()) {
                     selectable = ctrl.getSelectable(event.target);
                 }
