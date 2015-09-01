@@ -1,6 +1,6 @@
 
 /**
-* @license AngularJS-DND v0.1.12
+* @license AngularJS-DND v0.1.16
 * (c) 2014-2015 Alexander Afonin (toafonin@gmail.com, http://github.com/Tuch)
 * License: MIT
 */
@@ -17,7 +17,7 @@
 
 /* ENVIRONMENT VARIABLES */
 
-var version = '0.1.12',
+var version = '0.1.16',
     $ = angular.element, $window = $(window), $document = $(document), body = 'body', TRANSFORM, TRANSFORMORIGIN, MATCHES_SELECTOR,
     debug = {
         mode: false,
@@ -288,7 +288,6 @@ var Point = (function() {
         },
         deltaAngle: function(other, aboutPoint, isdegree) {
             aboutPoint = aboutPoint === undefined ? {x:0,y:0} : aboutPoint;
-
             var ret = this.angle(aboutPoint) - other.angle(aboutPoint);
 
             if (ret < 0) {
@@ -411,11 +410,11 @@ var Matrix = (function() {
                 c = roundNumber(this.c, 3),
                 d = roundNumber(this.d, 3),
                 tx = roundNumber(this.tx, 3),
-                ty = roundNumber(this.ty, 3);
+                ty = roundNumber(this.ty, 3),
+                result = 'matrix(' + a + ', ' + b + ', ' + c + ', ' + d + ', ' + tx +', ' + ty + ')';
 
-            return 'matrix(' + a + ', ' + b + ', ' + c + ', ' + d + ', ' + tx +', ' + ty + ')';
-        },
-
+            return result === 'matrix(1, 0, 0, 1, 0, 0)' ? 'none' : result;
+        }
     };
 
     var fn = function(a, b, c, d, tx, ty) {
@@ -648,10 +647,11 @@ extend($.prototype, {
 
         for (var i = 0, length = this.length; i < length; i++) {
             var node = this[i].cloneNode();
+            var childNodes = angular.element(this[i].childNodes).dndCloneByStyles();
 
-            angular.element(node).append(angular.element(this[0].childNodes).dndCloneByStyles());
+            angular.element(node).append(childNodes);
 
-            if (this[i].nodeType === 1) {
+            if (node.nodeType === 1) {
                 node.style.cssText = window.getComputedStyle(this[i], "").cssText;
             }
 
@@ -1005,7 +1005,7 @@ var module = angular.module('dnd', []);
                 this._manipulator.removeFromTargets();
             },
             useAsPoint: function(value) {
-                return this._manipulator.asPoint = value === false ? false : true;
+                return this._manipulator.asPoint = !(value === false);
             },
             setBounderElement: function(node) {
                 this._manipulator.$bounder = angular.element(node);
@@ -1197,6 +1197,18 @@ var module = angular.module('dnd', []);
                 return true;
             },
 
+            _isTriggerByPoint: function (p, r) {
+                return (p.x > r.left) && (p.x < r.right) && (p.y > r.top) && (p.y < r.bottom);
+            },
+
+            _isTriggerByRect: function (a, b) {
+                return a.top <= b.top && b.top <= a.bottom && ( a.left <= b.left && b.left <= a.right || a.left <= b.right && b.right <= a.right ) ||
+                a.top <= b.bottom && b.bottom <= a.bottom && ( a.left <= b.left && b.left <= a.right || a.left <= b.right && b.right <= a.right ) ||
+                a.left >= b.left && a.right <= b.right && ( b.top <= a.bottom && a.bottom <= b.bottom ||  b.bottom >= a.top && a.top >= b.top || a.top <= b.top && a.bottom >= b.bottom) ||
+                a.top >= b.top && a.bottom <= b.bottom && ( b.left <= a.right && a.right <= b.right || b.right >= a.left && a.left >= b.left || a.left <= b.left && a.right >= b.right) ||
+                a.top >= b.top && a.right <= b.right && a.bottom <= b.bottom && a.left >= b.left
+            },
+
             progress: function (event) {
                 this.event = event;
 
@@ -1215,28 +1227,38 @@ var module = angular.module('dnd', []);
 
                 this.dnd.trigger('drag', this.api);
 
-                var axis = this.getBorderedAxis(), x = axis.x, y = axis.y, asPoint = this.asPoint;
+                var isTrigger = this.asPoint ? this._isTriggerByPoint.bind(this, this.getBorderedAxis()) :
+                    this._isTriggerByRect.bind(this, angular.element(this.dnd.el).dndClientRect());
+                var dragenter = [];
+                var dragover = [];
+                var dragleave = [];
 
                 for(var i = 0; i < regions.length; i++) {
                     var region = regions[i],
-                        left = region.rect.left,
-                        right = left + region.rect.width,
-                        top = region.rect.top,
-                        bottom = top + region.rect.height,
-                        trigger = (x > left ) && (x < right) && (y > top) && (y < bottom),
+                        trigger = isTrigger(region.rect),
                         targetIndex = this.targets.indexOf(region.dnd.el);
 
                     if ( trigger ) {
                         if (targetIndex === -1) {
                             this.targets.push(region.dnd.el);
-                            region.dnd.trigger('dragenter', this.api, this.dnd.el);
+                            dragenter.push(region.dnd);
                         } else {
-                            region.dnd.trigger('dragover', this.api, this.dnd.el);
+                            dragover.push(region.dnd);
                         }
                     } else if (targetIndex !== -1) {
-                        $(this.targets[targetIndex]).data('dnd')[this.dnd.layer()].trigger('dragleave', this.api, this.dnd.el);
+                        dragleave.push($(this.targets[targetIndex]).data('dnd')[this.dnd.layer()]);
                         this.targets.splice(targetIndex, 1);
                     }
+                }
+
+                this._triggerArray(dragleave, 'dragleave');
+                this._triggerArray(dragenter, 'dragenter');
+                this._triggerArray(dragover, 'dragover');
+            },
+
+            _triggerArray: function (arr, event) {
+                for (var i = 0; i < arr.length; i++) {
+                    arr[i].trigger(event, this.api, this.dnd.el);
                 }
             },
 
@@ -1351,7 +1373,7 @@ var module = angular.module('dnd', []);
 
             return event.changedTouches ?
                 Point(event.changedTouches[0].clientX + (offset ? offset.x : 0), event.changedTouches[0].clientY + (offset ? offset.y : 0)) :
-                Point(this.event.clientX + (offset ? offset.x : 0), this.event.clientY + (offset ? offset.y : 0));
+                Point(event.clientX + (offset ? offset.x : 0), event.clientY + (offset ? offset.y : 0));
         },
 
         touchstart: function (event) {
@@ -1641,3 +1663,6 @@ angular.dnd = {
     debounce: debounce,
     debug: debug
 };
+
+
+

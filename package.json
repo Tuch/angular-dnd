@@ -1,6 +1,6 @@
 {
   "name": "angular-dnd-module",
-  "version": "0.1.12",
+  "version": "0.1.16",
   "author": "Alexander Afonin",
   "devDependencies": {
     "grunt-contrib-concat": "*",

@@ -2,7 +2,7 @@
 
 
 /**
-* @license AngularJS-DND v0.1.12
+* @license AngularJS-DND v0.1.16
 * (c) 2014-2015 Alexander Afonin (toafonin@gmail.com, http://github.com/Tuch)
 * License: MIT
 */
@@ -19,7 +19,7 @@
 
 /* ENVIRONMENT VARIABLES */
 
-var version = '0.1.12',
+var version = '0.1.16',
     $ = angular.element, $window = $(window), $document = $(document), body = 'body', TRANSFORM, TRANSFORMORIGIN, MATCHES_SELECTOR,
     debug = {
         mode: false,
@@ -290,7 +290,6 @@ var Point = (function() {
         },
         deltaAngle: function(other, aboutPoint, isdegree) {
             aboutPoint = aboutPoint === undefined ? {x:0,y:0} : aboutPoint;
-
             var ret = this.angle(aboutPoint) - other.angle(aboutPoint);
 
             if (ret < 0) {
@@ -413,11 +412,11 @@ var Matrix = (function() {
                 c = roundNumber(this.c, 3),
                 d = roundNumber(this.d, 3),
                 tx = roundNumber(this.tx, 3),
-                ty = roundNumber(this.ty, 3);
+                ty = roundNumber(this.ty, 3),
+                result = 'matrix(' + a + ', ' + b + ', ' + c + ', ' + d + ', ' + tx +', ' + ty + ')';
 
-            return 'matrix(' + a + ', ' + b + ', ' + c + ', ' + d + ', ' + tx +', ' + ty + ')';
-        },
-
+            return result === 'matrix(1, 0, 0, 1, 0, 0)' ? 'none' : result;
+        }
     };
 
     var fn = function(a, b, c, d, tx, ty) {
@@ -650,10 +649,11 @@ extend($.prototype, {
 
         for (var i = 0, length = this.length; i < length; i++) {
             var node = this[i].cloneNode();
+            var childNodes = angular.element(this[i].childNodes).dndCloneByStyles();
 
-            angular.element(node).append(angular.element(this[0].childNodes).dndCloneByStyles());
+            angular.element(node).append(childNodes);
 
-            if (this[i].nodeType === 1) {
+            if (node.nodeType === 1) {
                 node.style.cssText = window.getComputedStyle(this[i], "").cssText;
             }
 
@@ -1007,7 +1007,7 @@ var module = angular.module('dnd', []);
                 this._manipulator.removeFromTargets();
             },
             useAsPoint: function(value) {
-                return this._manipulator.asPoint = value === false ? false : true;
+                return this._manipulator.asPoint = !(value === false);
             },
             setBounderElement: function(node) {
                 this._manipulator.$bounder = angular.element(node);
@@ -1199,6 +1199,18 @@ var module = angular.module('dnd', []);
                 return true;
             },
 
+            _isTriggerByPoint: function (p, r) {
+                return (p.x > r.left) && (p.x < r.right) && (p.y > r.top) && (p.y < r.bottom);
+            },
+
+            _isTriggerByRect: function (a, b) {
+                return a.top <= b.top && b.top <= a.bottom && ( a.left <= b.left && b.left <= a.right || a.left <= b.right && b.right <= a.right ) ||
+                a.top <= b.bottom && b.bottom <= a.bottom && ( a.left <= b.left && b.left <= a.right || a.left <= b.right && b.right <= a.right ) ||
+                a.left >= b.left && a.right <= b.right && ( b.top <= a.bottom && a.bottom <= b.bottom ||  b.bottom >= a.top && a.top >= b.top || a.top <= b.top && a.bottom >= b.bottom) ||
+                a.top >= b.top && a.bottom <= b.bottom && ( b.left <= a.right && a.right <= b.right || b.right >= a.left && a.left >= b.left || a.left <= b.left && a.right >= b.right) ||
+                a.top >= b.top && a.right <= b.right && a.bottom <= b.bottom && a.left >= b.left
+            },
+
             progress: function (event) {
                 this.event = event;
 
@@ -1217,28 +1229,38 @@ var module = angular.module('dnd', []);
 
                 this.dnd.trigger('drag', this.api);
 
-                var axis = this.getBorderedAxis(), x = axis.x, y = axis.y, asPoint = this.asPoint;
+                var isTrigger = this.asPoint ? this._isTriggerByPoint.bind(this, this.getBorderedAxis()) :
+                    this._isTriggerByRect.bind(this, angular.element(this.dnd.el).dndClientRect());
+                var dragenter = [];
+                var dragover = [];
+                var dragleave = [];
 
                 for(var i = 0; i < regions.length; i++) {
                     var region = regions[i],
-                        left = region.rect.left,
-                        right = left + region.rect.width,
-                        top = region.rect.top,
-                        bottom = top + region.rect.height,
-                        trigger = (x > left ) && (x < right) && (y > top) && (y < bottom),
+                        trigger = isTrigger(region.rect),
                         targetIndex = this.targets.indexOf(region.dnd.el);
 
                     if ( trigger ) {
                         if (targetIndex === -1) {
                             this.targets.push(region.dnd.el);
-                            region.dnd.trigger('dragenter', this.api, this.dnd.el);
+                            dragenter.push(region.dnd);
                         } else {
-                            region.dnd.trigger('dragover', this.api, this.dnd.el);
+                            dragover.push(region.dnd);
                         }
                     } else if (targetIndex !== -1) {
-                        $(this.targets[targetIndex]).data('dnd')[this.dnd.layer()].trigger('dragleave', this.api, this.dnd.el);
+                        dragleave.push($(this.targets[targetIndex]).data('dnd')[this.dnd.layer()]);
                         this.targets.splice(targetIndex, 1);
                     }
+                }
+
+                this._triggerArray(dragleave, 'dragleave');
+                this._triggerArray(dragenter, 'dragenter');
+                this._triggerArray(dragover, 'dragover');
+            },
+
+            _triggerArray: function (arr, event) {
+                for (var i = 0; i < arr.length; i++) {
+                    arr[i].trigger(event, this.api, this.dnd.el);
                 }
             },
 
@@ -1353,7 +1375,7 @@ var module = angular.module('dnd', []);
 
             return event.changedTouches ?
                 Point(event.changedTouches[0].clientX + (offset ? offset.x : 0), event.changedTouches[0].clientY + (offset ? offset.y : 0)) :
-                Point(this.event.clientX + (offset ? offset.x : 0), this.event.clientY + (offset ? offset.y : 0));
+                Point(event.clientX + (offset ? offset.x : 0), event.clientY + (offset ? offset.y : 0));
         },
 
         touchstart: function (event) {
@@ -1643,6 +1665,9 @@ angular.dnd = {
     debounce: debounce,
     debug: debug
 };
+
+
+
 ;
 
 module.directive('dndDraggable', ['$timeout', '$parse', '$http', '$compile', '$q', '$templateCache', 'EventEmitter',
@@ -1799,7 +1824,6 @@ function ($timeout, $parse, $http, $compile, $q, $templateCache, EventEmitter) {
 
             updatePosition: function () {
                 var position = this.api.getRelBorderedAxis(this.borderOffset).plus(this._offset);
-                console.log(this.api.getRelBorderedAxis())
 
                 wrapper.dndCss(position.getAsCss());
             },
@@ -1820,7 +1844,7 @@ function ($timeout, $parse, $http, $compile, $q, $templateCache, EventEmitter) {
 
         var defaults = {
             layer: 'common',
-            useAsPoint: false,
+            useAsPoint: true,
             helper: null,
             handle: ''
         };
@@ -2553,25 +2577,37 @@ module.directive('dndSelectable', ['$parse', function($parse){
         };
 
         this.selecting = function(){
-            if(this.isSelectable() && onSelecting($scope) !== false) setterSelecting($scope, true);
+            if (!this.isSelectable()) {
+                return this;
+            }
+
+            setterSelecting($scope, true);
+            onSelecting($scope);
 
             return this;
         };
 
         this.unselecting = function(){
-            if(onUnselecting($scope) !== false) setterSelecting($scope, false);
+            setterSelecting($scope, false);
+            onUnselecting($scope);
 
             return this;
         };
 
         this.selected = function(){
-            if(this.isSelectable() && onSelected($scope) !== false) setterSelected($scope, true);
+            if (!this.isSelectable()) {
+                return this;
+            }
+
+            setterSelected($scope, true);
+            onSelected($scope);
 
             return this;
         };
 
         this.unselected = function(){
-            if(onUnselected($scope) !== false) setterSelected($scope, false);
+            setterSelected($scope, false);
+            onUnselected($scope);
 
             return this;
         };
@@ -2630,37 +2666,9 @@ module.directive('dndSelectable', ['$parse', function($parse){
             }
 
             $el.on('$destroy', ondestroy);
-
-            var selected = $parse(attrs.dndOnSelected);
-            var unselected = $parse(attrs.dndOnUnselected);
-            var selecting = $parse(attrs.dndOnSelecting);
-            var unselecting = $parse(attrs.dndOnUnselecting);
-
-            if(selected || unselected) {
-                selected = selected || noop;
-                unselected = unselected || noop;
-
-                scope.$watch(attrs.dndModelSelected, function(n, o){
-                    if(n === undefined || o === undefined || n === o) return;
-
-                    n ? selected(scope) : unselected(scope);
-                });
-            }
-
-
-            if(selecting || unselecting) {
-                selecting = selecting || noop;
-                unselecting = unselecting || noop;
-
-                scope.$watch(attrs.dndModelSelecting, function(n, o){
-                    if(n === undefined || o === undefined || n === o) return;
-
-                    n ? selecting(scope) : unselecting(scope);
-                });
-            }
         }
     };
-}])
+}]);
 ;
 
 module.directive('dndRect', ['$parse', function($parse){
@@ -2673,12 +2681,12 @@ module.directive('dndRect', ['$parse', function($parse){
 
     Controller.$inject = ['$scope', '$attrs', '$element'];
     function Controller( $scope, $attrs, $element ){
-        var getter = $parse($attrs.dndRect), setter = getter.assign, lastRect;
+        var getter = $parse($attrs.dndRect), setter = getter.assign || noop, lastRect;
 
         this.update = function(prop, value) {
             var values, rect = getter($scope) || {};
 
-            if(typeof prop != 'object') {
+            if (typeof prop != 'object') {
                 values = {};
                 values[prop] = value;
             } else values = prop;
@@ -2713,7 +2721,7 @@ module.directive('dndRect', ['$parse', function($parse){
 
                 if(!css) css = $element.dndCss(getStyles);
 
-                rect[style] = style == 'transform' ? (css[TRANSFORM] == 'none' ? 'matrix(1, 0, 0, 1, 0, 0)' : css[TRANSFORM]) : css[style];
+                rect[style] = (style === 'transform') ? css[TRANSFORM] : css[style];
             }
 
             for(var key in rect){
@@ -2746,17 +2754,21 @@ module.directive('dndRect', ['$parse', function($parse){
             for(var val, i=0; i < setStyles.length; i++ ){
                 val = setStyles[i];
 
-                if(n[val] == undefined && o[val] != undefined) css[val] = '';
-                else if(n[val] != undefined) css[val] = n[val];
+                if(n[val] == undefined && o[val] != undefined) {
+                    css[val] = '';
+                } else if(n[val] != undefined) {
+                    css[val] = n[val];
+                }
             }
 
-            if(css.transform) css[TRANSFORM] = css.transform;
+            if(css.transform) {
+                css[TRANSFORM] = css.transform;
+            }
+
             $element.dndCss(css);
 
         }, true);
     }
-
-
 
     return {
         restrict: 'A',
@@ -2908,7 +2920,6 @@ module.directive('dndLassoArea', ['DndLasso', '$parse', '$timeout', 'dndKey', fu
             }
 
             function onDrag(handler) {
-
                 scope.$dragged = true;
 
                 if(!handler.isActive()) return;
@@ -2939,16 +2950,11 @@ module.directive('dndLassoArea', ['DndLasso', '$parse', '$timeout', 'dndKey', fu
                         if(s[i].isSelecting()) s[i].toggleSelected();
                     }
 
-                    scope.$apply();
-                }
-
-                dragendCallback(scope, { $rect: handler.getRect() });
-
-                if(!ctrl.empty()) {
-
                     for(var i = 0; i < s.length; i++){
                         s[i].unselecting();
                     }
+
+                    dragendCallback(scope, { $rect: handler.getRect() });
 
                     scope.$apply();
                 }

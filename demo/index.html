@@ -59,10 +59,10 @@
         };
 
         this.reset = function(){
-            this.rect = {top:'0', left:'240px', width: '100px', height: '100px', transform: 'matrix(1, 0, 0, 1, 0, 0)'};
-            this.rect2 = {top:'200px', left:'440px', width: '100px', height: '100px', transform: 'matrix(1, 0, 0, 1, 0, 0)'};
-            this.rect3 = {top:'0', left:'440px', width: '100px', height: '100px', transform: 'matrix(1, 0, 0, 1, 0, 0)'};
-            this.rect4 = {top:'200px', left:'240px', width: '100px', height: '100px', transform: 'matrix(1, 0, 0, 1, 0, 0)'};
+            this.rect = {top:'0', left:'240px', width: '100px', height: '100px'};
+            this.rect2 = {top:'200px', left:'440px', width: '100px', height: '100px'};
+            this.rect3 = {top:'0', left:'440px', width: '100px', height: '100px'};
+            this.rect4 = {top:'200px', left:'240px', width: '100px', height: '100px'};
         }
 
         this.reset();
@@ -105,7 +105,7 @@
                  ng-click = "click(!$dragged && !$resized && !$rotated, $dropmodel)"
 
                  dnd-draggable = "true"
-                 dnd-draggable-opts = "{layer: 'layer1', useAsPoint: true }"
+                 dnd-draggable-opts = "{layer: 'layer1' }"
                  dnd-on-dragstart = "main.dragstart($dropmodel, $dragmodel)"
                  dnd-on-drag = "main.drag($dropmodel, $dragmodel)"
                  dnd-on-dragend = "main.dragend($dropmodel, $dragmodel)"

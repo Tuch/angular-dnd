@@ -119,7 +119,6 @@ module.directive('dndLassoArea', ['DndLasso', '$parse', '$timeout', 'dndKey', fu
             }
 
             function onDrag(handler) {
-
                 scope.$dragged = true;
 
                 if(!handler.isActive()) return;
@@ -150,16 +149,11 @@ module.directive('dndLassoArea', ['DndLasso', '$parse', '$timeout', 'dndKey', fu
                         if(s[i].isSelecting()) s[i].toggleSelected();
                     }
 
-                    scope.$apply();
-                }
-
-                dragendCallback(scope, { $rect: handler.getRect() });
-
-                if(!ctrl.empty()) {
-
                     for(var i = 0; i < s.length; i++){
                         s[i].unselecting();
                     }
+
+                    dragendCallback(scope, { $rect: handler.getRect() });
 
                     scope.$apply();
                 }
