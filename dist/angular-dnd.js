@@ -2,7 +2,7 @@
 
 
 /**
-* @license AngularJS-DND v0.1.16
+* @license AngularJS-DND v0.1.17
 * (c) 2014-2015 Alexander Afonin (toafonin@gmail.com, http://github.com/Tuch)
 * License: MIT
 */
@@ -19,7 +19,7 @@
 
 /* ENVIRONMENT VARIABLES */
 
-var version = '0.1.16',
+var version = '0.1.17',
     $ = angular.element, $window = $(window), $document = $(document), body = 'body', TRANSFORM, TRANSFORMORIGIN, MATCHES_SELECTOR,
     debug = {
         mode: false,
@@ -2339,8 +2339,44 @@ module.directive('dndResizable', ['$parse', '$timeout', function($parse, $timeou
 }]);
 ;
 
+module.directive('dndSortableList', ['$parse', '$compile', function($parse, $compile) {
+    function link(scope, element, attrs, ctrl) {
+        var defaults = {
+            layer: 'common'
+        };
+        var opts = ctrl.options = extend({}, defaults, $parse(attrs.dndSortableOpts)(scope) || {});
+        var getter = ctrl.getter = $parse(attrs.dndSortableList) || angular.noop;
+        var bindings = {};
+
+        bindings[opts.layer+'.dragover'] = function(api) {
+            if(getter(scope).length > 0) {
+                return;
+            }
+
+            api.$sortable.model = {list: getter(scope)};
+            api.$sortable.insertBefore = true;
+            element.append(api.placeholder[0]);
+        };
+
+        element.dndBind(bindings);
+    }
+
+    controller.$inject = ['$scope', '$element', '$attrs'];
+    function controller (scope, element, attrs) { }
+
+    return {
+        scope: true,
+        link: link,
+        controller: controller
+    };
+}]);
+
 module.directive('dndSortable', ['$parse', '$compile', function($parse, $compile) {
     var placeholder, ngRepeatRegExp = /^\s*([\s\S]+?)\s+in\s+([\s\S]+?)(?:\s+track\s+by\s+([\s\S]+?))?\s*$/;
+    var defaults = {
+        layer: 'common'
+    };
+
 
     function join(obj, sep1, sep2) {
         return Object.getOwnPropertyNames(obj).map(function(key) {
@@ -2366,8 +2402,10 @@ module.directive('dndSortable', ['$parse', '$compile', function($parse, $compile
         }
 
         var opts = angular.extend({
-            layer: "'common'",
+            layer: "common",
         }, $parse(tAttrs.dndSortableOpts)());
+
+        console.log(opts);
 
         var attrs = {
             'ng-transclude': '',
@@ -2391,18 +2429,12 @@ module.directive('dndSortable', ['$parse', '$compile', function($parse, $compile
         return '<' + tag + ' ' + joinAttrs(attrs) + '></' + tag + '>';
     }
 
-    function link(scope, element, attrs) {
-        var defaults = {
-            layer: 'common'
-        };
-
-        var parentNode = element[0].parentNode;
-        var parentElement = angular.element(parentNode);
-        var parentData = parentElement.data('dnd-sortable');
-        var getter = $parse(attrs.dndModel) || noop;
+    function link(scope, element, attrs, ctrls) {
+        var listCtrl = ctrls[0];
         var css = element.dndCss(['float', 'display']);
+        var parentNode = element[0].parentNode;
         var floating = /left|right|inline/.test(css.float + css.display);
-        var opts = extend({}, defaults, $parse(attrs.dndSortableOpts)(scope) || {});
+        var getter = $parse(attrs.dndModel) || noop;
         var sortstartCallback = $parse(attrs.dndOnSortstart);
         var sortCallback = $parse(attrs.dndOnSort);
         var sortchangeCallback = $parse(attrs.dndOnSortchange);
@@ -2410,24 +2442,6 @@ module.directive('dndSortable', ['$parse', '$compile', function($parse, $compile
         var sortenterCallback = $parse(attrs.dndOnSortenter);
         var sortleaveCallback = $parse(attrs.dndOnSortleave);
 
-        if(!parentData || !parentData[opts.layer]) {
-            parentData = parentData || {};
-            parentData[opts.layer] = true;
-
-            var bindings = {};
-
-            bindings[opts.layer+'.dragover'] = function(api) {
-                if(api.getEvent().target !== parentNode || getter(scope).list.length > 1) {
-                    return;
-                }
-
-                api.$sortable.model = getter(scope);
-                api.$sortable.insertBefore = true;
-                parentElement.append(placeholder[0]);
-            };
-
-            parentElement.dndBind(bindings).data('dnd-sortable', parentData);
-        }
 
         function isHalfway(dragTarget, axis, dropmodel) {
             var rect = element.dndClientRect();
@@ -2443,10 +2457,10 @@ module.directive('dndSortable', ['$parse', '$compile', function($parse, $compile
         scope.$$onDragStart = function(api) {
             sortstartCallback(scope);
 
-            placeholder = element.clone();
+            api.placeholder = element.clone();
             element.addClass('ng-hide');
-            placeholder.addClass('angular-dnd-placeholder');
-            parentNode.insertBefore(placeholder[0], element[0]);
+            api.placeholder.addClass('angular-dnd-placeholder');
+            parentNode.insertBefore(api.placeholder[0], element[0]);
             api.$sortable = {};
             api.clearCache();
 
@@ -2456,7 +2470,7 @@ module.directive('dndSortable', ['$parse', '$compile', function($parse, $compile
         scope.$$onDragOver = function(api, dropmodel, dragmodel) {
             var halfway = isHalfway(api.getDragTarget(), api.getBorderedAxis());
 
-            halfway ? parentNode.insertBefore(placeholder[0], element[0].nextSibling) : parentNode.insertBefore(placeholder[0], element[0]);
+            halfway ? parentNode.insertBefore(api.placeholder[0], element[0].nextSibling) : parentNode.insertBefore(api.placeholder[0], element[0]);
 
             var model = getter(scope);
 
@@ -2473,7 +2487,7 @@ module.directive('dndSortable', ['$parse', '$compile', function($parse, $compile
 
         scope.$$onDragEnd = function(api) {
             element.removeClass('ng-hide');
-            placeholder.addClass('ng-hide');
+            api.placeholder.remove();
 
             if(!api.$sortable.model) {
                 return;
@@ -2511,7 +2525,8 @@ module.directive('dndSortable', ['$parse', '$compile', function($parse, $compile
         transclude: true,
         template: template,
         replace: true,
-        link: link
+        link: link,
+        require: ['^dndSortableList']
     };
 }]);
 //TODO:

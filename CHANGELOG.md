@@ -1,5 +1,10 @@
 # [Changes]
 
+## v0.1.17
+* **dnd-sortable-list
+  * implement directive for handling sortable list
+* **
+
 ## v0.1.16
 * **angular.element(...).dndCloneByStyles
   * Fix bug with ignore text nodes
