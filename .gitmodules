@@ -1,0 +1,36 @@
+[submodule "latest"]
+    path = latest
+    url = https://github.com/Tuch/angular-dnd
+    branch = master
+[submodule "0.1.5"]
+    path = 0.1.5
+    url = https://github.com/Tuch/angular-dnd
+    branch = 0.1.5
+[submodule "0.1.6"]
+    path = 0.1.6
+    url = https://github.com/Tuch/angular-dnd
+    branch = 0.1.6
+[submodule "0.1.7"]
+    path = 0.1.7
+    url = https://github.com/Tuch/angular-dnd
+    branch = 0.1.7
+[submodule "dev"]
+	path = dev
+	url = https://github.com/Tuch/angular-dnd.git
+    branch = dev
+[submodule "0.1.9"]
+	path = 0.1.9
+	url = https://github.com/Tuch/angular-dnd.git
+    branch = 0.1.9
+[submodule "0.1.10"]
+	path = 0.1.10
+	url = https://github.com/Tuch/angular-dnd.git
+    branch = 0.1.10
+[submodule "0.1.11"]
+	path = 0.1.11
+	url = https://github.com/Tuch/angular-dnd.git
+    branch = 0.1.11
+[submodule "0.1.12"]
+	path = 0.1.12
+	url = https://github.com/Tuch/angular-dnd.git
+    branch = 0.1.12

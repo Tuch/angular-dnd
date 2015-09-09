@@ -1,4 +1,6 @@
-Angular-DND 0.1.16
+[![Join the chat at https://gitter.im/Tuch/angular-dnd](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/Tuch/angular-dnd?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
+Angular-DND 0.1.17
 =========
 
 Features:
@@ -79,8 +81,8 @@ Provides resize ability to the element. Parameter 'false' disables the directive
 - $resized [boolean] - Register that lets you know whether the element resizing during the last cycle of events (the last ~ 5ms). Convenient to use for example in ng-click (see. Example).
 
 
-
-
+### dnd-sortable-list [expression]
+List of sortable items
 
 ### dnd-sortable [expression]
 Reorder elements in a list or grid.
@@ -90,8 +92,6 @@ Reorder elements in a list or grid.
 - dnd-on-sort [function()]: Triggered at the process of sorting element
 - dnd-on-sortchange [function()]: This event is triggered during sorting, but only when the DOM position has changed
 - dnd-on-sortend [function()]: Triggered at the end of sorting element
-
-
 
 
 
@@ -218,3 +218,5 @@ PS:
 --------
 Sorry for bad translation.
 Waiting for your pull requests.
+
+[![Join the chat at https://gitter.im/Tuch/angular-dnd](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/Tuch/angular-dnd?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)

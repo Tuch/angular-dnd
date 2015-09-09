@@ -26,7 +26,9 @@
                     name: 'item1-'+(i),
                     sortable: true
                 };
+            }
 
+            for(var i = 0; i < 0; i++){
                 this.sortables2[i] = {
                     index: i,
                     name: 'item2-'+(i),
@@ -81,7 +83,7 @@
         <h4>Пример 1</h4>
         <div class = "container" ng-controller= "Ctrl1 as ctrl">
 
-            <ul class = "sortable sortable-1" dnd-container>
+            <ul class = "sortable sortable-1" dnd-container dnd-sortable-list = "ctrl.sortables">
                 <li ng-repeat = "item in ctrl.sortables" dnd-sortable
                     dnd-on-sortstart = "ctrl.onSortStart()"
                     dnd-on-sort = "ctrl.onSort()"
@@ -93,8 +95,8 @@
 
             <hr>
 
-            <ul class = "sortable sortable-2" >
-                <li ng-repeat = "item in ctrl.sortables2" dnd-sortable >{{item.name}}</li>
+            <ul class = "sortable sortable-2" dnd-sortable-list = "ctrl.sortables2">
+                <li ng-repeat = "item in ctrl.sortables2" dnd-sortable>{{item.name}}</li>
             </ul>
 
         </div>
@@ -102,7 +104,7 @@
         <h4>Пример 2</h4>
         <div class = "container" ng-controller = "Ctrl2 as ctrl" id = "sortable-exmaple2">
 
-            <ul class = "sortable sortable-1" dnd-container>
+            <ul class = "sortable sortable-1" dnd-container dnd-sortable-list = "ctrl.fields">
                 <li ng-repeat = "field in ctrl.fields" dnd-sortable dnd-containment>
                     <input ng-model = "field.name" type = "text" dnd-pointer-none>
                 </li>

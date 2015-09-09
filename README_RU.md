@@ -1,4 +1,6 @@
-Angular-DND 0.1.16
+[![Join the chat at https://gitter.im/Tuch/angular-dnd](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/Tuch/angular-dnd?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
+Angular-DND 0.1.17
 =========
 
 Особенности:
@@ -78,6 +80,11 @@ Angular-DND 0.1.16
 #### scope:
 - $resized [boolean] - флаг, который позволяют узнать было ли изменение размеров элемента в течении последнего цикла событий (последние ~5мс). Удобно использовать например в ng-click (см. пример).
 
+
+
+
+### dnd-sortable-list [expression]
+Список элементов для сортировки (он же может быть указан в ng-repeat)
 
 
 
@@ -204,3 +211,5 @@ TODO:
 - **supporting dynamic options**
 - **supporting ng-animate**
 - **supporting HTML5 dnd events**
+
+[![Join the chat at https://gitter.im/Tuch/angular-dnd](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/Tuch/angular-dnd?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)

@@ -1,6 +1,7 @@
-node_modules
-.idea
 .DS_Store
-._*
-npm-debug.log
+.idea
+node_modules
 sh
+npm-debug.log
+.idea
+._*
