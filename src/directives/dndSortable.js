@@ -61,7 +61,7 @@ module.directive('dndSortable', ['$parse', '$compile', function($parse, $compile
         }
 
         var opts = angular.extend({
-            layer: "common",
+            layer: "common"
         }, $parse(tAttrs.dndSortableOpts)());
 
         console.log(opts);
@@ -72,17 +72,18 @@ module.directive('dndSortable', ['$parse', '$compile', function($parse, $compile
             'dnd-draggable-opts': joinObj({
                 helper: "'clone'",
                 useAsPoint: true,
-                layer: opts.layer
+                layer: opts.layer,
+                handle: opts.handle
             }),
             'dnd-droppable': '',
             'dnd-droppable-opts': joinObj({
-                layer: opts.layer,
+                layer: opts.layer
             }),
             'dnd-on-dragstart': '$$onDragStart($api, $dropmodel, $dragmodel)',
             'dnd-on-dragend': '$$onDragEnd($api, $dropmodel, $dragmodel)',
             'dnd-on-dragover': '$$onDragOver($api, $dropmodel, $dragmodel)',
             'dnd-on-drag': '$$onDrag($api, $dropmodel, $dragmodel)',
-            'dnd-model': '{item: ' + match[1] + ', list: ' + match[2] + ', index: $index}',
+            'dnd-model': '{item: ' + match[1] + ', list: ' + match[2] + ', index: $index}'
         };
 
         return '<' + tag + ' ' + joinAttrs(attrs) + '></' + tag + '>';
@@ -127,6 +128,10 @@ module.directive('dndSortable', ['$parse', '$compile', function($parse, $compile
         };
 
         scope.$$onDragOver = function(api, dropmodel, dragmodel) {
+            var isDraggingNow = angular.isDefined(api.$sortable);
+            if (!isDraggingNow) {
+                return;
+            }
             var halfway = isHalfway(api.getDragTarget(), api.getBorderedAxis());
 
             halfway ? parentNode.insertBefore(api.placeholder[0], element[0].nextSibling) : parentNode.insertBefore(api.placeholder[0], element[0]);
