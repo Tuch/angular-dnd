@@ -2372,7 +2372,7 @@ module.directive('dndSortableList', ['$parse', '$compile', function($parse, $com
 }]);
 
 module.directive('dndSortable', ['$parse', '$compile', function($parse, $compile) {
-    var placeholder, ngRepeatRegExp = /^\s*(\S+)\s+in\s+(\S+)(?:\s+(?:\|\s)*track\s+by\s+(\S+))*/;
+    var placeholder, ngRepeatRegExp = /^\s*(\S+)\s+in\s+(\S+)(?:\s+track\s+by\s+(\S+))*/;
     var defaults = {
         layer: 'common'
     };
@@ -2410,7 +2410,7 @@ module.directive('dndSortable', ['$parse', '$compile', function($parse, $compile
         var model = {
             item: 'item: ' + match[1] + ', ',
             list: 'list: ' + match[2] + ', ',
-            index: 'index: ' + match[3] || 'item.index'
+            index: 'index: ' + match[3] || '$index'
         }
         var attrs = {
             'ng-transclude': '',
