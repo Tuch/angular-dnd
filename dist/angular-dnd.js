@@ -2372,7 +2372,7 @@ module.directive('dndSortableList', ['$parse', '$compile', function($parse, $com
 }]);
 
 module.directive('dndSortable', ['$parse', '$compile', function($parse, $compile) {
-    var placeholder, ngRepeatRegExp = /^\s*(\S+)\s+in\s+(\S+)(?:\s+track\s+by\s+(\S+))*/;
+    var placeholder, ngRepeatRegExp = /^\s*(\S+)\s+in\s+(\S+)(?:\s+(?:\|\s)*track\s+by\s+(\S+))*/;
     var defaults = {
         layer: 'common'
     };
