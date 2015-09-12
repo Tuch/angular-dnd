@@ -2372,7 +2372,7 @@ module.directive('dndSortableList', ['$parse', '$compile', function($parse, $com
 }]);
 
 module.directive('dndSortable', ['$parse', '$compile', function($parse, $compile) {
-    var placeholder, ngRepeatRegExp = /^\s*([\s\S]+?)\s+in\s+([\s\S]+?)(?:\s+track\s+by\s+([\s\S]+?))?\s*$/;
+    var placeholder, ngRepeatRegExp = /^\s*(\S+)\s+in\s+(\S+)(?:\s+track\s+by\s+(\S+))*/;
     var defaults = {
         layer: 'common'
     };
@@ -2407,6 +2407,11 @@ module.directive('dndSortable', ['$parse', '$compile', function($parse, $compile
 
         console.log(opts);
 
+        var model = {
+            item: 'item: ' + match[1] + ', ',
+            list: 'list: ' + match[2] + ', ',
+            index: 'index: ' + match[3] || '$index'
+        }
         var attrs = {
             'ng-transclude': '',
             'dnd-draggable': '',
@@ -2423,7 +2428,7 @@ module.directive('dndSortable', ['$parse', '$compile', function($parse, $compile
             'dnd-on-dragend': '$$onDragEnd($api, $dropmodel, $dragmodel)',
             'dnd-on-dragover': '$$onDragOver($api, $dropmodel, $dragmodel)',
             'dnd-on-drag': '$$onDrag($api, $dropmodel, $dragmodel)',
-            'dnd-model': '{item: ' + match[1] + ', list: ' + match[2] + ', index: $index}',
+            'dnd-model': '{' + model.item + model.list + model.index +'}'
         };
 
         return '<' + tag + ' ' + joinAttrs(attrs) + '></' + tag + '>';
