@@ -2410,7 +2410,7 @@ module.directive('dndSortable', ['$parse', '$compile', function($parse, $compile
         var model = {
             item: 'item: ' + match[1] + ', ',
             list: 'list: ' + match[2] + ', ',
-            index: 'index: ' + match[3] || '$index'
+            index: 'index: ' + match[3] || 'item.index'
         }
         var attrs = {
             'ng-transclude': '',
