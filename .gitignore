@@ -5,3 +5,4 @@ sh
 npm-debug.log
 .idea
 ._*
+bower_components
