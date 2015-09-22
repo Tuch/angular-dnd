@@ -176,3 +176,8 @@ button:hover {
 #sortable-exmaple2 .sortable input {
     width: auto;
 }
+
+#sortable-exmaple3 .sortable-3{
+    padding: 10px;
+    background: #ccc;
+}

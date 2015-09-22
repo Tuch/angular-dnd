@@ -1,5 +1,11 @@
 # [Changes]
 
+## v0.1.18
+* **dndLassoArea
+  * Fix bug with dnd-on-lassoend property
+* **move to npm packages
+* **
+
 ## v0.1.17
 * **dnd-sortable-list
   * implement directive for handling sortable list

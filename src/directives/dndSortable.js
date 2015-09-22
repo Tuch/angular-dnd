@@ -31,10 +31,11 @@ module.directive('dndSortableList', ['$parse', '$compile', function($parse, $com
 }]);
 
 module.directive('dndSortable', ['$parse', '$compile', function($parse, $compile) {
-    var placeholder, ngRepeatRegExp = /^\s*([\s\S]+?)\s+in\s+([\s\S]+?)(?:\s+track\s+by\s+([\s\S]+?))?\s*$/;
+    var placeholder, ngRepeatRegExp = /^\s*([\s\S]+?)\s+in\s+([\s\S]+?)(?:\s+as\s+([\s\S]+?))?(?:\s+track\s+by\s+([\s\S]+?))?\s*$/;
     var defaults = {
         layer: 'common'
     };
+
 
 
     function join(obj, sep1, sep2) {
@@ -60,11 +61,21 @@ module.directive('dndSortable', ['$parse', '$compile', function($parse, $compile
             throw 'dnd-sortable-item requires ng-repeat as dependence';
         }
 
-        var opts = angular.extend({
-            layer: "common"
-        }, $parse(tAttrs.dndSortableOpts)());
+        var lhs = match[1];
+        var rhs = match[2];
 
-        console.log(opts);
+        lhs = lhs.match(/^(?:(\s*[\$\w]+)|\(\s*([\$\w]+)\s*,\s*([\$\w]+)\s*\))$/);
+
+        var model = {
+            item: 'item: ' + (lhs[3] || lhs[1]) + ', ',
+            list: 'list: ' + rhs.replace(/\s\|(.)+$/g,'') + ', ',
+            index: 'index: ' + '$index'
+        };
+
+        var opts = angular.extend({
+            layer: "'common'",
+            handle: "''"
+        }, $parse(tAttrs.dndSortableOpts)());
 
         var attrs = {
             'ng-transclude': '',
@@ -83,7 +94,7 @@ module.directive('dndSortable', ['$parse', '$compile', function($parse, $compile
             'dnd-on-dragend': '$$onDragEnd($api, $dropmodel, $dragmodel)',
             'dnd-on-dragover': '$$onDragOver($api, $dropmodel, $dragmodel)',
             'dnd-on-drag': '$$onDrag($api, $dropmodel, $dragmodel)',
-            'dnd-model': '{item: ' + match[1] + ', list: ' + match[2] + ', index: $index}'
+            'dnd-model': '{' + model.item + model.list + model.index +'}'
         };
 
         return '<' + tag + ' ' + joinAttrs(attrs) + '></' + tag + '>';

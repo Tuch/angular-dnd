@@ -152,11 +152,11 @@ module.directive('dndLassoArea', ['DndLasso', '$parse', '$timeout', 'dndKey', fu
                     for(var i = 0; i < s.length; i++){
                         s[i].unselecting();
                     }
-
-                    dragendCallback(scope, { $rect: handler.getRect() });
-
-                    scope.$apply();
                 }
+
+                dragendCallback(scope, { $rect: handler.getRect() });
+
+                scope.$apply();
 
                 /* что бы события click/dblclick получили флаг $dragged === true, переключение флага происходит после их выполнения */
                 $timeout(function(){ scope.$dragged = false; });

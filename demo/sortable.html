@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="demo.css" />
 
     <link rel="stylesheet" href="../css/stylesheet.css" />
-    <script src="bower_components/angular/angular.js"></script>
+    <script src="../node_modules/angular/angular.js"></script>
     <script type="text/javascript" src = "../dist/angular-dnd.js"></script>
 
 
@@ -28,7 +28,7 @@
                 };
             }
 
-            for(var i = 0; i < 0; i++){
+            for(var i = 0; i < 2; i++){
                 this.sortables2[i] = {
                     index: i,
                     name: 'item2-'+(i),
@@ -66,6 +66,27 @@
             ];
         });
 
+        app.controller('Ctrl3', function ($scope) {
+            this.sortables3 = [];
+            this.sortables4 = [];
+
+            for(var i = 0; i < 1; i++){
+                this.sortables3[i] = {
+                    index: i,
+                    name: 'item3-'+(i),
+                    sortable: true
+                };
+            }
+
+            for(var i = 0; i < 2; i++){
+                this.sortables4[i] = {
+                    index: i,
+                    name: 'item4-'+(i),
+                    sortable: true
+                };
+            }
+        });
+
     </script>
 
 </head>
@@ -80,11 +101,12 @@
             Sortable example <br>
         </div>
 
-        <h4>Пример 1</h4>
+        <h4>Example 1</h4>
         <div class = "container" ng-controller= "Ctrl1 as ctrl">
 
             <ul class = "sortable sortable-1" dnd-container dnd-sortable-list = "ctrl.sortables">
-                <li ng-repeat = "item in ctrl.sortables" dnd-sortable
+                <li ng-repeat = "item in ctrl.sortables | orderBy: $index track by $index" dnd-sortable
+                    dnd-sortable-opts = "{layer: 'test12'}"
                     dnd-on-sortstart = "ctrl.onSortStart()"
                     dnd-on-sort = "ctrl.onSort()"
                     dnd-on-sortchange = "ctrl.onSortChange()"
@@ -101,7 +123,7 @@
 
         </div>
 
-        <h4>Пример 2</h4>
+        <h4>Example 2</h4>
         <div class = "container" ng-controller = "Ctrl2 as ctrl" id = "sortable-exmaple2">
 
             <ul class = "sortable sortable-1" dnd-container dnd-sortable-list = "ctrl.fields">
@@ -112,6 +134,21 @@
 
         </div>
 
-	</div>
+        <h4>Example 3</h4>
+        <div class = "container" ng-controller = "Ctrl3 as ctrl" id = "sortable-exmaple3">
+           <ul class = "sortable sortable-3" dnd-sortable-list = "ctrl.sortables3">
+                <li ng-repeat = "item1 in ctrl.sortables3" dnd-sortable style = "padding: 20px">
+                    {{ item1.name }}
+                    <ul class = "sortable sortable-4" dnd-sortable-list = "ctrl.sortables4" style = "padding: 20px">
+                        <li ng-repeat = "item2 in ctrl.sortables4" dnd-sortable>
+                            {{ item2.name }}
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+
+        </div>
+
+    </div>
 </body>
 </html>

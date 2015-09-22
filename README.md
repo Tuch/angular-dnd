@@ -1,6 +1,6 @@
 [![Join the chat at https://gitter.im/Tuch/angular-dnd](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/Tuch/angular-dnd?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-Angular-DND 0.1.17
+Angular-DND 0.1.18
 =========
 
 Features:

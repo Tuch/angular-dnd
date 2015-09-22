@@ -2,7 +2,7 @@
 
 
 /**
-* @license AngularJS-DND v0.1.17
+* @license AngularJS-DND v0.1.18
 * (c) 2014-2015 Alexander Afonin (toafonin@gmail.com, http://github.com/Tuch)
 * License: MIT
 */
@@ -19,7 +19,7 @@
 
 /* ENVIRONMENT VARIABLES */
 
-var version = '0.1.17',
+var version = '0.1.18',
     $ = angular.element, $window = $(window), $document = $(document), body = 'body', TRANSFORM, TRANSFORMORIGIN, MATCHES_SELECTOR,
     debug = {
         mode: false,
@@ -2372,10 +2372,11 @@ module.directive('dndSortableList', ['$parse', '$compile', function($parse, $com
 }]);
 
 module.directive('dndSortable', ['$parse', '$compile', function($parse, $compile) {
-    var placeholder, ngRepeatRegExp = /^\s*([\s\S]+?)\s+in\s+([\s\S]+?)(?:\s+track\s+by\s+([\s\S]+?))?\s*$/;
+    var placeholder, ngRepeatRegExp = /^\s*([\s\S]+?)\s+in\s+([\s\S]+?)(?:\s+as\s+([\s\S]+?))?(?:\s+track\s+by\s+([\s\S]+?))?\s*$/;
     var defaults = {
         layer: 'common'
     };
+
 
 
     function join(obj, sep1, sep2) {
@@ -2401,11 +2402,21 @@ module.directive('dndSortable', ['$parse', '$compile', function($parse, $compile
             throw 'dnd-sortable-item requires ng-repeat as dependence';
         }
 
-        var opts = angular.extend({
-            layer: "common",
-        }, $parse(tAttrs.dndSortableOpts)());
+        var lhs = match[1];
+        var rhs = match[2];
 
-        console.log(opts);
+        lhs = lhs.match(/^(?:(\s*[\$\w]+)|\(\s*([\$\w]+)\s*,\s*([\$\w]+)\s*\))$/);
+
+        var model = {
+            item: 'item: ' + (lhs[3] || lhs[1]) + ', ',
+            list: 'list: ' + rhs.replace(/\s\|(.)+$/g,'') + ', ',
+            index: 'index: ' + '$index'
+        };
+
+        var opts = angular.extend({
+            layer: "'common'",
+            handle: "''"
+        }, $parse(tAttrs.dndSortableOpts)());
 
         var attrs = {
             'ng-transclude': '',
@@ -2413,17 +2424,18 @@ module.directive('dndSortable', ['$parse', '$compile', function($parse, $compile
             'dnd-draggable-opts': joinObj({
                 helper: "'clone'",
                 useAsPoint: true,
-                layer: opts.layer
+                layer: opts.layer,
+                handle: opts.handle
             }),
             'dnd-droppable': '',
             'dnd-droppable-opts': joinObj({
-                layer: opts.layer,
+                layer: opts.layer
             }),
             'dnd-on-dragstart': '$$onDragStart($api, $dropmodel, $dragmodel)',
             'dnd-on-dragend': '$$onDragEnd($api, $dropmodel, $dragmodel)',
             'dnd-on-dragover': '$$onDragOver($api, $dropmodel, $dragmodel)',
             'dnd-on-drag': '$$onDrag($api, $dropmodel, $dragmodel)',
-            'dnd-model': '{item: ' + match[1] + ', list: ' + match[2] + ', index: $index}',
+            'dnd-model': '{' + model.item + model.list + model.index +'}'
         };
 
         return '<' + tag + ' ' + joinAttrs(attrs) + '></' + tag + '>';
@@ -2468,6 +2480,10 @@ module.directive('dndSortable', ['$parse', '$compile', function($parse, $compile
         };
 
         scope.$$onDragOver = function(api, dropmodel, dragmodel) {
+            var isDraggingNow = angular.isDefined(api.$sortable);
+            if (!isDraggingNow) {
+                return;
+            }
             var halfway = isHalfway(api.getDragTarget(), api.getBorderedAxis());
 
             halfway ? parentNode.insertBefore(api.placeholder[0], element[0].nextSibling) : parentNode.insertBefore(api.placeholder[0], element[0]);
@@ -2968,11 +2984,11 @@ module.directive('dndLassoArea', ['DndLasso', '$parse', '$timeout', 'dndKey', fu
                     for(var i = 0; i < s.length; i++){
                         s[i].unselecting();
                     }
-
-                    dragendCallback(scope, { $rect: handler.getRect() });
-
-                    scope.$apply();
                 }
+
+                dragendCallback(scope, { $rect: handler.getRect() });
+
+                scope.$apply();
 
                 /* что бы события click/dblclick получили флаг $dragged === true, переключение флага происходит после их выполнения */
                 $timeout(function(){ scope.$dragged = false; });
