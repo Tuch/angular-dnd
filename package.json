@@ -1,7 +1,11 @@
 {
   "name": "angular-dnd-module",
-  "version": "0.1.18",
+  "version": "0.1.19",
   "author": "Alexander Afonin",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Tuch/angular-dnd.git"
+  },
   "dependencies": {
     "angular": "^1.4.6"
   },

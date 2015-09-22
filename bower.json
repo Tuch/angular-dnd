@@ -1,0 +1,13 @@
+{
+    "name": "angular-dnd-module",
+    "version": "0.1.17",
+    "authors": [
+        "Afonin A.V. <toafonin@gmail.com>"
+    ],
+    "description": "Drag and Drop module for Super heroic AngularJS. No jQueryUI. Touch supporting",
+    "main": "./dist/angular-dnd.min.js",
+    "dependencies": {
+        "angular": "^1.4.5"
+    },
+    "_source": "git://github.com/angular/bower-angular.git"
+}
