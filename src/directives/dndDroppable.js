@@ -55,6 +55,12 @@ module.directive('dndDroppable', ['$parse', '$timeout', function( $parse, $timeo
             }
 
             function drop(api){
+                var local = api.droplocal;
+
+                if(!local.droppable) {
+                    return;
+                }
+
                 dropCallback(scope, {'$dragmodel':api.dragmodel, '$dropmodel': api.dropmodel, '$api': api});
             }
 

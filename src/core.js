@@ -1,6 +1,6 @@
 
 /**
-* @license AngularJS-DND v0.1.18
+* @license AngularJS-DND v0.1.19
 * (c) 2014-2015 Alexander Afonin (toafonin@gmail.com, http://github.com/Tuch)
 * License: MIT
 */
@@ -17,7 +17,7 @@
 
 /* ENVIRONMENT VARIABLES */
 
-var version = '0.1.18',
+var version = '0.1.19',
     $ = angular.element, $window = $(window), $document = $(document), body = 'body', TRANSFORM, TRANSFORMORIGIN, MATCHES_SELECTOR,
     debug = {
         mode: false,

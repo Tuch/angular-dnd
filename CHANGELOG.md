@@ -1,5 +1,9 @@
 # [Changes]
 
+## v0.1.19
+  * Fix bug with dnd-droppable element.
+* **
+
 ## v0.1.18
 * **dndLassoArea
   * Fix bug with dnd-on-lassoend property
