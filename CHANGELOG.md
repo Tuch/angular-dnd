@@ -1,5 +1,9 @@
 # [Changes]
 
+## v0.1.20
+  * Fix bug with scope.$apply.
+* **
+
 ## v0.1.19
   * Fix bug with dnd-droppable element.
 * **

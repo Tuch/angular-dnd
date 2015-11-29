@@ -81,7 +81,9 @@ function ($timeout, $parse, $http, $compile, $q, $templateCache, EventEmitter) {
 
                 this.wrap().appendTo($(document.body));
 
-                this.scope.$apply();
+                if (!this.scope.$root.$$phase) {
+                    this.scope.$apply();
+                }
 
                 api.setReferenceElement(document.body);
                 this.initBorderOffset();
@@ -223,7 +225,9 @@ function ($timeout, $parse, $http, $compile, $q, $templateCache, EventEmitter) {
             dragstartCallback(scope, {'$dragmodel':api.dragmodel, '$dropmodel': api.dropmodel, '$api': api});
 
             // запускаем dirty-checking цикл
-            scope.$apply();
+            if (!scope.$root.$$phase) {
+                scope.$apply();
+            }
         }
 
         function drag(api) {
@@ -234,7 +238,9 @@ function ($timeout, $parse, $http, $compile, $q, $templateCache, EventEmitter) {
             draggable.updatePosition();
             dragCallback(scope, {'$dragmodel':api.dragmodel, '$dropmodel': api.dropmodel, '$api': api});
 
-            scope.$apply();
+            if (!scope.$root.$$phase) {
+                scope.$apply();
+            }
         }
 
         function dragend(api) {

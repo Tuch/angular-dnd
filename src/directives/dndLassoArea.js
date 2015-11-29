@@ -94,7 +94,9 @@ module.directive('dndLassoArea', ['DndLasso', '$parse', '$timeout', 'dndKey', fu
 
                 clickCallback( scope, {$event: event});
 
-                scope.$apply();
+                if (!scope.$root.$$phase) {
+                    scope.$apply();
+                }
             }
 
             function onStart(handler) {
@@ -114,8 +116,9 @@ module.directive('dndLassoArea', ['DndLasso', '$parse', '$timeout', 'dndKey', fu
 
                 }
 
-
-                scope.$apply();
+                if (!scope.$root.$$phase) {
+                    scope.$apply();
+                }
             }
 
             function onDrag(handler) {
@@ -133,8 +136,9 @@ module.directive('dndLassoArea', ['DndLasso', '$parse', '$timeout', 'dndKey', fu
 
                 dragCallback(scope, { $rect: handler.getRect() });
 
-                scope.$apply();
-
+                if (!scope.$root.$$phase) {
+                    scope.$apply();
+                }
             }
 
             function onEnd(handler) {
@@ -156,7 +160,9 @@ module.directive('dndLassoArea', ['DndLasso', '$parse', '$timeout', 'dndKey', fu
 
                 dragendCallback(scope, { $rect: handler.getRect() });
 
-                scope.$apply();
+                if (!scope.$root.$$phase) {
+                    scope.$apply();
+                }
 
                 /* что бы события click/dblclick получили флаг $dragged === true, переключение флага происходит после их выполнения */
                 $timeout(function(){ scope.$dragged = false; });
@@ -173,7 +179,9 @@ module.directive('dndLassoArea', ['DndLasso', '$parse', '$timeout', 'dndKey', fu
                     selectable = ctrl.getSelectable(event.target);
                 }
 
-                scope.$apply();
+                if (!scope.$root.$$phase) {
+                    scope.$apply();
+                }
 
             }, 300) );
 
@@ -192,7 +200,9 @@ module.directive('dndLassoArea', ['DndLasso', '$parse', '$timeout', 'dndKey', fu
             $el.on('$destroy', function(){
                 ctrls.remove(ctrl);
 
-                scope.$apply();
+                if (!scope.$root.$$phase) {
+                    scope.$apply();
+                }
             });
 
             scope.$dragged = false;

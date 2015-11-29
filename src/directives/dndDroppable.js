@@ -28,7 +28,10 @@ module.directive('dndDroppable', ['$parse', '$timeout', function( $parse, $timeo
                 }
 
                 dragenterCallback(scope, {'$dragmodel':api.dragmodel, '$dropmodel': api.dropmodel, '$api': api});
-                scope.$apply();
+
+                if (!scope.$root.$$phase) {
+                    scope.$apply();
+                }
             }
 
             function dragover(api){
@@ -39,7 +42,10 @@ module.directive('dndDroppable', ['$parse', '$timeout', function( $parse, $timeo
                 }
 
                 dragoverCallback(scope, {'$dragmodel':api.dragmodel, '$dropmodel': api.dropmodel, '$api': api});
-                scope.$apply();
+
+                if (!scope.$root.$$phase) {
+                    scope.$apply();
+                }
             }
 
             function dragleave(api){
@@ -51,7 +57,10 @@ module.directive('dndDroppable', ['$parse', '$timeout', function( $parse, $timeo
 
                 dragleaveCallback(scope, {'$dragmodel':api.dragmodel, '$dropmodel': api.dropmodel, '$api': api});
                 api.dropmodel = undefined;
-                scope.$apply();
+
+                if (!scope.$root.$$phase) {
+                    scope.$apply();
+                }
             }
 
             function drop(api){
