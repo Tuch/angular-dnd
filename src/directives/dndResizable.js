@@ -69,7 +69,7 @@ module.directive('dndResizable', ['$parse', '$timeout', function($parse, $timeou
 
                 dragstartCallback(scope);
 
-                if (scope.$root && !scope.$root.$$phase) {
+                if (!scope.$root || !scope.$root.$$phase) {
                     scope.$apply();
                 }
             }
@@ -139,7 +139,7 @@ module.directive('dndResizable', ['$parse', '$timeout', function($parse, $timeou
 
                 dragCallback(scope);
 
-                if (scope.$root && !scope.$root.$$phase) {
+                if (!scope.$root || !scope.$root.$$phase) {
                     scope.$apply();
                 }
             }

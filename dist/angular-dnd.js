@@ -2,7 +2,7 @@
 
 
 /**
-* @license AngularJS-DND v0.1.21
+* @license AngularJS-DND v0.1.22
 * (c) 2014-2015 Alexander Afonin (toafonin@gmail.com, http://github.com/Tuch)
 * License: MIT
 */
@@ -19,7 +19,7 @@
 
 /* ENVIRONMENT VARIABLES */
 
-var version = '0.1.21',
+var version = '0.1.22',
     $ = angular.element, $window = $(window), $document = $(document), body = 'body', TRANSFORM, TRANSFORMORIGIN, MATCHES_SELECTOR,
     debug = {
         mode: false,
@@ -1753,7 +1753,7 @@ function ($timeout, $parse, $http, $compile, $q, $templateCache, EventEmitter) {
 
                 this.wrap().appendTo($(document.body));
 
-                if (this.scope.$root && !this.scope.$root.$$phase) {
+                if (!this.scope.$root || !this.scope.$root.$$phase) {
                     this.scope.$apply();
                 }
 
@@ -1897,7 +1897,7 @@ function ($timeout, $parse, $http, $compile, $q, $templateCache, EventEmitter) {
             dragstartCallback(scope, {'$dragmodel':api.dragmodel, '$dropmodel': api.dropmodel, '$api': api});
 
             // запускаем dirty-checking цикл
-            if (scope.$root && !scope.$root.$$phase) {
+            if (!scope.$root || !scope.$root.$$phase) {
                 scope.$apply();
             }
         }
@@ -1910,8 +1910,8 @@ function ($timeout, $parse, $http, $compile, $q, $templateCache, EventEmitter) {
             draggable.updatePosition();
             dragCallback(scope, {'$dragmodel':api.dragmodel, '$dropmodel': api.dropmodel, '$api': api});
 
-            if (scope.$root && !scope.$root.$$phase) {
-                scope.$apply();
+            if (!scope.$root || !scope.$root.$$phase) {
+                scope.$apply()
             }
         }
 
@@ -1981,7 +1981,7 @@ module.directive('dndDroppable', ['$parse', '$timeout', function( $parse, $timeo
 
                 dragenterCallback(scope, {'$dragmodel':api.dragmodel, '$dropmodel': api.dropmodel, '$api': api});
 
-                if (scope.$root && !scope.$root.$$phase) {
+                if (!scope.$root || !scope.$root.$$phase) {
                     scope.$apply();
                 }
             }
@@ -1995,7 +1995,7 @@ module.directive('dndDroppable', ['$parse', '$timeout', function( $parse, $timeo
 
                 dragoverCallback(scope, {'$dragmodel':api.dragmodel, '$dropmodel': api.dropmodel, '$api': api});
 
-                if (scope.$root && !scope.$root.$$phase) {
+                if (!scope.$root || !scope.$root.$$phase) {
                     scope.$apply();
                 }
             }
@@ -2010,7 +2010,7 @@ module.directive('dndDroppable', ['$parse', '$timeout', function( $parse, $timeo
                 dragleaveCallback(scope, {'$dragmodel':api.dragmodel, '$dropmodel': api.dropmodel, '$api': api});
                 api.dropmodel = undefined;
 
-                if (scope.$root && !scope.$root.$$phase) {
+                if (!scope.$root || !scope.$root.$$phase) {
                     scope.$apply();
                 }
             }
@@ -2103,7 +2103,7 @@ module.directive('dndRotatable', ['$parse', '$timeout', function($parse, $timeou
 
             dragstartCallback(scope);
 
-            if (scope.$root && !scope.$root.$$phase) {
+            if (!scope.$root || !scope.$root.$$phase) {
                 scope.$apply();
             }
         }
@@ -2138,7 +2138,7 @@ module.directive('dndRotatable', ['$parse', '$timeout', function($parse, $timeou
 
             dragCallback(scope);
 
-            if (scope.$root && !scope.$root.$$phase) {
+            if (!scope.$root || !scope.$root.$$phase) {
                 scope.$apply();
             }
         }
@@ -2248,7 +2248,7 @@ module.directive('dndResizable', ['$parse', '$timeout', function($parse, $timeou
 
                 dragstartCallback(scope);
 
-                if (scope.$root && !scope.$root.$$phase) {
+                if (!scope.$root || !scope.$root.$$phase) {
                     scope.$apply();
                 }
             }
@@ -2318,7 +2318,7 @@ module.directive('dndResizable', ['$parse', '$timeout', function($parse, $timeou
 
                 dragCallback(scope);
 
-                if (scope.$root && !scope.$root.$$phase) {
+                if (!scope.$root || !scope.$root.$$phase) {
                     scope.$apply();
                 }
             }
@@ -2505,7 +2505,7 @@ module.directive('dndSortable', ['$parse', '$compile', function($parse, $compile
             api.$sortable = {};
             api.clearCache();
 
-            if (scope.$root && !scope.$root.$$phase) {
+            if (!scope.$root || !scope.$root.$$phase) {
                 scope.$apply();
             }
         };
@@ -2524,7 +2524,7 @@ module.directive('dndSortable', ['$parse', '$compile', function($parse, $compile
             if (sortchangeCallback !== angular.noop && (!api.$sortable.model || api.$sortable.model.index !== model.index)) {
                 sortchangeCallback(scope);
 
-                if (scope.$root && !scope.$root.$$phase) {
+                if (!scope.$root || !scope.$root.$$phase) {
                     scope.$apply();
                 }
             }
@@ -2562,7 +2562,7 @@ module.directive('dndSortable', ['$parse', '$compile', function($parse, $compile
 
             sortendCallback(scope);
 
-            if (scope.$root && !scope.$root.$$phase) {
+            if (!scope.$root || !scope.$root.$$phase) {
                 scope.$apply();
             }
         };
@@ -2570,7 +2570,7 @@ module.directive('dndSortable', ['$parse', '$compile', function($parse, $compile
         (sortCallback !== angular.noop) && (scope.$$onDrag = function(api) {
             sortCallback(scope);
 
-            if (scope.$root && !scope.$root.$$phase) {
+            if (!scope.$root || !scope.$root.$$phase) {
                 scope.$apply();
             }
         });
@@ -2733,7 +2733,7 @@ module.directive('dndSelectable', ['$parse', function($parse){
             function ondestroy() {
                 ctrls[1].remove(ctrls[0]);
 
-                if (scope.$root && !scope.$root.$$phase) {
+                if (!scope.$root || !scope.$root.$$phase) {
                     scope.$apply();
                 }
             }
@@ -2968,7 +2968,7 @@ module.directive('dndLassoArea', ['DndLasso', '$parse', '$timeout', 'dndKey', fu
 
                 clickCallback( scope, {$event: event});
 
-                if (scope.$root && !scope.$root.$$phase) {
+                if (!scope.$root || !scope.$root.$$phase) {
                     scope.$apply();
                 }
             }
@@ -2990,7 +2990,7 @@ module.directive('dndLassoArea', ['DndLasso', '$parse', '$timeout', 'dndKey', fu
 
                 }
 
-                if (scope.$root && !scope.$root.$$phase) {
+                if (!scope.$root || !scope.$root.$$phase) {
                     scope.$apply();
                 }
             }
@@ -3010,7 +3010,7 @@ module.directive('dndLassoArea', ['DndLasso', '$parse', '$timeout', 'dndKey', fu
 
                 dragCallback(scope, { $rect: handler.getRect() });
 
-                if (scope.$root && !scope.$root.$$phase) {
+                if (!scope.$root || !scope.$root.$$phase) {
                     scope.$apply();
                 }
             }
@@ -3034,7 +3034,7 @@ module.directive('dndLassoArea', ['DndLasso', '$parse', '$timeout', 'dndKey', fu
 
                 dragendCallback(scope, { $rect: handler.getRect() });
 
-                if (scope.$root && !scope.$root.$$phase) {
+                if (!scope.$root || !scope.$root.$$phase) {
                     scope.$apply();
                 }
 
@@ -3053,7 +3053,7 @@ module.directive('dndLassoArea', ['DndLasso', '$parse', '$timeout', 'dndKey', fu
                     selectable = ctrl.getSelectable(event.target);
                 }
 
-                if (scope.$root && !scope.$root.$$phase) {
+                if (!scope.$root || !scope.$root.$$phase) {
                     scope.$apply();
                 }
 
@@ -3074,7 +3074,7 @@ module.directive('dndLassoArea', ['DndLasso', '$parse', '$timeout', 'dndKey', fu
             $el.on('$destroy', function(){
                 ctrls.remove(ctrl);
 
-                if (scope.$root && !scope.$root.$$phase) {
+                if (!scope.$root || !scope.$root.$$phase) {
                     scope.$apply();
                 }
             });
