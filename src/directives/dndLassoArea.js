@@ -94,7 +94,7 @@ module.directive('dndLassoArea', ['DndLasso', '$parse', '$timeout', 'dndKey', fu
 
                 clickCallback( scope, {$event: event});
 
-                if (!scope.$root.$$phase) {
+                if (scope.$root && !scope.$root.$$phase) {
                     scope.$apply();
                 }
             }
@@ -116,7 +116,7 @@ module.directive('dndLassoArea', ['DndLasso', '$parse', '$timeout', 'dndKey', fu
 
                 }
 
-                if (!scope.$root.$$phase) {
+                if (scope.$root && !scope.$root.$$phase) {
                     scope.$apply();
                 }
             }
@@ -136,7 +136,7 @@ module.directive('dndLassoArea', ['DndLasso', '$parse', '$timeout', 'dndKey', fu
 
                 dragCallback(scope, { $rect: handler.getRect() });
 
-                if (!scope.$root.$$phase) {
+                if (scope.$root && !scope.$root.$$phase) {
                     scope.$apply();
                 }
             }
@@ -160,7 +160,7 @@ module.directive('dndLassoArea', ['DndLasso', '$parse', '$timeout', 'dndKey', fu
 
                 dragendCallback(scope, { $rect: handler.getRect() });
 
-                if (!scope.$root.$$phase) {
+                if (scope.$root && !scope.$root.$$phase) {
                     scope.$apply();
                 }
 
@@ -179,7 +179,7 @@ module.directive('dndLassoArea', ['DndLasso', '$parse', '$timeout', 'dndKey', fu
                     selectable = ctrl.getSelectable(event.target);
                 }
 
-                if (!scope.$root.$$phase) {
+                if (scope.$root && !scope.$root.$$phase) {
                     scope.$apply();
                 }
 
@@ -200,7 +200,7 @@ module.directive('dndLassoArea', ['DndLasso', '$parse', '$timeout', 'dndKey', fu
             $el.on('$destroy', function(){
                 ctrls.remove(ctrl);
 
-                if (!scope.$root.$$phase) {
+                if (scope.$root && !scope.$root.$$phase) {
                     scope.$apply();
                 }
             });

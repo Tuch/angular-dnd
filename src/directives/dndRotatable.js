@@ -59,7 +59,7 @@ module.directive('dndRotatable', ['$parse', '$timeout', function($parse, $timeou
 
             dragstartCallback(scope);
 
-            if (!scope.$root.$$phase) {
+            if (scope.$root && !scope.$root.$$phase) {
                 scope.$apply();
             }
         }
@@ -94,7 +94,7 @@ module.directive('dndRotatable', ['$parse', '$timeout', function($parse, $timeou
 
             dragCallback(scope);
 
-            if (!scope.$root.$$phase) {
+            if (scope.$root && !scope.$root.$$phase) {
                 scope.$apply();
             }
         }

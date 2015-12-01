@@ -1,5 +1,9 @@
 # [Changes]
 
+## v0.1.21
+  * Hitfix bug with scope.$apply.
+* **
+
 ## v0.1.20
   * Fix bug with scope.$apply.
 * **

@@ -135,7 +135,7 @@ module.directive('dndSortable', ['$parse', '$compile', function($parse, $compile
             api.$sortable = {};
             api.clearCache();
 
-            if (!scope.$root.$$phase) {
+            if (scope.$root && !scope.$root.$$phase) {
                 scope.$apply();
             }
         };
@@ -154,7 +154,7 @@ module.directive('dndSortable', ['$parse', '$compile', function($parse, $compile
             if (sortchangeCallback !== angular.noop && (!api.$sortable.model || api.$sortable.model.index !== model.index)) {
                 sortchangeCallback(scope);
 
-                if (!scope.$root.$$phase) {
+                if (scope.$root && !scope.$root.$$phase) {
                     scope.$apply();
                 }
             }
@@ -192,7 +192,7 @@ module.directive('dndSortable', ['$parse', '$compile', function($parse, $compile
 
             sortendCallback(scope);
 
-            if (!scope.$root.$$phase) {
+            if (scope.$root && !scope.$root.$$phase) {
                 scope.$apply();
             }
         };
@@ -200,7 +200,7 @@ module.directive('dndSortable', ['$parse', '$compile', function($parse, $compile
         (sortCallback !== angular.noop) && (scope.$$onDrag = function(api) {
             sortCallback(scope);
 
-            if (!scope.$root.$$phase) {
+            if (scope.$root && !scope.$root.$$phase) {
                 scope.$apply();
             }
         });

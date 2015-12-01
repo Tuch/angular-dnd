@@ -124,7 +124,7 @@ module.directive('dndSelectable', ['$parse', function($parse){
             function ondestroy() {
                 ctrls[1].remove(ctrls[0]);
 
-                if (!scope.$root.$$phase) {
+                if (scope.$root && !scope.$root.$$phase) {
                     scope.$apply();
                 }
             }
