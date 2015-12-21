@@ -1,5 +1,9 @@
 # [Changes]
 
+## v0.1.23
+  * [#38]https://github.com/Tuch/angular-dnd/pull/38) dnd-draggable don't allow touch scroll (@liollury)
+* **
+
 ## v0.1.22
   * Hitfix bug with scope.$apply.
 * **
