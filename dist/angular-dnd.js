@@ -1388,7 +1388,9 @@ var module = angular.module('dnd', []);
         },
 
         touchmove: function(event) {
-            event.preventDefault();
+            if (this.manipulator.isTarget()) {
+                event.preventDefault();
+            }
 
             this.manipulator.progress(event);
         },
