@@ -28,7 +28,7 @@ module.directive('dndLassoArea', ['DndLasso', '$parse', '$timeout', 'dndKey', fu
                 var curElement = element;
                 while (curElement) {
                     if (ctrls[i].getElement()[0] == curElement) return ctrls[i];
-                    curElement = curElement.parentElement;
+                    curElement = curElement.parentElement || curElement.parentNode;
                 }
             }
 
