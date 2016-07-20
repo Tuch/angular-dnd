@@ -1164,7 +1164,7 @@ var module = angular.module('dnd', []);
 
                 var ret = [];
 
-                for(var key = 0; key < regions; key++) {
+                for(var key = 0; key < regions.length; key++) {
                     var dnd = $( regions[key] ).data('dnd')[this.dnd.layer()];
                     var rect = dnd.$el.dndClientRect();
 
