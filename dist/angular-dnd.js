@@ -1164,7 +1164,7 @@ var module = angular.module('dnd', []);
 
                 var ret = [];
 
-                for(var key in regions) {
+                for(var key = 0; key < regions; key++) {
                     var dnd = $( regions[key] ).data('dnd')[this.dnd.layer()];
                     var rect = dnd.$el.dndClientRect();
 
@@ -1667,9 +1667,6 @@ angular.dnd = {
     debounce: debounce,
     debug: debug
 };
-
-
-
 ;
 
 module.directive('dndDraggable', ['$timeout', '$parse', '$http', '$compile', '$q', '$templateCache', 'EventEmitter',
