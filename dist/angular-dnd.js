@@ -2,7 +2,7 @@
 
 
 /**
-* @license AngularJS-DND v0.1.24
+* @license AngularJS-DND v0.1.25
 * (c) 2014-2015 Alexander Afonin (toafonin@gmail.com, http://github.com/Tuch)
 * License: MIT
 */
@@ -19,7 +19,7 @@
 
 /* ENVIRONMENT VARIABLES */
 
-var version = '0.1.24',
+var version = '0.1.25',
     $ = angular.element, $window = $(window), $document = $(document), body = 'body', TRANSFORM, TRANSFORMORIGIN, MATCHES_SELECTOR,
     debug = {
         mode: false,

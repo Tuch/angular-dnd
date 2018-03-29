@@ -1,5 +1,13 @@
 # [Changes]
 
+## v0.1.25
+  * [#52]https://github.com/Tuch/angular-dnd/pull/52 (@Petah)
+* **
+
+## v0.1.24
+  * [#43]https://github.com/Tuch/angular-dnd/pull/43 (@Jobularity)
+* **
+
 ## v0.1.23
   * [#38]https://github.com/Tuch/angular-dnd/pull/38) dnd-draggable don't allow touch scroll (@liollury)
 * **
